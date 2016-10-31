@@ -10,7 +10,8 @@ var utility = require('./uuidGenerator.js');
 var mssqlConfig = {
     user: 'productionHistory',
     password: 'productionHistory',
-    server: '192.168.168.5'
+    //server: '192.168.168.5'
+    server: 'upgi.ddns.net'
 }
 
 app.post('/seedCount/api/newEntry', upload.any(), function(req, res) {
@@ -28,7 +29,6 @@ app.post('/seedCount/api/newEntry', upload.any(), function(req, res) {
         fs.rename(req.files[0].path, photoLocation, function(error) {
             console.log(error);
         });
-        //fs.createReadStream(req.files[0].path).pipe(fs.createWriteStream(photoLocation));
     }
     // connect to data server
     mssql.connect(mssqlConfig, function(error) {
@@ -46,7 +46,8 @@ app.post('/seedCount/api/newEntry', upload.any(), function(req, res) {
         request.query(queryString, function(error, resultSet) {
             if (error) throw error;
             mssql.close();
-            res.send("<div>氣泡數資料寫入成功！</div><div><a href=\"http://upgi.ddns.net:3355/seedCount/index.html\">返回系統</a></div>");
+            //res.send("<div>氣泡數資料寫入成功！</div><div><a href=\"http://upgi.ddns.net:3355/seedCount/index.html\">返回系統</a></div>");
+            res.send("<div>氣泡數資料寫入成功！</div><div><a href=\"http://192.168.0.16:80/seedCount/index.html\">返回系統</a></div>");
         });
     });
 });
