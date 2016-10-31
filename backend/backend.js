@@ -10,18 +10,13 @@ var utility = require('./uuidGenerator.js');
 var mssqlConfig = {
     user: 'productionHistory',
     password: 'productionHistory',
-    //server: '192.168.168.5'
-    server: 'upgi.ddns.net'
+    //server: 'upgi.ddns.net'
+    server: '192.168.168.5'
 }
 
 app.post('/seedCount/api/newEntry', upload.any(), function(req, res) {
-    console.log(req.body);
-    console.log('============================================');
-    console.log(req.files);
-    console.log('============================================');
+    //deal with NULL array in the case that photo isn't uploaded
     var photoLocation;
-
-    //deal with possible NULL values
     if (req.files.length == 0) {
         photoLocation = "NULL";
     } else {
@@ -46,8 +41,8 @@ app.post('/seedCount/api/newEntry', upload.any(), function(req, res) {
         request.query(queryString, function(error, resultSet) {
             if (error) throw error;
             mssql.close();
-            //res.send("<div>氣泡數資料寫入成功！</div><div><a href=\"http://upgi.ddns.net:3355/seedCount/index.html\">返回系統</a></div>");
-            res.send("<div>氣泡數資料寫入成功！</div><div><a href=\"http://192.168.0.16:80/seedCount/index.html\">返回系統</a></div>");
+            res.send("<div>" + req.body.prodLineID + "氣泡數資料寫入成功！</div><div><a href=\"http://upgi.ddns.net:3355/seedCount/index.html\">返回系統</a></div>");
+            //res.send("<div>氣泡數資料寫入成功！</div><div><a href=\"http://192.168.0.16:80/seedCount/index.html\">返回系統</a></div>");
         });
     });
 });

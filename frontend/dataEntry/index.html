@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
-    <title>玻璃生產線氣泡數登錄</title>
+    <title>氣泡數登錄 (手機版)</title>
     <script src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/1.4.5/numeral.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.15.2/moment.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js" charset="utf-8"></script>
@@ -15,9 +15,9 @@
 </head>
 
 <body>
-    <h1>玻璃生產線氣泡數登錄</h1>
-    <!--<form action="http://upgi.ddns.net:4949/seedCount/api/newEntry" method="post" enctype="multipart/form-data">-->
-    <form action="http://192.168.0.16:4949/seedCount/api/newEntry" method="post" enctype="multipart/form-data">
+    <h1>氣泡數登錄 (手機版)</h1>
+    <form action="http://upgi.ddns.net:4949/seedCount/api/newEntry" method="post" enctype="multipart/form-data">
+        <!-- <form action="http://192.168.0.16:4949/seedCount/api/newEntry" method="post" enctype="multipart/form-data"> -->
         <label for="recordDate">日期</label>
         <input type="date" name="recordDate" id="recordDate" required /><br><br>
 
@@ -63,15 +63,14 @@
         $("#prodLineID").val(getUrlParameter("prodLineID"));
     });
 
+    //javascript function to grab parameters from url
     var getUrlParameter = function getUrlParameter(sParam) {
         var sPageURL = decodeURIComponent(window.location.search.substring(1)),
             sURLVariables = sPageURL.split('&'),
             sParameterName,
             i;
-
         for (i = 0; i < sURLVariables.length; i++) {
             sParameterName = sURLVariables[i].split('=');
-
             if (sParameterName[0] === sParam) {
                 return sParameterName[1] === undefined ? true : sParameterName[1];
             }
