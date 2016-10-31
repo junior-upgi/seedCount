@@ -20,8 +20,8 @@
         "bootstrap": "*",
         "express": "*",
         "jquery": "*",
-        "mssql": "*",
         "moment": "*",
+        "mssql": "*",
         "numeral": "*"
     },
     "devDependencies": {

@@ -2,7 +2,9 @@
 <html lang="zh-Hant-TW">
 
 <head>
-    <meta charset="utf-8" http-equiv="pragma" content="no-cache" />
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
     <title>玻璃氣泡數監控系統</title>
     <script src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/1.4.5/numeral.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.15.2/moment.min.js"></script>
@@ -13,7 +15,36 @@
 </head>
 
 <body>
-    <a href="http://upgi.ddns.net:3355/seedCount/dataEntry/index.html">氣泡數輸入表單</a>
+    <!-- <a href="http://upgi.ddns.net:3355/seedCount/dataEntry/index.html">氣泡數輸入表單</a> -->
+    <!--<form action="http://posttestserver.com/post.php" method="post">-->
+    <form action="http://upgi.ddns.net:4949/seedCount/api/newEntry" method="post">
+        <label for="recordDate">日期</label>
+        <input type="date" name="recordDate" id="recordDate" required /><br><br>
+
+        <label for="recordTime">時間</label>
+        <input type="time" name="recordTime" id="recordTime" required /><br><br>
+
+        <label for="recordDateTime">日期時間</label>
+        <input type="datetime-local" name="recordDateTime" id="recordDateTime" required /><br><br>
+
+        <label for="prodFacilityID">日期時間</label>
+        <input type="text" name="prodFacilityID" id="prodFacilityID" value="新工總廠" readonly /><br><br>
+
+        <label for="prodLineID">日期時間</label>
+        <input type="text" name="prodLineID" id="prodLineID" value="L1-1" readonly /><br><br>
+
+        <label for="seedCount">氣泡數</label>
+        <input type="number" name="seedCount" min="0" max="30" id="seedCount" maxlength="2" required/><br><br>
+
+        <label for="note">備註</label><br>
+        <textarea name="note" id="note" rows="4" cols="50" placeholder="備註資訊"></textarea><br><br>
+
+        <label for="photo">相片</label>
+        <input type="file" name="photo" id="photo" /><br>
+
+        <input type="submit" value="送出">
+        <input type="reset" value="重置">
+    </form>
 </body>
 
 </html>
