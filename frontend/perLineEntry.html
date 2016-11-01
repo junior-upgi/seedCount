@@ -15,132 +15,132 @@
 </head>
 
 <body>
-    <!-- <form class="container-fluid" id="seedCountForm" action="http://upgi.ddns.net:4949/seedCount/api/newEntry" method="post" enctype="multipart/form-data" onreset="runOnFormReset()> -->
-    <form class="container-fluid" id="seedCountForm" action="http://192.168.0.16:4949/seedCount/api/newEntry" method="post" enctype="multipart/form-data" onreset="runOnFormReset()">
+    <!-- <form class="container-fluid" id="seedCountForm" action="http://192.168.0.16:4949/seedCount/api/newEntry" method="post" enctype="multipart/form-data" onreset="runOnFormReset()"> -->
+    <form class="container-fluid" id="seedCountForm" action="http://upgi.ddns.net:4949/seedCount/api/newEntry" method="post" enctype="multipart/form-data" onreset="runOnFormReset()>
 
-        <div class="row">
-            <h2 class="col-xs-12" id="title">氣泡數登錄</h2>
+        <div class=" row ">
+            <h2 class="col-xs-12 " id="title ">氣泡數登錄</h2>
         </div>
 
-        <div class="row">
-            <div class="col-xs-8 col-lg-4">
-                <table class="table table-bordered">
+        <div class="row ">
+            <div class="col-xs-8 col-lg-4 ">
+                <table class="table table-bordered ">
                     <tr>
-                        <td class="col-xs-3"><span class="label label-primary">廠區</span></td>
-                        <td><input type="text" name="prodFacilityID" id="prodFacilityID" style="border:0px" value="新工總廠" readonly required/></td>
+                        <td class="col-xs-3 "><span class="label label-primary ">廠區</span></td>
+                        <td><input type="text " name="prodFacilityID " id="prodFacilityID " style="border:0px " value="新工總廠 " readonly required/></td>
                     </tr>
                     <tr>
-                        <td class="col-xs-3"><span class="label label-primary">生產線</span></td>
-                        <td><input type="text" name="prodLineID" id="prodLineID" style="border:0px" readonly required/></td>
+                        <td class="col-xs-3 "><span class="label label-primary ">生產線</span></td>
+                        <td><input type="text " name="prodLineID " id="prodLineID " style="border:0px " readonly required/></td>
                     </tr>
                     <tr>
-                        <td class="col-xs-3"><span class="label label-primary">工作日期 (*必填)</span></td>
+                        <td class="col-xs-3 "><span class="label label-primary ">工作日期 (*必填)</span></td>
                         <td>
-                            <input type="date" name="mockRecordDate" id="mockRecordDate" required />
-                            <input type="date" name="recordDate" id="recordDate" hidden required />
+                            <input type="date " name="mockRecordDate " id="mockRecordDate " required />
+                            <input type="date " name="recordDate " id="recordDate " hidden required />
                         </td>
                     </tr>
                     <tr>
-                        <td class="col-xs-3"><span class="label label-primary">記錄時段 (*必選)</span></td>
-                        <td><input type="time" name="recordTime" id="recordTime" style="border:0px" disabled required /></td>
+                        <td class="col-xs-3 "><span class="label label-primary ">記錄時段 (*必選)</span></td>
+                        <td><input type="time " name="recordTime " id="recordTime " style="border:0px " disabled required /></td>
                     </tr>
                 </table>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-xs-12 col-lg-8">
+        <div class="row ">
+            <div class="col-xs-12 col-lg-8 ">
                 <table>
                     <tr>
-                        <td class="col-xs-3">
-                            <a class="btn btn-default timeSelector" data-shift="早班" data-time="08:00"></a>
+                        <td class="col-xs-3 ">
+                            <a class="btn btn-default timeSelector " data-shift="早班 " data-time="08:00 "></a>
                         </td>
-                        <td class="col-xs-3">
-                            <a class="btn btn-default timeSelector" data-shift="早班" data-time="10:00"></a>
+                        <td class="col-xs-3 ">
+                            <a class="btn btn-default timeSelector " data-shift="早班 " data-time="10:00 "></a>
                         </td>
-                        <td class="col-xs-3">
-                            <a class="btn btn-default timeSelector" data-shift="早班" data-time="12:00"></a>
+                        <td class="col-xs-3 ">
+                            <a class="btn btn-default timeSelector " data-shift="早班 " data-time="12:00 "></a>
                         </td>
-                        <td class="col-xs-3">
-                            <a class="btn btn-default timeSelector" data-shift="早班" data-time="14:00"></a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="col-xs-3">
-                            <a class="btn btn-default timeSelector" data-shift="中班" data-time="16:00"></a>
-                        </td>
-                        <td class="col-xs-3">
-                            <a class="btn btn-default timeSelector" data-shift="中班" data-time="18:00"></a>
-                        </td>
-                        <td class="col-xs-3">
-                            <a class="btn btn-default timeSelector" data-shift="中班" data-time="20:00"></a>
-                        </td>
-                        <td class="col-xs-3">
-                            <a class="btn btn-default timeSelector" data-shift="中班" data-time="22:00"></a>
+                        <td class="col-xs-3 ">
+                            <a class="btn btn-default timeSelector " data-shift="早班 " data-time="14:00 "></a>
                         </td>
                     </tr>
                     <tr>
-                        <td class="col-xs-3">
-                            <a class="btn btn-default timeSelector crossOver" data-shift="夜班" data-time="00:00"></a>
+                        <td class="col-xs-3 ">
+                            <a class="btn btn-default timeSelector " data-shift="中班 " data-time="16:00 "></a>
                         </td>
-                        <td class="col-xs-3">
-                            <a class="btn btn-default timeSelector crossOver" data-shift="夜班" data-time="02:00"></a>
+                        <td class="col-xs-3 ">
+                            <a class="btn btn-default timeSelector " data-shift="中班 " data-time="18:00 "></a>
                         </td>
-                        <td class="col-xs-3">
-                            <a class="btn btn-default timeSelector crossOver" data-shift="夜班" data-time="04:00"></a>
+                        <td class="col-xs-3 ">
+                            <a class="btn btn-default timeSelector " data-shift="中班 " data-time="20:00 "></a>
                         </td>
-                        <td class="col-xs-3">
-                            <a class="btn btn-default timeSelector crossOver" data-shift="夜班" data-time="06:00"></a>
+                        <td class="col-xs-3 ">
+                            <a class="btn btn-default timeSelector " data-shift="中班 " data-time="22:00 "></a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="col-xs-3 ">
+                            <a class="btn btn-default timeSelector crossOver " data-shift="夜班 " data-time="00:00 "></a>
+                        </td>
+                        <td class="col-xs-3 ">
+                            <a class="btn btn-default timeSelector crossOver " data-shift="夜班 " data-time="02:00 "></a>
+                        </td>
+                        <td class="col-xs-3 ">
+                            <a class="btn btn-default timeSelector crossOver " data-shift="夜班 " data-time="04:00 "></a>
+                        </td>
+                        <td class="col-xs-3 ">
+                            <a class="btn btn-default timeSelector crossOver " data-shift="夜班 " data-time="06:00 "></a>
                         </td>
                     </tr>
                 </table>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-xs-12">
-                <table class="table table-bordered">
+        <div class="row ">
+            <div class="col-xs-12 ">
+                <table class="table table-bordered ">
                     <tr>
-                        <td class="col-xs-3 col-lg-1"><span class="label label-primary">瓶號</span></td>
-                        <td colspan="6"><input type="text" name="prodReference" size="10" maxlength="10" required /></td>
+                        <td class="col-xs-3 col-lg-1 "><span class="label label-primary ">瓶號</span></td>
+                        <td colspan="6 "><input type="text " name="prodReference " size="10 " maxlength="10 " required /></td>
                     </tr>
                     <tr>
-                        <td class="col-xs-3 col-lg-1"><span class="label label-primary">玻璃厚度</span></td>
-                        <td colspan="6"><input type="number" name="thickness" min="0" max="30" step="0.05" required /></td>
+                        <td class="col-xs-3 col-lg-1 "><span class="label label-primary ">玻璃厚度</span></td>
+                        <td colspan="6 "><input type="number " name="thickness " min="0 " max="30 " step="0.05 " required /></td>
                     </tr>
                     <tr>
-                        <td class="col-xs-3 col-lg-1"><span class="label label-primary">檢視項次</span></td>
-                        <td class="text-center">1*</td>
-                        <td class="text-center">2</td>
-                        <td class="text-center">3</td>
-                        <td class="text-center">4</td>
-                        <td class="text-center">5</td>
-                        <td class="text-center">6</td>
+                        <td class="col-xs-3 col-lg-1 "><span class="label label-primary ">檢視項次</span></td>
+                        <td class="text-center ">1*</td>
+                        <td class="text-center ">2</td>
+                        <td class="text-center ">3</td>
+                        <td class="text-center ">4</td>
+                        <td class="text-center ">5</td>
+                        <td class="text-center ">6</td>
                     </tr>
                     <tr>
-                        <td class="col-xs-3 col-lg-1"><span class="label label-primary">氣泡數</span></td>
-                        <td class="text-center"><input class="seedCountInput" type="number" name="seedCount[0]" min="0" max="30" size="2" required /></td>
-                        <td class="text-center"><input class="seedCountInput" type="number" name="seedCount[1]" min="0" max="30" size="2" /></td>
-                        <td class="text-center"><input class="seedCountInput" type="number" name="seedCount[2]" min="0" max="30" size="2" /></td>
-                        <td class="text-center"><input class="seedCountInput" type="number" name="seedCount[3]" min="0" max="30" size="2" /></td>
-                        <td class="text-center"><input class="seedCountInput" type="number" name="seedCount[4]" min="0" max="30" size="2" /></td>
-                        <td class="text-center"><input class="seedCountInput" type="number" name="seedCount[5]" min="0" max="30" size="2" /></td>
+                        <td class="col-xs-3 col-lg-1 "><span class="label label-primary ">氣泡數</span></td>
+                        <td class="text-center "><input class="seedCountInput " type="number " name="seedCount[0] " min="0 " max="30 " size="2 " required /></td>
+                        <td class="text-center "><input class="seedCountInput " type="number " name="seedCount[1] " min="0 " max="30 " size="2 " /></td>
+                        <td class="text-center "><input class="seedCountInput " type="number " name="seedCount[2] " min="0 " max="30 " size="2 " /></td>
+                        <td class="text-center "><input class="seedCountInput " type="number " name="seedCount[3] " min="0 " max="30 " size="2 " /></td>
+                        <td class="text-center "><input class="seedCountInput " type="number " name="seedCount[4] " min="0 " max="30 " size="2 " /></td>
+                        <td class="text-center "><input class="seedCountInput " type="number " name="seedCount[5] " min="0 " max="30 " size="2 " /></td>
                     </tr>
                     <tfoot>
                         <tr>
-                            <td class="col-xs-3 col-lg-1">
-                                <span class="label label-primary">備註</span>
+                            <td class="col-xs-3 col-lg-1 ">
+                                <span class="label label-primary ">備註</span>
                             </td>
-                            <td colspan="6">
-                                <textarea name="note" id="note" rows="2" cols="50" style="border:0px" placeholder="備註資訊"></textarea>
+                            <td colspan="6 ">
+                                <textarea name="note " id="note " rows="2 " cols="50 " style="border:0px " placeholder="備註資訊 "></textarea>
                             </td>
                         </tr>
                         <tr>
-                            <td class="col-xs-3 col-lg-1">
-                                <span class="label label-primary">相片</span>
+                            <td class="col-xs-3 col-lg-1 ">
+                                <span class="label label-primary ">相片</span>
                             </td>
-                            <td colspan="6">
-                                <input type="file" name="photo" id="photo" accept="image/" capture="" />
+                            <td colspan="6 ">
+                                <input type="file " name="photo " id="photo " accept="image/ " capture=" " />
                             </td>
                         </tr>
                     </tfoot>
@@ -148,9 +148,9 @@
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-xs-4 col-lg-1"><input class="btn btn-lg btn-default" type="submit" value="送出"></div>
-            <div class="col-xs-4 col-lg-1"><input class="btn btn-lg btn-default" type="reset" value="重置"></div>
+        <div class="row ">
+            <div class="col-xs-4 col-lg-1 "><input class="btn btn-lg btn-default " type="submit " value="送出 "></div>
+            <div class="col-xs-4 col-lg-1 "><input class="btn btn-lg btn-default " type="reset " value="重置 "></div>
         </div>
     </form>
 </body>
@@ -158,51 +158,51 @@
 </html>
 
 <script>
-    $("document").ready(function() {
-        $("#title").text(getUrlParameter("prodLineID") + " " + $("#title").text());
-        $("#mockRecordDate").val(moment().format("YYYY-MM-DD"));
-        $("#recordDate").val(moment().format("YYYY-MM-DD")).css("pointer-events", "none");
-        $("#recordTime").css("pointer-events", "none")
-        $(".timeSelector").each(function() {
-            $(this).data("date", $("#mockRecordDate").val())
-                .text($(this).data("shift") + " " + $(this).data("time"));
-            if ($(this).hasClass("crossOver")) {
-                $(this).data("date", moment($("#mockRecordDate").val()).add(1, "d").format("YYYY-MM-DD"));
+    $("document ").ready(function() {
+        $("#title ").text(getUrlParameter("prodLineID ") + " " + $("#title ").text());
+        $("#mockRecordDate ").val(moment().format("YYYY-MM-DD "));
+        $("#recordDate ").val(moment().format("YYYY-MM-DD ")).css("pointer-events ", "none ");
+        $("#recordTime ").css("pointer-events ", "none ")
+        $(".timeSelector ").each(function() {
+            $(this).data("date ", $("#mockRecordDate ").val())
+                .text($(this).data("shift ") + " " + $(this).data("time "));
+            if ($(this).hasClass("crossOver ")) {
+                $(this).data("date ", moment($("#mockRecordDate ").val()).add(1, "d ").format("YYYY-MM-DD "));
             }
         });
-        $("#prodLineID").val(getUrlParameter("prodLineID")).css("pointer-events", "none");
+        $("#prodLineID ").val(getUrlParameter("prodLineID ")).css("pointer-events ", "none ");
 
-        $(".timeSelector").on("click", function() {
-            $("#recordTime").val($(this).data("time"));
-            if ($(this).hasClass("crossOver")) {
-                $("#recordDate").val(moment($("#mockRecordDate").val()).add(1, 'd').format("YYYY-MM-DD"));
+        $(".timeSelector ").on("click ", function() {
+            $("#recordTime ").val($(this).data("time "));
+            if ($(this).hasClass("crossOver ")) {
+                $("#recordDate ").val(moment($("#mockRecordDate ").val()).add(1, 'd').format("YYYY-MM-DD "));
             } else {
-                $("#recordDate").val(moment($("#mockRecordDate").val()).format("YYYY-MM-DD"));
+                $("#recordDate ").val(moment($("#mockRecordDate ").val()).format("YYYY-MM-DD "));
             }
-            $(".timeSelector").removeClass("btn-primary");
-            $(this).addClass("btn-primary");
+            $(".timeSelector ").removeClass("btn-primary ");
+            $(this).addClass("btn-primary ");
         });
 
-        $("#mockRecordDate").change(function() {
-            $("#recordTime").val("");
-            $("#recordDate").val($(this).val());
-            $(".timeSelector").each(function() {
-                $(this).data("date", $("#mockRecordDate").val())
-                    .text($(this).data("shift") + " " + $(this).data("time"));
-                if ($(this).hasClass("crossOver")) {
-                    $(this).data("date", moment($("#mockRecordDate").val()).add(1, "d").format("YYYY-MM-DD"));
+        $("#mockRecordDate ").change(function() {
+            $("#recordTime ").val(" ");
+            $("#recordDate ").val($(this).val());
+            $(".timeSelector ").each(function() {
+                $(this).data("date ", $("#mockRecordDate ").val())
+                    .text($(this).data("shift ") + " " + $(this).data("time "));
+                if ($(this).hasClass("crossOver ")) {
+                    $(this).data("date ", moment($("#mockRecordDate ").val()).add(1, "d ").format("YYYY-MM-DD "));
                 }
             });
-            $(".timeSelector").removeClass("btn-primary");
+            $(".timeSelector ").removeClass("btn-primary ");
         });
     });
 
-    $("#seedCountForm").submit(function() {
-        $("#recordTime").prop('disabled', false);
+    $("#seedCountForm ").submit(function() {
+        $("#recordTime ").prop('disabled', false);
     });
 
     function runOnFormReset() {
-        $(".timeSelector").removeClass("btn-primary");
+        $(".timeSelector ").removeClass("btn-primary ");
     }
 
     //javascript function to parse parameters from url
