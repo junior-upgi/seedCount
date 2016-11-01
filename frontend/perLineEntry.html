@@ -15,8 +15,8 @@
 </head>
 
 <body>
-    <!-- <form class="container-fluid" id="seedCountForm" action="http://upgi.ddns.net:4949/seedCount/api/newEntry" method="post" enctype="multipart/form-data"> -->
-    <form class="container-fluid" id="seedCountForm" action="http://192.168.0.16:4949/seedCount/api/newEntry" method="post" enctype="multipart/form-data">
+    <!-- <form class="container-fluid" id="seedCountForm" action="http://upgi.ddns.net:4949/seedCount/api/newEntry" method="post" enctype="multipart/form-data" onreset="runOnFormReset()> -->
+    <form class="container-fluid" id="seedCountForm" action="http://192.168.0.16:4949/seedCount/api/newEntry" method="post" enctype="multipart/form-data" onreset="runOnFormReset()">
 
         <div class="row">
             <h2 class="col-xs-12" id="title">氣泡數登錄</h2>
@@ -50,7 +50,7 @@
 
         <div class="row">
             <div class="col-xs-12 col-lg-8">
-                <table class="table">
+                <table>
                     <tr>
                         <td class="col-xs-3">
                             <a class="btn btn-default timeSelector" data-shift="早班" data-time="08:00"></a>
@@ -132,7 +132,7 @@
                                 <span class="label label-primary">備註</span>
                             </td>
                             <td colspan="6">
-                                <textarea name="note" id="note" rows="3" cols="50" style="border:0px" placeholder="備註資訊"></textarea>
+                                <textarea name="note" id="note" rows="2" cols="50" style="border:0px" placeholder="備註資訊"></textarea>
                             </td>
                         </tr>
                         <tr>
@@ -200,6 +200,10 @@
     $("#seedCountForm").submit(function() {
         $("#recordTime").prop('disabled', false);
     });
+
+    function runOnFormReset() {
+        $(".timeSelector").removeClass("btn-primary");
+    }
 
     //javascript function to parse parameters from url
     var getUrlParameter = function getUrlParameter(sParam) {
