@@ -10,8 +10,8 @@ var utility = require('./uuidGenerator.js');
 var mssqlConfig = {
     user: 'productionHistory',
     password: 'productionHistory',
-    //server: 'upgi.ddns.net'
-    server: '192.168.168.5'
+    //server: '192.168.168.5'
+    server: 'upgi.ddns.net'
 }
 
 app.post('/seedCount/api/newEntry', upload.any(), function(req, res) {
@@ -37,8 +37,8 @@ app.post('/seedCount/api/newEntry', upload.any(), function(req, res) {
         var queryString = "INSERT INTO productionHistory.dbo.seedCount VALUES ('" +
             moment(req.body.recordDate + ' ' + req.body.recordTime + ':00').format("YYYY-MM-DD HH:mm:ss") + "','" +
             req.body.prodFacilityID + "','" +
-            req.body.prodLineID + "'," +
-            req.body.reference + "'," +
+            req.body.prodLineID + "','" +
+            req.body.prodReference + "','" +
             req.body.thickness + "'," +
             (req.body.seedCount[0] === '' ? "NULL" : req.body.seedCount[0]) + "," +
             (req.body.seedCount[1] === '' ? "NULL" : req.body.seedCount[1]) + "," +
@@ -49,14 +49,18 @@ app.post('/seedCount/api/newEntry', upload.any(), function(req, res) {
             (req.body.note === '' ? "NULL" : "'" + req.body.note + "'") + "," +
             (photoLocation === "NULL" ? "NULL" : "'" + photoLocation + "'") + ",'" +
             moment().format("YYYY-MM-DD HH:mm:ss") + "');";
+        console.log(queryString + '\n');
         // insert data
         request.query(queryString, function(error, resultSet) {
-            if (error) throw error;
+            if (error) {
+                console.log("資料寫入錯誤： " + error + '\n')
+                throw error;
+            }
             mssql.close();
             console.log(moment(req.body.recordDate + ' ' + req.body.recordTime + ':00').format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料寫入成功\n");
         });
-        res.send("<div>" + req.body.prodLineID + "氣泡數資料寫入成功！</div><div><a href=\"http://upgi.ddns.net:3355/seedCount/mobileEntry.html\">返回系統</a></div>");
-        //res.send("<div>氣泡數資料寫入成功！</div><div><a href=\"http://192.168.0.16:80/seedCount/mobileEntry.html\">返回系統</a></div>");
+        //res.send("<div>" + req.body.prodLineID + "氣泡數資料寫入成功！</div><div><a href=\"http://upgi.ddns.net:3355/seedCount/mobileEntry.html\">返回系統</a></div>");
+        res.send("<div>" + req.body.prodLineID + "氣泡數資料寫入成功！</div><div><a href=\"http://192.168.0.16:80/seedCount/mobileEntry.html\">返回系統</a></div>");
     });
 });
 
