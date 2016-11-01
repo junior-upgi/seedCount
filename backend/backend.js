@@ -20,11 +20,16 @@ app.post('/seedCount/api/newEntry', upload.any(), function(req, res) {
     if (req.files.length == 0) {
         photoLocation = "NULL";
     } else {
-        photoLocation = req.files[0].destination + req.body.prodLineID + '/' + moment(req.body.recordDate + ' ' + req.body.recordTime + ':00').format("YYYYMMDDHHmmss") + '.JPG';
+        photoLocation = req.files[0].destination + req.body.prodLineID + '/' + moment(req.body.recordDate + ' ' + req.body.recordTime + ':00').format("YYYYMMDDHHmm") + '.JPG';
         fs.rename(req.files[0].path, photoLocation, function(error) {
-            console.log(error);
+            if (error) {
+                console.log(req.body.prodLineID + " 圖片上傳錯誤： " + error + '\n');
+            } else {
+                console.log(req.body.prodLineID + " 圖片上傳成功" + '\n');
+            }
         });
     }
+
     // connect to data server
     mssql.connect(mssqlConfig, function(error) {
         if (error) throw error;
@@ -33,7 +38,14 @@ app.post('/seedCount/api/newEntry', upload.any(), function(req, res) {
             moment(req.body.recordDate + ' ' + req.body.recordTime + ':00').format("YYYY-MM-DD HH:mm:ss") + "','" +
             req.body.prodFacilityID + "','" +
             req.body.prodLineID + "'," +
-            req.body.seedCount + "," +
+            req.body.reference + "'," +
+            req.body.thickness + "'," +
+            (req.body.seedCount[0] === '' ? "NULL" : req.body.seedCount[0]) + "," +
+            (req.body.seedCount[1] === '' ? "NULL" : req.body.seedCount[1]) + "," +
+            (req.body.seedCount[2] === '' ? "NULL" : req.body.seedCount[2]) + "," +
+            (req.body.seedCount[3] === '' ? "NULL" : req.body.seedCount[3]) + "," +
+            (req.body.seedCount[4] === '' ? "NULL" : req.body.seedCount[4]) + "," +
+            (req.body.seedCount[5] === '' ? "NULL" : req.body.seedCount[5]) + "," +
             (req.body.note === '' ? "NULL" : "'" + req.body.note + "'") + "," +
             (photoLocation === "NULL" ? "NULL" : "'" + photoLocation + "'") + ",'" +
             moment().format("YYYY-MM-DD HH:mm:ss") + "');";
@@ -41,9 +53,10 @@ app.post('/seedCount/api/newEntry', upload.any(), function(req, res) {
         request.query(queryString, function(error, resultSet) {
             if (error) throw error;
             mssql.close();
-            res.send("<div>" + req.body.prodLineID + "氣泡數資料寫入成功！</div><div><a href=\"http://upgi.ddns.net:3355/seedCount/index.html\">返回系統</a></div>");
-            //res.send("<div>氣泡數資料寫入成功！</div><div><a href=\"http://192.168.0.16:80/seedCount/index.html\">返回系統</a></div>");
+            console.log(moment(req.body.recordDate + ' ' + req.body.recordTime + ':00').format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料寫入成功\n");
         });
+        res.send("<div>" + req.body.prodLineID + "氣泡數資料寫入成功！</div><div><a href=\"http://upgi.ddns.net:3355/seedCount/mobileEntry.html\">返回系統</a></div>");
+        //res.send("<div>氣泡數資料寫入成功！</div><div><a href=\"http://192.168.0.16:80/seedCount/mobileEntry.html\">返回系統</a></div>");
     });
 });
 
