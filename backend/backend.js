@@ -1,4 +1,5 @@
 var express = require('express');
+var cors = require('cors');
 var app = express();
 var multer = require('multer');
 var upload = multer({ dest: 'seedImage/' });
@@ -13,6 +14,8 @@ var mssqlConfig = {
     //server: 'upgi.ddns.net'
     server: '192.168.168.5'
 }
+
+app.use(cors());
 
 app.post('/seedCount/api/mobileDataEntry', upload.any(), function(req, res) {
     //deal with NULL array in the case that photo isn't uploaded

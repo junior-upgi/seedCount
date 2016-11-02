@@ -66,10 +66,20 @@
     };
     var facilityData = '新工總廠';
     var prodLineID = ['L1-1', 'L1', 'L2', 'L3', 'L5', 'L6', 'L7', 'L8'];
+
     $("document").ready(function() {
         //initialize current date
         $(".currentDate").text(currentDate);
+        constructSituationBoardTable(getDailySeedCountData(currentDate));
+    });
 
+    var getDailySeedCountData = function(date) {
+        $.getJSON("http://upgi.ddns.net:4949/seedCount/api/dailySeedCountResult?date=" + date, function(result) {
+            console.log(result);
+        });
+    };
+
+    var constructSituationBoardTable = function(callback) {
         //construct the table heading
         $("#dailySeedCountOverviewTableHeading").append('<th class="text-center">班次</th><th class="text-center">時間</th><th class="text-center">產品</th>');
         $.each(prodLineID, function(key, value) {
@@ -93,5 +103,5 @@
                 $(".processing").removeClass("processing");
             });
         });
-    });
+    };
 </script>
