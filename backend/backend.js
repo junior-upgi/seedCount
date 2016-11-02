@@ -65,17 +65,10 @@ app.post('/seedCount/api/mobileDataEntry', upload.any(), function(req, res) {
 });
 
 app.get('/seedCount/api/dailySeedCountResult', function(req, res) {
-    var bodyParser = require('body-parser');
-    app.use(bodyParser.json());
-    app.use(bodyParser.urlencoded({ extended: false }))
-    var message = req.body;
-
-    console.log(req.body);
-
     mssql.connect(mssqlConfig, function(error) {
         if (error) throw error;
         var request = new mssql.Request();
-        var queryString = "SELECT * FROM productionHistory.dbo.seedCountResult WHERE recordDate=CAST(GETDATE() AS DATE) ORDER BY prodLineID,recordDatetime;";
+        var queryString = "SELECT * FROM productionHistory.dbo.seedCountResult WHERE recordDate='" + req.query.date + "' ORDER BY prodLineID,recordDatetime;";
         console.log(queryString + '\n');
         request.query(queryString, function(error, resultSet) {
             if (error) {
