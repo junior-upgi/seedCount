@@ -74,15 +74,19 @@
     });
 
     var populateSituationBoard = function(seedCountData) {
-        console.log(seedCountData);
-        $.each(seedCountData, function() {
-            /////////////////////
+        $.each(seedCountData, function(index, field) {
+            $("td.seedCountColumn." + moment(field.recordDatetime).format("HH" + "\\" + ":mm") + '.' + field.prodLineID).text(field.unitSeedCount);
+            console.log("td.seedCountColumn." + moment(field.recordDatetime).format("HH" + "\\" + ":mm") + '.' + field.prodLineID);
+            console.log(field.recordTime);
+            console.log(field.prodReference);
+            console.log(field.prodLineID);
+            console.log(field.unitSeedCount);
         });
     };
 
     var getDailySeedCountData = function(date) {
         $.getJSON("http://upgi.ddns.net:4949/seedCount/api/dailySeedCountResult?date=" + date, function(result) {
-            populateSituationBoard(result);
+            populateSituationBoard(JSON.parse(result));
         });
     };
 
@@ -103,7 +107,7 @@
                 //loop though each production line
                 $.each(prodLineID, function(key, value) {
                     $("tr.processing").append('<td class="seedCountColumn processing ' + value + '"></td>').addClass(timePoint + ' ' + shiftData.reference);
-                    $("td." + value + ".processing").addClass("text-center 新工總廠 " + shiftData.reference).data("record-datetime", currentDate + " " + timePoint + ":00");
+                    $("td." + value + ".processing").addClass("text-center 新工總廠 " + timePoint + " " + shiftData.reference).data("record-datetime", currentDate + " " + timePoint + ":00");
                 });
                 $("td.seedCountColumn.processing").text("N/A");
                 $(".processing").removeClass("processing");
