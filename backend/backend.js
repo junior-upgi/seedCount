@@ -59,8 +59,33 @@ app.post('/seedCount/api/mobileDataEntry', upload.any(), function(req, res) {
             mssql.close();
             console.log(moment(req.body.recordDate + ' ' + req.body.recordTime + ':00').format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料寫入成功\n");
         });
-        res.send("<div>" + req.body.prodLineID + "氣泡數資料寫入成功！</div><div><a href=\"http://upgi.ddns.net:3355/seedCount/mobileEntry.html\">返回系統</a></div>");
+        res.send("<div>" + req.body.prodLineID + "氣泡數資料寫入成功</div><div><a href=\"http://upgi.ddns.net:3355/seedCount/mobileEntry.html\">返回系統</a></div>");
         //res.send("<div>" + req.body.prodLineID + "氣泡數資料寫入成功！</div><div><a href=\"http://192.168.0.16:80/seedCount/mobileEntry.html\">返回系統</a></div>");
+    });
+});
+
+app.get('/seedCount/api/dailySeedCountResult', function(req, res) {
+    var bodyParser = require('body-parser');
+    app.use(bodyParser.json());
+    app.use(bodyParser.urlencoded({ extended: false }))
+    var message = req.body;
+
+    console.log(req.body);
+
+    mssql.connect(mssqlConfig, function(error) {
+        if (error) throw error;
+        var request = new mssql.Request();
+        var queryString = "SELECT * FROM productionHistory.dbo.seedCountResult WHERE recordDate=CAST(GETDATE() AS DATE) ORDER BY prodLineID,recordDatetime;";
+        console.log(queryString + '\n');
+        request.query(queryString, function(error, resultSet) {
+            if (error) {
+                console.log("氣泡數資料讀取錯誤： " + error + '\n')
+                throw error;
+            }
+            console.log("氣泡數計算結果讀取成功\n");
+            mssql.close();
+            res.json(JSON.stringify(resultSet));
+        });
     });
 });
 

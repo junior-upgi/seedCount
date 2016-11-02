@@ -15,6 +15,83 @@
 </head>
 
 <body>
+    <div class="container">
+        <div class="row">
+            <div class="page-header">
+                <h1>統義玻璃股份有限公司 <small>氣泡數監控程式</small></h1>
+                <span class="currentDate"></span>
+            </div>
+            <table class="table table-bordered table-condensed table-hover table-striped">
+                <caption><span class="currentDate"></span> 氣泡數統計</caption>
+                <thead>
+                    <tr id="dailySeedCountOverviewTableHeading">
+                    </tr>
+                </thead>
+                <tbody id="dailySeedCountOverviewDataList">
+                </tbody>
+            </table>
+        </div>
+    </div>
 </body>
 
 </html>
+
+<script>
+    var currentDate = moment().format("YYYY-MM-DD");
+    var shiftData = {
+        day: {
+            id: 0,
+            reference: "早班",
+            start: "07:30",
+            end: "15:30",
+            checkPoint: ['08:00', '10:00', '12:00', '14:00'],
+            length: 480
+        },
+        night: {
+            id: 1,
+            reference: "中班",
+            start: "15:30",
+            end: "23:30",
+            checkPoint: ['16:00', '18:00', '20:00', '22:00'],
+            length: 480
+        },
+        graveYard: {
+            id: 2,
+            reference: "夜班",
+            start: "23:30",
+            end: "07:30",
+            checkPoint: ['00:00', '02:00', '04:00', '06:00'],
+            length: 480
+        }
+    };
+    var facilityData = '新工總廠';
+    var prodLineID = ['L1-1', 'L1', 'L2', 'L3', 'L5', 'L6', 'L7', 'L8'];
+    $("document").ready(function() {
+        //initialize current date
+        $(".currentDate").text(currentDate);
+
+        //construct the table heading
+        $("#dailySeedCountOverviewTableHeading").append('<th class="text-center">班次</th><th class="text-center">時間</th><th class="text-center">產品</th>');
+        $.each(prodLineID, function(key, value) {
+            $("#dailySeedCountOverviewTableHeading").append('<th class="text-center">' + value + '</th>');
+        });
+        //loop through each shift
+        $.each(shiftData, function(shift, shiftData) {
+            //loop though each seed count examin check point
+            $.each(shiftData.checkPoint, function(checkPoint, timePoint) {
+                $("#dailySeedCountOverviewDataList").append('<tr class="processing"><td class="processing shiftColumn"></td><td class="processing timePointColumn"></td><td class="processing prodReferenceColumn"></td></tr>');
+                $("td.processing.shiftColumn").text(shiftData.reference).addClass("text-center");
+                $("td.processing.timePointColumn").text(timePoint).addClass("text-center");
+                $("td.processing.prodReferenceColumn").text('N/A').addClass("text-center");
+                //loop though each production line
+                $.each(prodLineID, function(key, value) {
+                    //console.log(shiftData.reference + ":" + timePoint + ":" + value);
+                    $("tr.processing").append('<td class="seedCountColumn processing ' + value + '"></td>');
+                    $("td." + value + ".processing").addClass("text-center 新工總廠 " + shiftData.reference).data("record-datetime", currentDate + " " + timePoint + ":00");
+                });
+                $("td.seedCountColumn.processing").text("N/A");
+                $(".processing").removeClass("processing");
+            });
+        });
+    });
+</script>
