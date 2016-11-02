@@ -32,7 +32,7 @@ FROM (
 		  ,c.validEntryCount
 		  ,ROUND(CAST(ISNULL(b.count_0,0)+ISNULL(b.count_1,0)+ISNULL(b.count_2,0)+ISNULL(b.count_3,0)+ISNULL(b.count_4,0)+ISNULL(b.count_5,0) AS FLOAT)/c.validEntryCount,2) AS avgCount
 		  ,b.thickness
-		  ,ROUND((1*b.thickness/10)*CAST(ISNULL(b.count_0,0)+ISNULL(b.count_1,0)+ISNULL(b.count_2,0)+ISNULL(b.count_3,0)+ISNULL(b.count_4,0)+ISNULL(b.count_5,0) AS FLOAT)/c.validEntryCount,2) AS unitSeedCount
+		  ,ROUND((CAST(ISNULL(b.count_0,0)+ISNULL(b.count_1,0)+ISNULL(b.count_2,0)+ISNULL(b.count_3,0)+ISNULL(b.count_4,0)+ISNULL(b.count_5,0) AS FLOAT)/c.validEntryCount)*(10/b.thickness),2) AS unitSeedCount
 		  ,b.note
 		  ,b.photoLocation
 		  ,b.created
@@ -88,7 +88,7 @@ FROM (
 		  ,c.validEntryCount
 		  ,ROUND(CAST(ISNULL(b.count_0,0)+ISNULL(b.count_1,0)+ISNULL(b.count_2,0)+ISNULL(b.count_3,0)+ISNULL(b.count_4,0)+ISNULL(b.count_5,0) AS FLOAT)/c.validEntryCount,2) AS avgCount
 		  ,b.thickness
-		  ,ROUND((1*b.thickness/10)*CAST(ISNULL(b.count_0,0)+ISNULL(b.count_1,0)+ISNULL(b.count_2,0)+ISNULL(b.count_3,0)+ISNULL(b.count_4,0)+ISNULL(b.count_5,0) AS FLOAT)/c.validEntryCount,2) AS unitSeedCount
+		  ,ROUND((CAST(ISNULL(b.count_0,0)+ISNULL(b.count_1,0)+ISNULL(b.count_2,0)+ISNULL(b.count_3,0)+ISNULL(b.count_4,0)+ISNULL(b.count_5,0) AS FLOAT)/c.validEntryCount)*(10/b.thickness),2) AS unitSeedCount
 		  ,b.note
 		  ,b.photoLocation
 		  ,b.created
