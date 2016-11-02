@@ -1,6 +1,6 @@
 SELECT
-	DATEADD(day,-1,CAST(d.recordDatetime AS DATE)) AS recordDate
-	,CAST(d.recordDatetime AS TIME) AS recordTime
+	CONVERT(VARCHAR(10), DATEADD(DAY,-1,d.recordDatetime), 120) AS recordDate
+	,CONVERT(VARCHAR(8),DATEADD(DAY,-1,d.recordDatetime), 108) AS recordTime
 	,d.recordDatetime
 	,d.prodFacilityID
 	,d.prodLineID
@@ -55,8 +55,8 @@ FROM (
 WHERE CAST(d.recordDatetime AS TIME) BETWEEN '00:00' AND '06:00'
 UNION ALL
 SELECT
-	CAST(d.recordDatetime AS DATE) AS recordDate
-	,CAST(d.recordDatetime AS TIME) AS recordTime
+	CONVERT(VARCHAR(10),d.recordDatetime, 120) AS recordDate
+	,CONVERT(VARCHAR(8),d.recordDatetime, 108) AS recordTime
 	,d.recordDatetime
 	,d.prodFacilityID
 	,d.prodLineID

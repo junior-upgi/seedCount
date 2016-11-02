@@ -73,9 +73,16 @@
         constructSituationBoardTable(getDailySeedCountData(currentDate));
     });
 
+    var populateSituationBoard = function(seedCountData) {
+        console.log(seedCountData);
+        $.each(seedCountData, function() {
+            /////////////////////
+        });
+    };
+
     var getDailySeedCountData = function(date) {
         $.getJSON("http://upgi.ddns.net:4949/seedCount/api/dailySeedCountResult?date=" + date, function(result) {
-            console.log(result);
+            populateSituationBoard(result);
         });
     };
 
@@ -95,8 +102,7 @@
                 $("td.processing.prodReferenceColumn").text('N/A').addClass("text-center");
                 //loop though each production line
                 $.each(prodLineID, function(key, value) {
-                    //console.log(shiftData.reference + ":" + timePoint + ":" + value);
-                    $("tr.processing").append('<td class="seedCountColumn processing ' + value + '"></td>');
+                    $("tr.processing").append('<td class="seedCountColumn processing ' + value + '"></td>').addClass(timePoint + ' ' + shiftData.reference);
                     $("td." + value + ".processing").addClass("text-center 新工總廠 " + shiftData.reference).data("record-datetime", currentDate + " " + timePoint + ":00");
                 });
                 $("td.seedCountColumn.processing").text("N/A");
