@@ -14,7 +14,7 @@ var mssqlConfig = {
     server: '192.168.168.5'
 }
 
-app.post('/seedCount/api/newEntry', upload.any(), function(req, res) {
+app.post('/seedCount/api/mobileDataEntry', upload.any(), function(req, res) {
     //deal with NULL array in the case that photo isn't uploaded
     var photoLocation;
     if (req.files.length == 0) {
