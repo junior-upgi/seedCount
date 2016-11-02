@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="./serverInfo.js"></script>
 </head>
 
 <body>
@@ -20,7 +21,7 @@
             <h2 class="col-xs-12 text-center" id="title">氣泡數登錄</h2>
         </div>
         <!-- <form class="container-fluid" id="seedCountForm" action="http://192.168.0.16:4949/seedCount/api/mobileDataEntry" method="post" enctype="multipart/form-data" onreset="runOnFormReset()"> -->
-        <form class="form-horizontal" id="seedCountForm" action="http://upgi.ddns.net:4949/seedCount/api/mobileDataEntry" method="post" enctype="multipart/form-data" onreset="runOnFormReset()">
+        <form class="form-horizontal" id="seedCountForm" action="http://fakeURL" method="post" enctype="multipart/form-data" onreset="runOnFormReset()">
             <div class="form-group">
                 <label for="prodFacilityID" class="control-label col-xs-3 col-lg-1">廠區</label>
                 <div class="input-group col-xs-9">
@@ -121,6 +122,7 @@
 
 <script>
     $("document").ready(function() {
+        $("#seedCountForm").attr("action", backendHost + "seedCount/api/mobileDataEntry");
         $("#title").text(getUrlParameter("prodLineID") + " " + $("#title").text());
         $("#mockRecordDate").val(moment().format("YYYY-MM-DD"));
         $("#recordDate").val(moment().format("YYYY-MM-DD")).css("display", "none");

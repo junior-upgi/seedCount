@@ -8,12 +8,15 @@ var mssql = require('mssql');
 var moment = require('moment');
 var utility = require('./uuidGenerator.js');
 
+var frontendServer = "http://192.168.0.16:80/";
+//var frontendServer = "http://upgi.ddns.net:3355/";
+
 var mssqlConfig = {
     user: 'productionHistory',
     password: 'productionHistory',
-    //server: 'upgi.ddns.net'
-    server: '192.168.168.5'
-}
+    //server: '192.168.168.5'
+    server: 'upgi.ddns.net'
+};
 
 app.use(cors());
 
@@ -61,9 +64,9 @@ app.post('/seedCount/api/mobileDataEntry', upload.any(), function(req, res) {
             }
             mssql.close();
             console.log(moment(req.body.recordDate + ' ' + req.body.recordTime + ':00').format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料寫入成功\n");
+            res.send("<div>" + req.body.prodLineID + "氣泡數資料寫入成功</div><div><a href=\"" + frontendServer + "/seedCount/mobileEntry.html\">返回系統</a></div>");
+            //res.send("<div>" + req.body.prodLineID + "氣泡數資料寫入成功！</div><div><a href=\"http://192.168.0.16:80/seedCount/mobileEntry.html\">返回系統</a></div>");
         });
-        res.send("<div>" + req.body.prodLineID + "氣泡數資料寫入成功</div><div><a href=\"http://upgi.ddns.net:3355/seedCount/mobileEntry.html\">返回系統</a></div>");
-        //res.send("<div>" + req.body.prodLineID + "氣泡數資料寫入成功！</div><div><a href=\"http://192.168.0.16:80/seedCount/mobileEntry.html\">返回系統</a></div>");
     });
 });
 

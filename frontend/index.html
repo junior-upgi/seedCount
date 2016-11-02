@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="./serverInfo.js"></script>
 </head>
 
 <body>
@@ -85,7 +86,7 @@
     };
 
     var getDailySeedCountData = function(date) {
-        $.getJSON("http://upgi.ddns.net:4949/seedCount/api/dailySeedCountResult?date=" + date, function(result) {
+        $.getJSON(backendHost + "seedCount/api/dailySeedCountResult?date=" + date, function(result) {
             populateSituationBoard(JSON.parse(result));
         });
     };

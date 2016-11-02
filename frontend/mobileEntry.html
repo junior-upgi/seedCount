@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="./serverInfo.js"></script>
 </head>
 
 <body>
@@ -35,7 +36,19 @@
                 <a class="btn btn-default btn-lg" href="./perLineEntry.html?prodLineID=L8">輸入 L8 資料</a>
             </div>
         </div>
+        <br>
+        <br>
+
+        <div class="row text-center">
+            <a id="homeLink" class="btn btn-default btn-lg" href="#">返回氣泡監控程式主頁</a>
+        </div>
     </div>
 </body>
 
 </html>
+
+<script>
+    $("document").ready(function() {
+        $("#homeLink").attr("href", frontendHost + "seedCount/index.html");
+    });
+</script>
