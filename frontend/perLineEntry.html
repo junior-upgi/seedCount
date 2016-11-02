@@ -15,104 +15,105 @@
 </head>
 
 <body>
-    <div class="container">
+    <div class="container-fluid">
         <div class="row">
             <h2 class="col-xs-12 text-center" id="title">氣泡數登錄</h2>
         </div>
-        <div class="row">
-            <!-- <form class="container-fluid" id="seedCountForm" action="http://192.168.0.16:4949/seedCount/api/newEntry" method="post" enctype="multipart/form-data" onreset="runOnFormReset()"> -->
-            <form class="form-horizontal" id="seedCountForm" action="http://upgi.ddns.net:4949/seedCount/api/newEntry" method="post" enctype="multipart/form-data" onreset="runOnFormReset()">
-                <div class="form-group">
-                    <label for="prodFacilityID" class="control-label col-xs-2">廠區</label>
-                    <div class="col-xs-9">
-                        <input type="text" class="form-control" name="prodFacilityID" id="prodFacilityID" value="新工總廠" readonly required>
-                    </div>
+        <!-- <form class="container-fluid" id="seedCountForm" action="http://192.168.0.16:4949/seedCount/api/newEntry" method="post" enctype="multipart/form-data" onreset="runOnFormReset()"> -->
+        <form class="form-horizontal" id="seedCountForm" action="http://upgi.ddns.net:4949/seedCount/api/newEntry" method="post" enctype="multipart/form-data" onreset="runOnFormReset()">
+            <div class="form-group">
+                <label for="prodFacilityID" class="control-label col-xs-3 col-lg-1">廠區</label>
+                <div class="input-group col-xs-9">
+                    <input type="text" class="form-control input-sm" name="prodFacilityID" id="prodFacilityID" value="新工總廠" readonly required>
+                    <span class="input-group-addon">預設值</span>
                 </div>
-                <div class="form-group">
-                    <label for="prodLineID" class="control-label col-xs-2">生產線</label>
-                    <div class="col-xs-9">
-                        <input type="text" class="form-control" name="prodLineID" id="prodLineID" readonly required>
-                    </div>
+            </div>
+            <div class="form-group">
+                <label for="prodLineID" class="control-label col-xs-3 col-lg-1">生產線</label>
+                <div class="input-group col-xs-9">
+                    <input type="text" class="form-control input-sm" name="prodLineID" id="prodLineID" readonly required>
+                    <span class="input-group-addon">預設值</span>
                 </div>
-                <div class="form-group">
-                    <label for="recordDate" class="control-label col-xs-2">工作日期</label>
-                    <div class="col-xs-9">
-                        <input type="date" class="form-control" name="mockRecordDate" id="mockRecordDate" required>
-                        <input type="date" class="form-control" name="recordDate" id="recordDate" disabled required>
-                    </div>
+            </div>
+            <div class="form-group">
+                <label for="recordDate" class="control-label col-xs-3 col-lg-1">工作日期</label>
+                <div class="input-group col-xs-9">
+                    <input type="date" class="form-control input-sm" name="mockRecordDate" id="mockRecordDate" required>
+                    <span class="input-group-addon">*必填</span>
+                    <input type="date" class="form-control input-sm" name="recordDate" id="recordDate" disabled required>
                 </div>
-                <div class="form-group">
-                    <label for="recordTime" class="control-label col-xs-2">記錄時段</label>
-                    <div class="col-xs-9">
-                        <input type="time" class="form-control" name="recordTime" id="recordTime" disabled required>
-                    </div>
+            </div>
+            <div class="form-group">
+                <label for="recordTime" class="control-label col-xs-3 col-lg-1">記錄時段</label>
+                <div class="input-group col-xs-9">
+                    <input type="time" class="form-control input-sm" name="recordTime" id="recordTime" disabled required>
+                    <span class="input-group-addon">請點選時段按鈕</span>
                 </div>
-                <div class="form-group">
-                    <label class="control-label btn btn-default timeSelector" data-shift="早班" data-time="08:00"></label>
-                    <label class="control-label btn btn-default timeSelector" data-shift="早班" data-time="10:00"></label>
-                    <label class="control-label btn btn-default timeSelector" data-shift="早班" data-time="12:00"></label>
-                    <label class="control-label btn btn-default timeSelector" data-shift="早班" data-time="14:00"></label>
-                    <label class="control-label btn btn-default timeSelector" data-shift="中班" data-time="16:00"></label>
-                    <label class="control-label btn btn-default timeSelector" data-shift="中班" data-time="18:00"></label>
-                    <label class="control-label btn btn-default timeSelector" data-shift="中班" data-time="20:00"></label>
-                    <label class="control-label btn btn-default timeSelector" data-shift="中班" data-time="22:00"></label>
-                    <label class="control-label btn btn-default timeSelector crossOver" data-shift="夜班" data-time="00:00"></label>
-                    <label class="control-label btn btn-default timeSelector crossOver" data-shift="夜班" data-time="02:00"></label>
-                    <label class="control-label btn btn-default timeSelector crossOver" data-shift="夜班" data-time="04:00"></label>
-                    <label class="control-label btn btn-default timeSelector crossOver" data-shift="夜班" data-time="06:00"></label>
+            </div>
+            <div class="form-group text-center">
+                <label class="control-label btn btn-default timeSelector" data-shift="早班" data-time="08:00"></label>
+                <label class="control-label btn btn-default timeSelector" data-shift="中班" data-time="16:00"></label>
+                <label class="control-label btn btn-default timeSelector crossOver" data-shift="夜班" data-time="00:00"></label>
+                <label class="control-label btn btn-default timeSelector" data-shift="早班" data-time="10:00"></label>
+                <label class="control-label btn btn-default timeSelector" data-shift="中班" data-time="18:00"></label>
+                <label class="control-label btn btn-default timeSelector crossOver" data-shift="夜班" data-time="02:00"></label>
+                <label class="control-label btn btn-default timeSelector" data-shift="早班" data-time="12:00"></label>
+                <label class="control-label btn btn-default timeSelector" data-shift="中班" data-time="20:00"></label>
+                <label class="control-label btn btn-default timeSelector crossOver" data-shift="夜班" data-time="04:00"></label>
+                <label class="control-label btn btn-default timeSelector" data-shift="早班" data-time="14:00"></label>
+                <label class="control-label btn btn-default timeSelector" data-shift="中班" data-time="22:00"></label>
+                <label class="control-label btn btn-default timeSelector crossOver" data-shift="夜班" data-time="06:00"></label>
+            </div>
+            <div class="form-group">
+                <label for="prodReference" class="control-label col-xs-3 col-lg-1">瓶號</label>
+                <div class="input-group col-xs-9">
+                    <input type="text" class="form-control input-sm" name="prodReference" id="prodReference" size="10" maxlength="10" required>
+                    <span class="input-group-addon">*必填</span>
                 </div>
-                <div class="form-group">
-                    <label for="prodReference" class="control-label col-xs-2">瓶號</label>
-                    <div class="col-xs-9">
-                        <input type="text" class="form-control" name="prodReference" id="prodReference" size="10" maxlength="10" required>
-                    </div>
+            </div>
+            <div class="form-group">
+                <label for="thickness" class="control-label col-xs-3 col-lg-1">玻璃厚度</label>
+                <div class="input-group col-xs-9">
+                    <input type="number" class="form-control input-sm" name="thickness" id="thickness" min="0" max="30" step="0.05" required>
+                    <span class="input-group-addon">*必填</span>
                 </div>
-                <div class="form-group">
-                    <label for="thickness" class="control-label col-xs-2">玻璃厚度</label>
-                    <div class="col-xs-9">
-                        <input type="number" class="form-control" name="thickness" id="thickness" min="0" max="30" step="0.05" required>
-                    </div>
+            </div>
+            <div class="form-group">
+                <div class="input-group">
+                    <label class="control-label">氣泡記數 (*必填)</label>
                 </div>
-                <div class="form-group">
-                    <div class="input-group col-xs-8 col-xs-offset-1">
-                        <span class="input-group-addon">氣泡記數項次 1</span>
-                        <input type="number" class="form-control seedCountInput" name="seedCount[0]" min="0" max="30" step="1" required>
-                        <span class="input-group-addon">必填</span>
-                    </div>
-                    <div class="input-group col-xs-8 col-xs-offset-1">
-                        <span class="input-group-addon">氣泡記數項次 2</span>
-                        <input type="number" class="form-control seedCountInput" name="seedCount[1]" min="0" max="30" step="1">
-                    </div>
-                    <div class="input-group col-xs-8 col-xs-offset-1">
-                        <span class="input-group-addon">氣泡記數項次 3</span>
-                        <input type="number" class="form-control seedCountInput" name="seedCount[2]" min="0" max="30" step="1">
-                    </div>
-                    <div class="input-group col-xs-8 col-xs-offset-1">
-                        <span class="input-group-addon">氣泡記數項次 4</span>
-                        <input type="number" class="form-control seedCountInput" name="seedCount[3]" min="0" max="30" step="1">
-                    </div>
-                    <div class="input-group col-xs-8 col-xs-offset-1">
-                        <span class="input-group-addon">氣泡記數項次 5</span>
-                        <input type="number" class="form-control seedCountInput" name="seedCount[4]" min="0" max="30" step="1">
-                    </div>
-                    <div class="input-group col-xs-8 col-xs-offset-1">
-                        <span class="input-group-addon">氣泡記數項次 6</span>
-                        <input type="number" class="form-control seedCountInput" name="seedCount[5]" min="0" max="30" step="1">
-                    </div>
+                <div class="input-group">
+                    <span class="input-group-addon">取樣1</span>
+                    <input type="number" class="form-control input-sm text-center" name="seedCount[0]" min="0" max="30" step="1" required>
+                    <span class="input-group-addon">取樣2</span>
+                    <input type="number" class="form-control input-sm text-center" name="seedCount[1]" min="0" max="30" step="1" required>
+                    <span class="input-group-addon">取樣3</span>
+                    <input type="number" class="form-control input-sm text-center" name="seedCount[2]" min="0" max="30" step="1" required>
                 </div>
-                <div class="form-group">
-                    <label for="note" class="control-label col-xs-2">備註</label>
-                    <div class="col-xs-9">
-                        <textarea class="form-control" name="note" id="note" rows="2" cols="50" placeholder="備註資訊"></textarea>
-                    </div>
+                <div class="input-group">
+                    <span class="input-group-addon">取樣4</span>
+                    <input type="number" class="form-control input-sm text-center" name="seedCount[3]" min="0" max="30" step="1" required>
+                    <span class="input-group-addon">取樣5</span>
+                    <input type="number" class="form-control input-sm text-center" name="seedCount[4]" min="0" max="30" step="1" required>
+                    <span class="input-group-addon">取樣6</span>
+                    <input type="number" class="form-control input-sm text-center" name="seedCount[5]" min="0" max="30" step="1" required>
                 </div>
-                <div class="form-group">
-                    <label class="control-label col-xs-offset-2 btn btn-default btn-file">
-                        上傳相片<input type="file" name="photo" id="photo" style="display:none;" accept="image/*" capture="">
-                    </label>
+            </div>
+            <div class="form-group">
+                <label for="note" class="control-label col-xs-3 col-lg-1">備註</label>
+                <div class="col-xs-9">
+                    <textarea class="form-control input-sm" name="note" id="note" rows="4" cols="50" placeholder="備註資訊"></textarea>
                 </div>
-            </form>
-        </div>
+            </div>
+            <div class="form-group text-center">
+                <label class="control-label btn btn-default btn-file">
+                    <span id="photoID">上傳相片</span>
+                    <input type="file" name="photo" id="photo" style="display:none;" accept="image/*">
+                </label>
+                <button type="submit" class="control-label btn btn-primary col-xs-offset-1">送出資料</button>
+                <button type="reset" class="control-label btn btn-primary">重置內容</button>
+            </div>
+        </form>
     </div>
 </body>
 
@@ -155,6 +156,13 @@
                 }
             });
             $(".timeSelector").removeClass("btn-primary");
+        });
+
+        $("#photo").change(function() {
+            $("#photoID").text($(this).val());
+            if ($("#photoID").text() === "") {
+                $("#photoID").text("上傳相片");
+            }
         });
     });
 
