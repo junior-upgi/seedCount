@@ -8,14 +8,14 @@ var mssql = require('mssql');
 var moment = require('moment');
 var utility = require('./uuidGenerator.js');
 
-var frontendServer = "http://192.168.0.16:80/";
-//var frontendServer = "http://upgi.ddns.net:3355/";
+//var frontendServer = "http://192.168.0.16:80/"; //development environment
+var frontendServer = "http://upgi.ddns.net:3355/"; //production server
 
 var mssqlConfig = {
     user: 'productionHistory',
     password: 'productionHistory',
-    //server: '192.168.168.5'
-    server: 'upgi.ddns.net'
+    //server: 'upgi.ddns.net' //access database from the Internet (development)
+    server: '192.168.168.5' //access database from LAN (production)
 };
 
 app.use(cors());
@@ -36,7 +36,7 @@ app.post('/seedCount/api/mobileDataEntry', upload.any(), function(req, res) {
         });
     }
 
-    // connect to data server
+    // connect to data server to insert mobile data entry
     mssql.connect(mssqlConfig, function(error) {
         if (error) throw error;
         var request = new mssql.Request();
@@ -64,8 +64,19 @@ app.post('/seedCount/api/mobileDataEntry', upload.any(), function(req, res) {
             }
             mssql.close();
             console.log(moment(req.body.recordDate + ' ' + req.body.recordTime + ':00').format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料寫入成功\n");
+            /*            var trialCount = 0;
+                        var seedCountSum = 0;
+                        req.body.seedCount.forEach(function(seedCountValue, index) {
+                            if (seedCountValue !== '') {
+                                trialCount += seedCountValue;
+                                seedCountSum++;
+                            }
+                        });
+                        if (((seedCountSum / trialCount) * (10 / req.body.thickness)) > 10) {
+                            console.log
+                            console.log("系統偵測到氣泡數超過正常值狀況，即將發送通知...！\n");
+                        }*/
             res.send("<div>" + req.body.prodLineID + "氣泡數資料寫入成功</div><div><a href=\"" + frontendServer + "/seedCount/mobileEntry.html\">返回系統</a></div>");
-            //res.send("<div>" + req.body.prodLineID + "氣泡數資料寫入成功！</div><div><a href=\"http://192.168.0.16:80/seedCount/mobileEntry.html\">返回系統</a></div>");
         });
     });
 });
