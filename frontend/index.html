@@ -36,6 +36,10 @@
                 </thead>
                 <tbody id="situationTableDataSection">
                 </tbody>
+                <tfoot>
+                    <tr id="situationTableFooter">
+                    </tr>
+                </tfoot>
             </table>
         </div>
     </div>
@@ -54,38 +58,50 @@
     });
 
     var constructSituationTable = function(callback) {
-        //construct the table heading
+        // construct the table heading
         $("#situationTableHeading").append('<th class="text-center">班次</th><th class="text-center">時間</th><th class="text-center">產品</th>');
         $.each(prodLineList, function(index, prodLine) {
             $("#situationTableHeading").append('<th class="text-center">' + prodLine.reference + '</th>');
         });
-        //loop through each shift
+        $("#situationTableHeading").append('<th class="text-center">平均</th>');
+        // loop through each shift
         $.each(shiftList, function(index, shift) {
             //loop though each seed count examin check point
             $.each(shift.inspectTimePoint, function(index, timePoint) {
                 var trimmedTimePoint = timePoint.slice(0, 2) + timePoint.slice(3);
                 //create first three fields and add appropriate class attributes for identification
-                $("#situationTableDataSection").append('<tr class="processing"><td class="processing shiftColumn"></td><td class="processing timePointColumn"></td><td class="processing prodReferenceColumn"></td></tr>');
+                $("#situationTableDataSection").append('<tr class="processing"><td class="processing shiftField"></td><td class="processing timePointField"></td><td class="processing prodReferenceField"></td></tr>');
                 $("tr.processing").addClass(shift.reference + ' ' + trimmedTimePoint);
-                $("td.processing.shiftColumn").html(shift.cReference).addClass("text-center " + shift.reference + ' ' + trimmedTimePoint);
-                $("td.processing.timePointColumn").html(trimmedTimePoint).addClass("text-center " + shift.reference + ' ' + trimmedTimePoint);
-                $("td.processing.prodReferenceColumn").addClass("text-center " + shift.reference + ' ' + trimmedTimePoint);
+                $("td.processing.shiftField").html(shift.cReference).addClass("text-center " + shift.reference + ' ' + trimmedTimePoint);
+                $("td.processing.timePointField").html(trimmedTimePoint).addClass("text-center " + shift.reference + ' ' + trimmedTimePoint);
+                $("td.processing.prodReferenceField").addClass("text-center " + shift.reference + ' ' + trimmedTimePoint);
                 //loop though each production line
                 $.each(prodLineList, function(index, prodLine) {
                     //create one field for each production line and add appropriate class attributes for identification
-                    $("tr.processing").append('<td class="seedCountColumn processing empty ' + prodLine.reference + '"></td>');
+                    $("tr.processing").append('<td class="seedCountField processing empty ' + prodLine.reference + '"></td>');
                     $("td." + prodLine.reference + ".processing").addClass("text-center " + facilityList[0].cReference + " " + shift.reference + ' ' + trimmedTimePoint);
                 });
-                $(".processing").removeClass("processing"); //remove all temp processing class attrib
+                // add one cell for summary
+                $("tr.processing").append('<td class="processing hourlyAverageField"></td>')
+                $("td.processing.hourlyAverageField").addClass("text-center " + shift.reference + ' ' + trimmedTimePoint);
+                $(".processing").removeClass("processing"); // remove all temp processing class attrib
             });
         });
+        // construct the footer summary section
+        $("#situationTableFooter").append('<th class="text-center" colspan="3">當日平均</th>');
+        // loop though each production line
+        $.each(prodLineList, function(index, prodLine) {
+            $("#situationTableFooter").append('<th class="text-center prodLineAverageField ' + prodLine.reference + '"></th>');
+        });
+        // create daily overall summary
+        $("#situationTableFooter").append('<th class="text-center dailyAverageField"></th>');
     };
 
     var getSeedCountData = function(date) {
-        $(".workingDate").text(date);
         //ajax POST for seed count data and pass on the data for processing
         $.getJSON(backendHost + "seedCount/api/dailySeedCountResult?date=" + date, function(result) {
-            populateSituationTable(JSON.parse(result));
+            $(".workingDate").text(date); //set the date label on the situation table caption
+            populateSituationTable(JSON.parse(result)); //pass on the data to seed the situationTable
         });
     };
 
@@ -93,14 +109,21 @@
     var populateSituationTable = function(seedCountRecordSet) {
         // loop through each record
         $.each(seedCountRecordSet, function(index, seedCountRecord) {
-            // construct identification info from the index'ed record
-            var seedCountCellSelector = "td.seedCountColumn." +
+            // construct identification info for product cell from the index'ed record
+            var productReferenceCellSelector = "td.prodReferenceField" + "." +
+                moment(seedCountRecord.recordDatetime).add(getHourTimezoneOffset(), 'h').format("HH") +
+                moment(seedCountRecord.recordDatetime).format("mm");
+            // using the ID info to grab the correct <td> to insert data
+            $(productReferenceCellSelector).append('<div>' + seedCountRecord.prodReference + '</div>');
+            // construct identification info for seedCount Cell from the index'ed record
+            var seedCountCellSelector = "td.seedCountField." +
                 seedCountRecord.prodLineID + "." +
                 moment(seedCountRecord.recordDatetime).add(getHourTimezoneOffset(), 'h').format("HH") +
                 moment(seedCountRecord.recordDatetime).format("mm");
             // using the ID info to grab the correct <td> to insert data
             $(seedCountCellSelector).append('<span class="label ' + (seedCountRecord.unitSeedCount > 10 ? "label-danger" : "label-success") + '">' + seedCountRecord.unitSeedCount + "</span>").removeClass("empty").addClass("filled");
         });
+        $("td").css("vertical-align", "middle");
     };
 
     var getHourTimezoneOffset = function() {
