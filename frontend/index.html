@@ -7,9 +7,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
     <title>氣泡數監控程式</title>
     <script src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/1.4.5/numeral.min.js"></script>
-    <!-- <script src="//cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.7/moment-timezone.min.js"></script> -->
-    <!-- <script src="//cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.7/moment-timezone-utils.min.js"></script> -->
-    <!-- <script src="//cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.7/moment-timezone-with-data.min.js"></script> -->
     <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.15.2/moment.min.js"></script>
     <!-- <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.css"> -->
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js" charset="utf-8"></script>
@@ -19,6 +16,7 @@
     <!-- <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootswatch/3.3.7/spacelab/bootstrap.min.css"> -->
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script src="./serverInfo.js"></script>
+    <script src="./model.js"></script>
 </head>
 
 <body>
@@ -33,10 +31,10 @@
                     <h3><span class="workingDate"></span> 氣泡數統計結果</h3>
                 </caption>
                 <thead>
-                    <tr id="tableHeading">
+                    <tr id="situationTableHeading">
                     </tr>
                 </thead>
-                <tbody id="tableData">
+                <tbody id="situationTableDataSection">
                 </tbody>
             </table>
         </div>
@@ -50,62 +48,16 @@
     $(".currentDate").text(currentDate);
     var workingDate = currentDate;
 
-    var shiftList = [{
-        reference: "day",
-        cReference: "早班",
-        start: "07:30",
-        end: "15:30",
-        inspectTimePoint: ['08:00', '10:00', '12:00', '14:00'],
-        length: 480
-    }, {
-        reference: "night",
-        cReference: "中班",
-        start: "15:30",
-        end: "23:30",
-        inspectTimePoint: ['16:00', '18:00', '20:00', '22:00'],
-        length: 480
-    }, {
-        reference: "graveYard",
-        cReference: "夜班",
-        start: "23:30",
-        end: "07:30",
-        inspectTimePoint: ['00:00', '02:00', '04:00', '06:00'],
-        length: 480
-    }];
-
-    var facilityList = [{
-        cReference: '新工總廠'
-    }];
-
-    var prodLineList = [{
-        reference: 'L1-1'
-    }, {
-        reference: 'L1'
-    }, {
-        reference: 'L2'
-    }, {
-        reference: 'L3'
-    }, {
-        reference: 'L5'
-    }, {
-        reference: 'L6'
-    }, {
-        reference: 'L7'
-    }, {
-        reference: 'L8'
-    }];
-
     $("document").ready(function() {
         //initialize current date
-        //constructSituationTable(getSeedCountData('2016-03-03'));
         constructSituationTable(getSeedCountData(workingDate));
     });
 
     var constructSituationTable = function(callback) {
         //construct the table heading
-        $("#tableHeading").append('<th class="text-center">班次</th><th class="text-center">時間</th><th class="text-center">產品</th>');
+        $("#situationTableHeading").append('<th class="text-center">班次</th><th class="text-center">時間</th><th class="text-center">產品</th>');
         $.each(prodLineList, function(index, prodLine) {
-            $("#tableHeading").append('<th class="text-center">' + prodLine.reference + '</th>');
+            $("#situationTableHeading").append('<th class="text-center">' + prodLine.reference + '</th>');
         });
         //loop through each shift
         $.each(shiftList, function(index, shift) {
@@ -113,7 +65,7 @@
             $.each(shift.inspectTimePoint, function(index, timePoint) {
                 var trimmedTimePoint = timePoint.slice(0, 2) + timePoint.slice(3);
                 //create first three fields and add appropriate class attributes for identification
-                $("#tableData").append('<tr class="processing"><td class="processing shiftColumn"></td><td class="processing timePointColumn"></td><td class="processing prodReferenceColumn"></td></tr>');
+                $("#situationTableDataSection").append('<tr class="processing"><td class="processing shiftColumn"></td><td class="processing timePointColumn"></td><td class="processing prodReferenceColumn"></td></tr>');
                 $("tr.processing").addClass(shift.reference + ' ' + trimmedTimePoint);
                 $("td.processing.shiftColumn").html(shift.cReference).addClass("text-center " + shift.reference + ' ' + trimmedTimePoint);
                 $("td.processing.timePointColumn").html(trimmedTimePoint).addClass("text-center " + shift.reference + ' ' + trimmedTimePoint);
@@ -144,16 +96,16 @@
             // construct identification info from the index'ed record
             var seedCountCellSelector = "td.seedCountColumn." +
                 seedCountRecord.prodLineID + "." +
-                moment(seedCountRecord.recordDatetime).add(-8, 'h').format("HH") +
+                moment(seedCountRecord.recordDatetime).add(getHourTimezoneOffset(), 'h').format("HH") +
                 moment(seedCountRecord.recordDatetime).format("mm");
-            console.log(seedCountRecord);
-            console.log(seedCountRecord.recordDatetime);
-            console.log(moment(seedCountRecord.recordDatetime).format("YYYY-MM-DD HH:mm:SS"));
-            console.log(moment(seedCountRecord.recordDatetime).format("HH"));
-            console.log(moment(seedCountRecord.recordDatetime).format("mm"));
-            console.log(seedCountCellSelector);
             // using the ID info to grab the correct <td> to insert data
             $(seedCountCellSelector).append('<span class="label ' + (seedCountRecord.unitSeedCount > 10 ? "label-danger" : "label-success") + '">' + seedCountRecord.unitSeedCount + "</span>").removeClass("empty").addClass("filled");
         });
+    };
+
+    var getHourTimezoneOffset = function() {
+        var dateValue = new Date();
+        var hourTimezoneOffset = dateValue.getTimezoneOffset() / 60;
+        return hourTimezoneOffset;
     };
 </script>
