@@ -7,6 +7,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
     <title>氣泡數監控程式</title>
     <script src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/1.4.5/numeral.min.js"></script>
+    <!-- <script src="//cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.7/moment-timezone.min.js"></script> -->
+    <!-- <script src="//cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.7/moment-timezone-utils.min.js"></script> -->
+    <!-- <script src="//cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.7/moment-timezone-with-data.min.js"></script> -->
     <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.15.2/moment.min.js"></script>
     <!-- <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.css"> -->
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js" charset="utf-8"></script>
@@ -26,7 +29,9 @@
                 <span class="currentDate"></span>
             </div>
             <table id="situationTable" class="table table-bordered table-condensed table-hover table-striped">
-                <caption><span class="currentDate"></span> 氣泡數統計</caption>
+                <caption>
+                    <h3><span class="workingDate"></span> 氣泡數統計結果</h3>
+                </caption>
                 <thead>
                     <tr id="tableHeading">
                     </tr>
@@ -42,6 +47,8 @@
 
 <script>
     var currentDate = moment().format("YYYY-MM-DD");
+    $(".currentDate").text(currentDate);
+    var workingDate = currentDate;
 
     var shiftList = [{
         reference: "day",
@@ -66,9 +73,9 @@
         length: 480
     }];
 
-    var facility = {
-        reference: '新工總廠'
-    };
+    var facilityList = [{
+        cReference: '新工總廠'
+    }];
 
     var prodLineList = [{
         reference: 'L1-1'
@@ -90,8 +97,8 @@
 
     $("document").ready(function() {
         //initialize current date
-        $(".currentDate").text(currentDate);
-        constructSituationTable(getSeedCountData(currentDate));
+        //constructSituationTable(getSeedCountData('2016-03-03'));
+        constructSituationTable(getSeedCountData(workingDate));
     });
 
     var constructSituationTable = function(callback) {
@@ -115,7 +122,7 @@
                 $.each(prodLineList, function(index, prodLine) {
                     //create one field for each production line and add appropriate class attributes for identification
                     $("tr.processing").append('<td class="seedCountColumn processing empty ' + prodLine.reference + '"></td>');
-                    $("td." + prodLine.reference + ".processing").addClass("text-center 新工總廠 " + shift.reference + ' ' + trimmedTimePoint);
+                    $("td." + prodLine.reference + ".processing").addClass("text-center " + facilityList[0].cReference + " " + shift.reference + ' ' + trimmedTimePoint);
                 });
                 $(".processing").removeClass("processing"); //remove all temp processing class attrib
             });
@@ -123,19 +130,30 @@
     };
 
     var getSeedCountData = function(date) {
-        //ajax data and pass on data for processing
+        $(".workingDate").text(date);
+        //ajax POST for seed count data and pass on the data for processing
         $.getJSON(backendHost + "seedCount/api/dailySeedCountResult?date=" + date, function(result) {
             populateSituationTable(JSON.parse(result));
         });
     };
 
+    // populate data into the situation table
     var populateSituationTable = function(seedCountRecordSet) {
+        // loop through each record
         $.each(seedCountRecordSet, function(index, seedCountRecord) {
+            // construct identification info from the index'ed record
             var seedCountCellSelector = "td.seedCountColumn." +
                 seedCountRecord.prodLineID + "." +
-                moment(seedCountRecord.recordDatetime).format("HH") +
+                moment(seedCountRecord.recordDatetime).add(-8, 'h').format("HH") +
                 moment(seedCountRecord.recordDatetime).format("mm");
-            $(seedCountCellSelector).append('<span class="label ' + (seedCountRecord.unitSeedCount > 10 ? "label-primary" : "label-success") + '">' + seedCountRecord.unitSeedCount + "</span>").removeClass("empty").addClass("filled");
+            console.log(seedCountRecord);
+            console.log(seedCountRecord.recordDatetime);
+            console.log(moment(seedCountRecord.recordDatetime).format("YYYY-MM-DD HH:mm:SS"));
+            console.log(moment(seedCountRecord.recordDatetime).format("HH"));
+            console.log(moment(seedCountRecord.recordDatetime).format("mm"));
+            console.log(seedCountCellSelector);
+            // using the ID info to grab the correct <td> to insert data
+            $(seedCountCellSelector).append('<span class="label ' + (seedCountRecord.unitSeedCount > 10 ? "label-danger" : "label-success") + '">' + seedCountRecord.unitSeedCount + "</span>").removeClass("empty").addClass("filled");
         });
     };
 </script>

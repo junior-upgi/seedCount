@@ -18,12 +18,13 @@
     "dependencies": {
         "body-parser": "*",
         "bootstrap": "*",
-        "express": "*",
         "cors": "*",
-        "multer": "*",
+        "express": "*",
         "jquery": "*",
         "moment": "*",
+        "moment-timezone": "*",
         "mssql": "*",
+        "multer": "*",
         "numeral": "*"
     },
     "devDependencies": {
