@@ -3,21 +3,21 @@ var shiftList = [{
     cReference: "早班",
     start: "07:30",
     end: "15:30",
-    inspectTimePoint: ['08:00', '10:00', '12:00', '14:00'],
+    inspectTimePointList: ['08:00', '10:00', '12:00', '14:00'],
     length: 480
 }, {
     reference: "night",
     cReference: "中班",
     start: "15:30",
     end: "23:30",
-    inspectTimePoint: ['16:00', '18:00', '20:00', '22:00'],
+    inspectTimePointList: ['16:00', '18:00', '20:00', '22:00'],
     length: 480
 }, {
     reference: "graveYard",
     cReference: "夜班",
     start: "23:30",
     end: "07:30",
-    inspectTimePoint: ['00:00', '02:00', '04:00', '06:00'],
+    inspectTimePointList: ['00:00', '02:00', '04:00', '06:00'],
     length: 480
 }];
 

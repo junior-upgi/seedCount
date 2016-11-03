@@ -8,8 +8,8 @@
     <title>氣泡數監控程式</title>
     <script src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/1.4.5/numeral.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.15.2/moment.min.js"></script>
-    <!-- <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.css"> -->
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js" charset="utf-8"></script>
+    <!-- <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.css"> -->
     <!-- <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script> -->
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
@@ -26,8 +26,12 @@
                 <h1>統義玻璃股份有限公司 <small>氣泡數監控程式</small></h1>
                 <span class="currentDate"></span>
             </div>
-            <table id="situationTable" class="table table-bordered table-condensed table-hover table-striped">
+            <table id="situationTable" class="table table-bordered table-condensed table-hover">
                 <caption>
+                    <button class="btn btn-default" onclick="previous()">前一日</button>
+                    <button class="btn btn-default" onclick="refresh()">資料重整</button>
+                    <button class="btn btn-default" onclick="next()">下一日</button>
+                    <button class="btn btn-default" onclick="today()">返回今日</button>
                     <h3><span class="workingDate"></span> 氣泡數統計結果</h3>
                 </caption>
                 <thead>
@@ -48,16 +52,24 @@
 </html>
 
 <script>
+    "use strict";
     var currentDate = moment().format("YYYY-MM-DD");
     $(".currentDate").text(currentDate);
     var workingDate = currentDate;
 
     $("document").ready(function() {
-        //initialize current date
-        constructSituationTable(getSeedCountData(workingDate));
+        constructSituationTable(workingDate);
+        formatSituationTable();
     });
 
-    var constructSituationTable = function(callback) {
+    function formatSituationTable() {
+        $("td.day.seedCountField").addClass("success");
+        $("td.night.seedCountField").addClass("warning");
+        $("td.graveYard.seedCountField").addClass("info");
+        $("td,th").css("border", "1px solid black");
+    }
+
+    function constructSituationTable(WorkingDate) {
         // construct the table heading
         $("#situationTableHeading").append('<th class="text-center">班次</th><th class="text-center">時間</th><th class="text-center">產品</th>');
         $.each(prodLineList, function(index, prodLine) {
@@ -67,7 +79,7 @@
         // loop through each shift
         $.each(shiftList, function(index, shift) {
             //loop though each seed count examin check point
-            $.each(shift.inspectTimePoint, function(index, timePoint) {
+            $.each(shift.inspectTimePointList, function(index, timePoint) {
                 var trimmedTimePoint = timePoint.slice(0, 2) + timePoint.slice(3);
                 //create first three fields and add appropriate class attributes for identification
                 $("#situationTableDataSection").append('<tr class="processing"><td class="processing shiftField"></td><td class="processing timePointField"></td><td class="processing prodReferenceField"></td></tr>');
@@ -82,8 +94,8 @@
                     $("td." + prodLine.reference + ".processing").addClass("text-center " + facilityList[0].cReference + " " + shift.reference + ' ' + trimmedTimePoint);
                 });
                 // add one cell for summary
-                $("tr.processing").append('<td class="processing hourlyAverageField"></td>')
-                $("td.processing.hourlyAverageField").addClass("text-center " + shift.reference + ' ' + trimmedTimePoint);
+                $("tr.processing").append('<th class="processing hourlyAverageField"></td>')
+                $("th.processing.hourlyAverageField").addClass("text-center " + shift.reference + ' ' + trimmedTimePoint);
                 $(".processing").removeClass("processing"); // remove all temp processing class attrib
             });
         });
@@ -95,18 +107,19 @@
         });
         // create daily overall summary
         $("#situationTableFooter").append('<th class="text-center dailyAverageField"></th>');
+        getSeedCountData(WorkingDate);
     };
 
-    var getSeedCountData = function(date) {
+    function getSeedCountData(date) {
         //ajax POST for seed count data and pass on the data for processing
         $.getJSON(backendHost + "seedCount/api/dailySeedCountResult?date=" + date, function(result) {
             $(".workingDate").text(date); //set the date label on the situation table caption
-            populateSituationTable(JSON.parse(result)); //pass on the data to seed the situationTable
+            populateSituationTable(JSON.parse(result));
         });
     };
 
     // populate data into the situation table
-    var populateSituationTable = function(seedCountRecordSet) {
+    function populateSituationTable(seedCountRecordSet) {
         // loop through each record
         $.each(seedCountRecordSet, function(index, seedCountRecord) {
             // construct identification info for product cell from the index'ed record
@@ -121,11 +134,98 @@
                 moment(seedCountRecord.recordDatetime).add(getHourTimezoneOffset(), 'h').format("HH") +
                 moment(seedCountRecord.recordDatetime).format("mm");
             // using the ID info to grab the correct <td> to insert data
-            $(seedCountCellSelector).append('<span class="label ' + (seedCountRecord.unitSeedCount > 10 ? "label-danger" : "label-success") + '">' + seedCountRecord.unitSeedCount + "</span>").removeClass("empty").addClass("filled");
+            $(seedCountCellSelector).append(Math.round(seedCountRecord.unitSeedCount * 100) / 100).removeClass("empty").addClass("filled");
         });
-        $("td").css("vertical-align", "middle");
+        $("td,th").css("vertical-align", "middle");
+        situationTableSummaryCalculation();
     };
 
+    // after situation table is populated with data, this function calculate and displays summary information
+    function situationTableSummaryCalculation() {
+        // cycle through each shift (每兩小時當日平均)
+        $.each(shiftList, function(index, shift) {
+            //cycle through each inspectTimePoint
+            $.each(shift.inspectTimePointList, function(index, timePoint) {
+                var validEntryCount = 0,
+                    seedCountSum = 0;
+                var trimmedTimePoint = timePoint.slice(0, 2) + timePoint.slice(3);
+                //cycle through each bi-hourly <tr> and count the valid entries and get the sum of the entries
+                $("td.seedCountField.filled." + trimmedTimePoint).each(function(index, seedCountCell) {
+                    seedCountSum += Number($(this).text());
+                    validEntryCount++;
+                });
+                if (validEntryCount > 0) {
+                    // if there are valid entries, calculate the bi-hourly average
+                    $("th.hourlyAverageField." + trimmedTimePoint).text(Math.round(((Math.round(seedCountSum * 100) / 100) / validEntryCount) * 100) / 100);
+                }
+            });
+        });
+        // cycle through each production line (每線當日平均)
+        $.each(prodLineList, function(index, prodLine) {
+            var validEntryCount = 0,
+                seedCountSum = 0;
+            $("td.seedCountField.filled." + prodLine.reference).each(function(index, seedCountCell) {
+                seedCountSum += Number($(this).text());
+                validEntryCount++;
+            });
+            if (validEntryCount > 0) {
+                //if there are valid entries, calculate the bi-hourly average
+                $("th.prodLineAverageField." + prodLine.reference).text(Math.round(((Math.round(seedCountSum * 100) / 100) / validEntryCount) * 100) / 100);
+            }
+        });
+        // daily overall average
+        var validEntryCount = 0,
+            seedCountSum = 0;
+        $("td.seedCountField.filled").each(function(index, seedCountCell) {
+            seedCountSum += Number($(this).text());
+            validEntryCount++;
+        });
+        if (validEntryCount > 0) {
+            //if there are valid entries, calculate the bi-hourly average
+            $("th.dailyAverageField").text(Math.round(((Math.round(seedCountSum * 100) / 100) / validEntryCount) * 100) / 100);
+        }
+    };
+
+    function previous() {
+        $("span.workingDate").empty();
+        $("tr#situationTableFooter").empty();
+        $("tbody#situationTableDataSection").empty();
+        $("tr#situationTableHeading").empty();
+        workingDate = moment(workingDate).add(-1, 'd').format("YYYY-MM-DD");
+        constructSituationTable(workingDate);
+        formatSituationTable();
+    };
+
+    function refresh() {
+        $("span.workingDate").empty();
+        $("tr#situationTableFooter").empty();
+        $("tbody#situationTableDataSection").empty();
+        $("tr#situationTableHeading").empty();
+        constructSituationTable(workingDate);
+        formatSituationTable();
+    };
+
+    function today() {
+        $("span.workingDate").empty();
+        $("tr#situationTableFooter").empty();
+        $("tbody#situationTableDataSection").empty();
+        $("tr#situationTableHeading").empty();
+        workingDate = moment().format("YYYY-MM-DD");
+        constructSituationTable(workingDate);
+        formatSituationTable();
+    };
+
+    function next() {
+        $("span.workingDate").empty();
+        $("tr#situationTableFooter").empty();
+        $("tbody#situationTableDataSection").empty();
+        $("tr#situationTableHeading").empty();
+        workingDate = moment(workingDate).add(1, 'd').format("YYYY-MM-DD");
+        constructSituationTable(workingDate);
+        formatSituationTable();
+    };
+
+    //utility function to return the Hour offset when using mement.js due to timezone issue
     var getHourTimezoneOffset = function() {
         var dateValue = new Date();
         var hourTimezoneOffset = dateValue.getTimezoneOffset() / 60;
