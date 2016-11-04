@@ -56,7 +56,7 @@ app.post('/seedCount/api/mobileDataEntry', upload.any(), function(req, res) {
             (req.body.note === '' ? "NULL" : "'" + req.body.note + "'") + "," +
             (photoLocation === "NULL" ? "NULL" : "'" + photoLocation + "'") + ",'" +
             moment().format("YYYY-MM-DD HH:mm:ss") + "');";
-        console.log(queryString + '\n');
+        //console.log(queryString + '\n');
         // insert data
         request.query(queryString, function(error, resultSet) {
             if (error) {
@@ -87,7 +87,7 @@ app.get('/seedCount/api/dailySeedCountResult', function(req, res) {
         if (error) throw error;
         var request = new mssql.Request();
         var queryString = "SELECT * FROM productionHistory.dbo.seedCountResult WHERE recordDate='" + req.query.date + "' ORDER BY prodLineID,recordDatetime;";
-        console.log(queryString + '\n');
+        //console.log(queryString + '\n');
         request.query(queryString, function(error, resultSet) {
             if (error) {
                 console.log("氣泡數資料讀取錯誤： " + error + '\n')
@@ -117,7 +117,7 @@ app.get('/seedCount/api/recordCountOnDate', function(req, res) {
                 if (error) throw error;
                 var request = new mssql.Request();
                 var queryString = "SELECT COUNT(*) AS recordCount FROM productionHistory.dbo.seedCount WHERE recordDatetime BETWEEN '" + dateToCheck.format("YYYY-MM-DD") + " 07:30:00.000" + "' AND '" + dateToCheck.add(1, "day").format("YYYY-MM-DD") + " 07:29:59.999" + "';";
-                console.log(queryString);
+                //console.log(queryString);
                 request.query(queryString, function(error, resultSet) {
                     if (error) {
                         console.log("recordCountOnDate API failure： " + error + '\n')
@@ -131,6 +131,25 @@ app.get('/seedCount/api/recordCountOnDate', function(req, res) {
             });
         }
     }
+});
+
+app.get('/seedCount/api/retrieveRecord', function(req, res) {
+    mssql.connect(mssqlConfig, function(error) {
+        if (error) throw error;
+        var request = new mssql.Request();
+        var queryString = "SELECT * FROM productionHistory.dbo.seedCount WHERE recordDatetime='" + req.query.workingDate + " " + req.query.timePoint + ":00" + "' AND prodFacilityID='" + req.query.prodFacilityID + "' AND prodLineID='" + req.query.prodLineID + "';";
+        console.log(queryString + '\n');
+        request.query(queryString, function(error, resultSet) {
+            if (error) {
+                console.log("retrieveRecord API failure： " + error + '\n')
+                res.send('{}');
+                throw error;
+            }
+            console.log("retrieveRecord success...!\n");
+            mssql.close();
+            res.json(JSON.stringify(resultSet));
+        });
+    });
 });
 
 //utility function to return the Hour offset when using mement.js due to timezone issue

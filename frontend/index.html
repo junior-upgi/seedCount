@@ -47,6 +47,35 @@
             </table>
         </div>
     </div>
+    <div id="seedCountFieldEditModal" class="modal fade modal-lg" role="dialog">
+        <div class="modal-dialog model-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">氣泡數資料修改</h4>
+                </div>
+                <div class="modal-body">
+                    <div id="prodFacilityID"></div>
+                    <div id="prodLineID"></div>
+                    <div id="recordDatetime"></div>
+                    <div id="prodReference" contenteditable>產品編號</div>
+                    玻璃厚度 <input id="thickness" type="number" min="0" max="30" step="0.05" placeholder="玻璃厚度" required /><br>
+                    <input id="seedCount_0" type="number" min="0" max="30" step="1" placeholder="取樣1" required /><br>
+                    <input id="seedCount_1" type="number" min="0" max="30" step="1" placeholder="取樣2" /><br>
+                    <input id="seedCount_2" type="number" min="0" max="30" step="1" placeholder="取樣3" /><br>
+                    <input id="seedCount_3" type="number" min="0" max="30" step="1" placeholder="取樣4" /><br>
+                    <input id="seedCount_4" type="number" min="0" max="30" step="1" placeholder="取樣5" /><br>
+                    <input id="seedCount_5" type="number" min="0" max="30" step="1" placeholder="取樣6" /><br>
+                    <textarea id="note" rows="4" placeholder="備註資訊"></textarea><br>
+                    <input id="photo" type="file" accept="image/*" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">確認送出</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消關閉</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
@@ -60,6 +89,41 @@
         constructSituationTable(workingDate);
         formatSituationTable();
         autoRefresh();
+        $("#seedCountFieldEditModal").on("shown.bs.modal", function(e) {
+            var workingDate = $("div.modal-body").data("workingDate");
+            var timePoint = $("div.modal-body").data("timePoint").slice(0, 2) + ":" + $("div.modal-body").data("timePoint").slice(2, 4) + ":00";
+            var prodFacilityID = $("div.modal-body").data("prodFacilityID");
+            var prodLineID = $("div.modal-body").data("prodLineID");
+            var existingRecord;
+            $.getJSON(backendHost + "seedCount/api/retrieveRecord?" +
+                "workingDate=" + workingDate +
+                "&timePoint=" + timePoint +
+                "&prodFacilityID=" + prodFacilityID +
+                "&prodLineID=" + prodLineID,
+                function(result) {
+                    if (JSON.parse(result).length === 0) {
+                        existingRecord = false;
+                        $("h4.modal-title").text("氣泡數資料新增");
+                    } else {
+                        var parsedResult = JSON.parse(result)[0];
+                        console.log(parsedResult.count_0);
+                        existingRecord = true;
+                        $("h4.modal-title").text("氣泡數資料修改");
+                        $("div#prodReference").text(parsedResult.prodReference).prop("contenteditable", false);
+                        $("input#thickness").val(parsedResult.thickness);
+                        $("input#seedCount_0").val(parsedResult.count_0);
+                        $("input#seedCount_1").val(parsedResult.count_1);
+                        $("input#seedCount_2").val(parsedResult.count_2);
+                        $("input#seedCount_3").val(parsedResult.count_3);
+                        $("input#seedCount_4").val(parsedResult.count_4);
+                        $("input#seedCount_5").val(parsedResult.count_5);
+                        $("text#note").val(parsedResult.note);
+                    }
+                    $("div#prodFacilityID").text = parsedResult.prodFacilityID;
+                    $("div#prodLineID").text = parsedResult.prodLineID;
+                    $("div#recordDatetime").text = parsedResult.recordDatetime;
+                });
+        });
     });
 
     function autoRefresh() {
@@ -98,6 +162,19 @@
         $("th#prodReferenceFieldLabel,td.prodReferenceField").css("display", "none");
         $("th#situationTableFooterLabel").attr("colspan", "2");
         $("button.navigation").prop("disabled", false);
+        enableSeedCountFieldEdit();
+    };
+
+    function enableSeedCountFieldEdit() {
+        //add click-n-edit functionality to seedCountField cells
+        $("td.seedCountField").click(function() {
+            $("div.modal-body")
+                .data("workingDate", $(this).data("workingDate"))
+                .data("timePoint", $(this).data("timePoint"))
+                .data("prodFacilityID", $(this).data("prodFacilityID"))
+                .data("prodLineID", $(this).data("prodLineID"));
+            $("#seedCountFieldEditModal").modal();
+        });
     };
 
     function constructSituationTable(WorkingDate) {
@@ -122,7 +199,11 @@
                 $.each(prodLineList, function(index, prodLine) {
                     //create one field for each production line and add appropriate class attributes for identification
                     $("tr.processing").append('<td class="seedCountField processing empty ' + prodLine.reference + '"></td>');
-                    $("td." + prodLine.reference + ".processing").addClass("text-center " + facilityList[0].cReference + " " + shift.reference + ' ' + trimmedTimePoint);
+                    $("td." + prodLine.reference + ".processing").addClass("text-center " + facilityList[0].cReference + " " + shift.reference + ' ' + trimmedTimePoint)
+                        .data("working-date", workingDate)
+                        .data("time-point", trimmedTimePoint)
+                        .data("prod-facility-i-d", facilityList[0].cReference)
+                        .data("prod-line-i-d", prodLine.reference);
                 });
                 // add one cell for summary
                 $("tr.processing").append('<th class="processing hourlyAverageField"></td>')
@@ -138,6 +219,7 @@
         });
         // create daily overall summary
         $("#situationTableFooter").append('<th class="text-center dailyAverageField"></th>');
+        // proceed to getting actual table data
         getSeedCountData(WorkingDate);
     };
 
