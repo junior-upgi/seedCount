@@ -24,14 +24,14 @@
         <div class="row">
             <div class="page-header">
                 <h1>統義玻璃股份有限公司 <small>氣泡數監控程式</small></h1>
-                <span class="currentDate"></span>
+                <span id="datetimeBanner"></span>
             </div>
             <table id="situationTable" class="table table-bordered table-condensed table-hover">
                 <caption>
-                    <button class="btn btn-default" onclick="previous()">前一日</button>
-                    <button class="btn btn-default" onclick="refresh()">資料重整</button>
-                    <button class="btn btn-default" onclick="next()">下一日</button>
-                    <button class="btn btn-default" onclick="today()">返回今日</button>
+                    <button id="previousButton" class="btn btn-default navigation" onclick="previous()">前一日</button>
+                    <button id="refreshButton" class="btn btn-default navigation" onclick="refresh()">資料重整</button>
+                    <button id="nextButton" class="btn btn-default navigation" onclick="next()">下一日</button>
+                    <button id="todayButton" class="btn btn-default navigation" onclick="today()">返回今日</button>
                     <h3><span class="workingDate"></span> 氣泡數統計資料</h3>
                 </caption>
                 <thead>
@@ -54,24 +54,55 @@
 <script>
     "use strict";
     var currentDate = moment().format("YYYY-MM-DD");
-    $(".currentDate").text(currentDate);
     var workingDate = currentDate;
 
     $("document").ready(function() {
         constructSituationTable(workingDate);
         formatSituationTable();
+        autoRefresh();
     });
+
+    function autoRefresh() {
+        var now = new Date();
+        var updateDatetimeBanner = function(clockBannerUpdateInterval) {
+            setInterval(function() {
+                now = new Date();
+                if (now.getSeconds() % 60 == 0) {
+                    $("button.navigation").prop("disabled", true);
+                    refresh();
+                }
+                $("#datetimeBanner").text(
+                    now.getFullYear() + '-' +
+                    padValue(now.getMonth()) + '-' +
+                    padValue(now.getDay()) + ' ' +
+                    padValue(now.getHours()) + ':' +
+                    padValue(now.getMinutes()) + ':' +
+                    padValue(now.getSeconds())
+                );
+            }, clockBannerUpdateInterval * 1000);
+        }(1);
+
+        function padValue(valueToBePadded) {
+            var str = "" + valueToBePadded;
+            var pad = "00";
+            var paddedValue = pad.substring(0, pad.length - str.length) + str;
+            return paddedValue;
+        }
+    };
 
     function formatSituationTable() {
         $("td.day.seedCountField").addClass("success");
         $("td.night.seedCountField").addClass("warning");
         $("td.graveYard.seedCountField").addClass("info");
         $("td,th").css("border", "1px solid black");
-    }
+        $("th#prodReferenceFieldLabel,td.prodReferenceField").css("display", "none");
+        $("th#situationTableFooterLabel").attr("colspan", "2");
+        $("button.navigation").prop("disabled", false);
+    };
 
     function constructSituationTable(WorkingDate) {
         // construct the table heading
-        $("#situationTableHeading").append('<th class="text-center">班次</th><th class="text-center">時間</th><th class="text-center">產品</th>');
+        $("#situationTableHeading").append('<th class="text-center">班次</th><th class="text-center">時間</th><th id="prodReferenceFieldLabel" class="text-center">產品</th>');
         $.each(prodLineList, function(index, prodLine) {
             $("#situationTableHeading").append('<th class="text-center">' + prodLine.reference + '</th>');
         });
@@ -100,7 +131,7 @@
             });
         });
         // construct the footer summary section
-        $("#situationTableFooter").append('<th class="text-center" colspan="3">當日平均</th>');
+        $("#situationTableFooter").append('<th id="situationTableFooterLabel" class="text-center" colspan="3">當日平均</th>');
         // loop though each production line
         $.each(prodLineList, function(index, prodLine) {
             $("#situationTableFooter").append('<th class="text-center prodLineAverageField ' + prodLine.reference + '"></th>');
@@ -193,6 +224,7 @@
     };
 
     function previous() {
+        $("button.navigation").prop("disabled", true);
         $("span.workingDate").empty();
         $("tr#situationTableFooter").empty();
         $("tbody#situationTableDataSection").empty();
@@ -203,6 +235,7 @@
     };
 
     function refresh() {
+        $("button.navigation").prop("disabled", true);
         $("span.workingDate").empty();
         $("tr#situationTableFooter").empty();
         $("tbody#situationTableDataSection").empty();
@@ -212,6 +245,7 @@
     };
 
     function today() {
+        $("button.navigation").prop("disabled", true);
         $("span.workingDate").empty();
         $("tr#situationTableFooter").empty();
         $("tbody#situationTableDataSection").empty();
@@ -222,6 +256,7 @@
     };
 
     function next() {
+        $("button.navigation").prop("disabled", true);
         $("span.workingDate").empty();
         $("tr#situationTableFooter").empty();
         $("tbody#situationTableDataSection").empty();
