@@ -1,3 +1,17 @@
+var seedCountLevelCap = [{
+    situation: "良好",
+    ceiling: 4
+}, {
+    situation: "正常",
+    ceiling: 8
+}, {
+    situation: "偏高",
+    ceiling: 10
+}, {
+    situation: "嚴重",
+    ceiling: 9999
+}];
+
 var shiftList = [{
     reference: "day",
     cReference: "早班",

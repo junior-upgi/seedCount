@@ -82,12 +82,19 @@
 
 <script>
     "use strict";
-    var currentDate = moment().format("YYYY-MM-DD");
-    var workingDate = currentDate;
+    var currentDate = new Date();
+    var workingDate = moment().format("YYYY-MM-DD");;
 
     $("document").ready(function() {
+        $("#datetimeBanner").text(
+            currentDate.getFullYear() + '-' +
+            padValue(currentDate.getMonth() + 1) + '-' +
+            padValue(currentDate.getDay()) + ' ' +
+            padValue(currentDate.getHours()) + ':' +
+            padValue(currentDate.getMinutes()) + ':' +
+            padValue(currentDate.getSeconds())
+        );
         constructSituationTable(workingDate);
-        formatSituationTable();
         autoRefresh();
         $("#seedCountFieldEditModal").on("shown.bs.modal", function(e) {
             var workingDate = $("div.modal-body").data("workingDate");
@@ -126,57 +133,6 @@
         });
     });
 
-    function autoRefresh() {
-        var now = new Date();
-        var updateDatetimeBanner = function(clockBannerUpdateInterval) {
-            setInterval(function() {
-                now = new Date();
-                if (now.getSeconds() % 60 == 0) {
-                    $("button.navigation").prop("disabled", true);
-                    refresh();
-                }
-                $("#datetimeBanner").text(
-                    now.getFullYear() + '-' +
-                    padValue(now.getMonth()) + '-' +
-                    padValue(now.getDay()) + ' ' +
-                    padValue(now.getHours()) + ':' +
-                    padValue(now.getMinutes()) + ':' +
-                    padValue(now.getSeconds())
-                );
-            }, clockBannerUpdateInterval * 1000);
-        }(1);
-
-        function padValue(valueToBePadded) {
-            var str = "" + valueToBePadded;
-            var pad = "00";
-            var paddedValue = pad.substring(0, pad.length - str.length) + str;
-            return paddedValue;
-        }
-    };
-
-    function formatSituationTable() {
-        $("td.day.seedCountField").addClass("success");
-        $("td.night.seedCountField").addClass("warning");
-        $("td.graveYard.seedCountField").addClass("info");
-        $("td,th").css("border", "1px solid black");
-        $("th#prodReferenceFieldLabel,td.prodReferenceField").css("display", "none");
-        $("th#situationTableFooterLabel").attr("colspan", "2");
-        $("button.navigation").prop("disabled", false);
-        enableSeedCountFieldEdit();
-    };
-
-    function enableSeedCountFieldEdit() {
-        //add click-n-edit functionality to seedCountField cells
-        $("td.seedCountField").click(function() {
-            $("div.modal-body")
-                .data("workingDate", $(this).data("workingDate"))
-                .data("timePoint", $(this).data("timePoint"))
-                .data("prodFacilityID", $(this).data("prodFacilityID"))
-                .data("prodLineID", $(this).data("prodLineID"));
-            $("#seedCountFieldEditModal").modal();
-        });
-    };
-
     function constructSituationTable(WorkingDate) {
         // construct the table heading
         $("#situationTableHeading").append('<th class="text-center">班次</th><th class="text-center">時間</th><th id="prodReferenceFieldLabel" class="text-center">產品</th>');
@@ -200,10 +156,10 @@
                     //create one field for each production line and add appropriate class attributes for identification
                     $("tr.processing").append('<td class="seedCountField processing empty ' + prodLine.reference + '"></td>');
                     $("td." + prodLine.reference + ".processing").addClass("text-center " + facilityList[0].cReference + " " + shift.reference + ' ' + trimmedTimePoint)
-                        .data("working-date", workingDate)
-                        .data("time-point", trimmedTimePoint)
-                        .data("prod-facility-i-d", facilityList[0].cReference)
-                        .data("prod-line-i-d", prodLine.reference);
+                        .data("workingDate", workingDate)
+                        .data("timePoint", trimmedTimePoint)
+                        .data("prodFacilityID", facilityList[0].cReference)
+                        .data("prodLineID", prodLine.reference);
                 });
                 // add one cell for summary
                 $("tr.processing").append('<th class="processing hourlyAverageField"></td>')
@@ -227,6 +183,8 @@
         $.getJSON(backendHost + "seedCount/api/recordCountOnDate?date=" + date, function(result) {
             if (JSON.parse(result)[0].recordCount < 1) {
                 $(".workingDate").text(date + " 尚無"); //set the date label on the situation table caption
+                //skip the table data population step and go straight to table formatting
+                formatSituationTable();
             } else {
                 $(".workingDate").text(date); //set the date label on the situation table caption
                 //ajax POST for seed count data and pass on the data for processing
@@ -255,7 +213,7 @@
             // using the ID info to grab the correct <td> to insert data
             $(seedCountCellSelector).append(Math.round(seedCountRecord.unitSeedCount * 100) / 100).removeClass("empty").addClass("filled");
         });
-        $("td,th").css("vertical-align", "middle");
+        //$("td,th").css("vertical-align", "middle");
         situationTableSummaryCalculation();
     };
 
@@ -303,6 +261,68 @@
             //if there are valid entries, calculate the bi-hourly average
             $("th.dailyAverageField").text(Math.round(((Math.round(seedCountSum * 100) / 100) / validEntryCount) * 100) / 100);
         }
+        formatSituationTable();
+    };
+
+    function formatSituationTable() {
+        $("td,th").css("vertical-align", "middle");
+        $("td.day.seedCountField").addClass("success");
+        $("td.night.seedCountField").addClass("warning");
+        $("td.graveYard.seedCountField").addClass("info");
+        $("td,th").css("border", "1px solid black");
+        $("th#prodReferenceFieldLabel,td.prodReferenceField").css("display", "none");
+        $("th#situationTableFooterLabel").attr("colspan", "2");
+        $("button.navigation").prop("disabled", false);
+        $("td.filled,th.hourlyAverageField,th.prodLineAverageField,th.dailyAverageField").each(function(index, filledSeedCountField) {
+            switch (true) {
+                case ($(this).text() < seedCountLevelCap[0].ceiling):
+                    $(this).css("color", "green");
+                    break;
+                case ($(this).text() < seedCountLevelCap[1].ceiling):
+                    $(this).css("color", "black");
+                    break;
+                case ($(this).text() < seedCountLevelCap[2].ceiling):
+                    $(this).css("font-weight", "bold").css("color", "blue");
+                    break;
+                default:
+                    $(this).css("font-weight", "bold").css("color", "red");
+                    break;
+            }
+        });
+        enableSeedCountFieldEdit();
+    };
+
+    function autoRefresh() {
+        var now = new Date();
+        var updateDatetimeBanner = function(clockBannerUpdateInterval) {
+            setInterval(function() {
+                now = new Date();
+                if (now.getSeconds() % 60 == 0) {
+                    $("button.navigation").prop("disabled", true);
+                    refresh();
+                }
+                $("#datetimeBanner").text(
+                    now.getFullYear() + '-' +
+                    padValue(now.getMonth() + 1) + '-' +
+                    padValue(now.getDay()) + ' ' +
+                    padValue(now.getHours()) + ':' +
+                    padValue(now.getMinutes()) + ':' +
+                    padValue(now.getSeconds())
+                );
+            }, clockBannerUpdateInterval * 1000);
+        }(1);
+    };
+
+    function enableSeedCountFieldEdit() {
+        //add click-n-edit functionality to seedCountField cells
+        $("td.seedCountField").click(function() {
+            $("div.modal-body")
+                .data("workingDate", $(this).data("workingDate"))
+                .data("timePoint", $(this).data("timePoint"))
+                .data("prodFacilityID", $(this).data("prodFacilityID"))
+                .data("prodLineID", $(this).data("prodLineID"));
+            $("#seedCountFieldEditModal").modal();
+        });
     };
 
     function previous() {
@@ -313,7 +333,6 @@
         $("tr#situationTableHeading").empty();
         workingDate = moment(workingDate).add(-1, 'd').format("YYYY-MM-DD");
         constructSituationTable(workingDate);
-        formatSituationTable();
     };
 
     function refresh() {
@@ -323,7 +342,6 @@
         $("tbody#situationTableDataSection").empty();
         $("tr#situationTableHeading").empty();
         constructSituationTable(workingDate);
-        formatSituationTable();
     };
 
     function today() {
@@ -334,7 +352,6 @@
         $("tr#situationTableHeading").empty();
         workingDate = moment().format("YYYY-MM-DD");
         constructSituationTable(workingDate);
-        formatSituationTable();
     };
 
     function next() {
@@ -345,7 +362,6 @@
         $("tr#situationTableHeading").empty();
         workingDate = moment(workingDate).add(1, 'd').format("YYYY-MM-DD");
         constructSituationTable(workingDate);
-        formatSituationTable();
     };
 
     //utility function to return the Hour offset when using mement.js due to timezone issue
@@ -354,4 +370,12 @@
         var hourTimezoneOffset = dateValue.getTimezoneOffset() / 60;
         return hourTimezoneOffset;
     };
+
+    //utility function to pad time values(hour,minute,second) with preceeding zeros
+    function padValue(valueToBePadded) {
+        var str = "" + valueToBePadded;
+        var pad = "00";
+        var paddedValue = pad.substring(0, pad.length - str.length) + str;
+        return paddedValue;
+    }
 </script>
