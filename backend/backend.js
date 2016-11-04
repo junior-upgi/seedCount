@@ -20,6 +20,7 @@ var mssqlConfig = {
 
 app.use(cors());
 
+
 app.post('/seedCount/api/mobileDataEntry', upload.any(), function(req, res) {
     //deal with NULL array in the case that photo isn't uploaded
     var photoLocation;
@@ -98,6 +99,46 @@ app.get('/seedCount/api/dailySeedCountResult', function(req, res) {
         });
     });
 });
+
+app.get('/seedCount/api/recordCountOnDate', function(req, res) {
+    var dateToCheck = '';
+    if (req.query.date === undefined) {
+        console.log('parameter not received, empty results returned to the client...\n');
+        res.send('{}');
+    } else {
+        console.log('parameter received...\n');
+        dateToCheck = moment(req.query.date, "YYYY-MM-DD");
+        if ((!dateToCheck.isValid()) || (req.query.date.length !== 10)) {
+            console.log('parameter not valid...\n');
+            res.send('{}');
+        } else {
+            console.log('parameter is valid...\n');
+            mssql.connect(mssqlConfig, function(error) {
+                if (error) throw error;
+                var request = new mssql.Request();
+                var queryString = "SELECT COUNT(*) AS recordCount FROM productionHistory.dbo.seedCount WHERE recordDatetime BETWEEN '" + dateToCheck.format("YYYY-MM-DD") + " 07:30:00.000" + "' AND '" + dateToCheck.add(1, "day").format("YYYY-MM-DD") + " 07:29:59.999" + "';";
+                console.log(queryString);
+                request.query(queryString, function(error, resultSet) {
+                    if (error) {
+                        console.log("recordCountOnDate API failure： " + error + '\n')
+                        res.send('{}');
+                        throw error;
+                    }
+                    console.log("recordCountOnDate success...!\n");
+                    mssql.close();
+                    res.json(JSON.stringify(resultSet));
+                });
+            });
+        }
+    }
+});
+
+//utility function to return the Hour offset when using mement.js due to timezone issue
+var getHourTimezoneOffset = function() {
+    var dateValue = new Date();
+    var hourTimezoneOffset = dateValue.getTimezoneOffset() / 60;
+    return hourTimezoneOffset;
+};
 
 app.listen(4949);
 console.log('seedCount backend server is running on port 4949...\n');

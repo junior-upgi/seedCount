@@ -32,7 +32,7 @@
                     <button class="btn btn-default" onclick="refresh()">資料重整</button>
                     <button class="btn btn-default" onclick="next()">下一日</button>
                     <button class="btn btn-default" onclick="today()">返回今日</button>
-                    <h3><span class="workingDate"></span> 氣泡數統計結果</h3>
+                    <h3><span class="workingDate"></span> 氣泡數統計資料</h3>
                 </caption>
                 <thead>
                     <tr id="situationTableHeading">
@@ -111,10 +111,16 @@
     };
 
     function getSeedCountData(date) {
-        //ajax POST for seed count data and pass on the data for processing
-        $.getJSON(backendHost + "seedCount/api/dailySeedCountResult?date=" + date, function(result) {
-            $(".workingDate").text(date); //set the date label on the situation table caption
-            populateSituationTable(JSON.parse(result));
+        $.getJSON(backendHost + "seedCount/api/recordCountOnDate?date=" + date, function(result) {
+            if (JSON.parse(result)[0].recordCount < 1) {
+                $(".workingDate").text(date + " 尚無"); //set the date label on the situation table caption
+            } else {
+                $(".workingDate").text(date); //set the date label on the situation table caption
+                //ajax POST for seed count data and pass on the data for processing
+                $.getJSON(backendHost + "seedCount/api/dailySeedCountResult?date=" + date, function(result) {
+                    populateSituationTable(JSON.parse(result));
+                });
+            }
         });
     };
 
