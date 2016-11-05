@@ -6,9 +6,10 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
     <title>氣泡數監控程式</title>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/1.4.5/numeral.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.15.2/moment.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js" charset="utf-8"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.15.2/moment.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.15.2/locale/zh-tw.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.9/moment-timezone-with-data.min.js"></script>
     <!-- <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.css"> -->
     <!-- <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script> -->
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
@@ -24,7 +25,7 @@
         <div class="row">
             <div class="page-header">
                 <h1>統義玻璃股份有限公司&nbsp;<small>氣泡數監控程式</small></h1>
-                <span id="datetimeBanner"></span>
+                <h5 id="clockBanner"></h5>
             </div>
             <table id="situationTable" class="table table-bordered table-condensed table-hover">
                 <caption>
@@ -35,7 +36,7 @@
                     <button id="todayButton" class="btn btn-default btn-lg navigation" onclick="today()" disabled>返回今日</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                     <input id="designatedDate" type="date" class="input-lg">
                     <button id="switchDateButton" class="btn btn-default btn-lg navigation" onclick="switchToDate()" disabled>指定日期檢視</button>
-                    <h3><span class="workingDate"></span>&nbsp;氣泡數統計資料</h3>
+                    <h3><span id="workingDateBanner"></span>&nbsp;氣泡數統計資料</h3>
                 </caption>
                 <thead>
                     <tr id="situationTableHeading">
@@ -56,27 +57,20 @@
 
 <script>
     "use strict";
-    var currentDatetime = new Date();
-    var workingDate = moment().format("YYYY-MM-DD");
+    var workingDatetime = moment();
+    var workingDate = getWorkDateString(workingDatetime);
     var editMode = false;
-    var buttonAccessible = false;
-    var buttonInaccessibleCounter = 10;
+    var buttonInaccessibleCounter = 5;
+    var buttonInaccessibleCounterUpperLimit = 5;
 
     $("document").ready(function() {
         $("#designatedDate").val(workingDate);
-        $("#datetimeBanner").text(
-            currentDatetime.getFullYear() + '-' +
-            padValue(currentDatetime.getMonth() + 1) + '-' +
-            padValue(currentDatetime.getDay()) + ' ' +
-            padValue(currentDatetime.getHours()) + ':' +
-            padValue(currentDatetime.getMinutes()) + ':' +
-            padValue(currentDatetime.getSeconds())
-        );
-        constructSituationTable(workingDate);
+        $("#clockBanner").text(workingDatetime.format("YYYY-MM-DD HH:mm:SS"));
+        constructSituationTable(workingDatetime);
         autoRefresh();
     });
 
-    function constructSituationTable(WorkingDate) {
+    function constructSituationTable(datetimeObject) {
         // construct the table heading
         $("#situationTableHeading").append('<th class="text-center">班次</th><th class="text-center">時間</th><th id="prodReferenceFieldLabel" class="text-center">產品</th>');
         $.each(prodLineList, function(index, prodLine) {
@@ -99,7 +93,7 @@
                     //create one field for each production line and add appropriate class attributes for identification
                     $("tr.processing").append('<td class="seedCountField processing empty ' + prodLine.reference + '"></td>');
                     $("td." + prodLine.reference + ".processing").addClass("text-center " + facilityList[0].cReference + " " + shift.reference + ' ' + trimmedTimePoint)
-                        .data("workingDate", workingDate)
+                        .data("workingDate", datetimeObject)
                         .data("timePoint", trimmedTimePoint)
                         .data("prodFacilityID", facilityList[0].cReference)
                         .data("prodLineID", prodLine.reference);
@@ -119,19 +113,19 @@
         // create daily overall summary
         $("#situationTableFooter").append('<th class="text-center dailyAverageField"></th>');
         // proceed to getting actual table data
-        getSeedCountData(WorkingDate);
+        getSeedCountData(datetimeObject);
     };
 
-    function getSeedCountData(date) {
-        $.getJSON(backendHost + "seedCount/api/recordCountOnDate?date=" + date, function(result) {
+    function getSeedCountData(workingDatetime) {
+        $.getJSON(backendHost + "seedCount/api/recordCountOnDate?date=" + getWorkDateString(workingDatetime), function(result) {
             if (JSON.parse(result)[0].recordCount < 1) {
-                $(".workingDate").text(date + " 尚無"); //set the date label on the situation table caption
+                $(".workingDateBanner").text(getWorkDateString(workingDatetime) + " 尚無"); //set the date label on the situation table caption
                 //skip the table data population step and go straight to table formatting
                 formatSituationTable();
             } else {
-                $(".workingDate").text(date); //set the date label on the situation table caption
+                $(".workingDateBanner").text(getWorkDateString(workingDatetime)); //set the date label on the situation table caption
                 //ajax POST for seed count data and pass on the data for processing
-                $.getJSON(backendHost + "seedCount/api/dailySeedCountResult?date=" + date, function(result) {
+                $.getJSON(backendHost + "seedCount/api/dailySeedCountResult?date=" + getWorkDateString(workingDatetime), function(result) {
                     populateSituationTable(JSON.parse(result));
                 });
             }
@@ -142,6 +136,11 @@
     function populateSituationTable(seedCountRecordSet) {
         // loop through each record
         $.each(seedCountRecordSet, function(index, seedCountRecord) {
+            var recordDatetime = new Date(seedCountRecord.recordDatetime);
+            var timePoint = padValue(recordDatetime.getUTCHours()) + padValue(recordDatetime.getUTCMinutes())
+            console.log(seedCountRecord.recordDatetime);
+            console.log(recordDatetime);
+            console.log(timePoint);
             // construct identification info for product cell from the index'ed record
             var productReferenceCellSelector = "td.prodReferenceField" + "." +
                 moment(seedCountRecord.recordDatetime).add(getHourTimezoneOffset(), 'h').format("HH") +
@@ -255,12 +254,12 @@
                 count_5: "NULL",
                 note: "NULL",
                 photoLocation: "NULL",
-                created: currentDatetime.getFullYear() + '-' +
-                    padValue(currentDatetime.getMonth() + 1) + '-' +
-                    padValue(currentDatetime.getDay()) + 'T' +
-                    padValue(currentDatetime.getHours()) + ':' +
-                    padValue(currentDatetime.getMinutes()) + ':' +
-                    padValue(currentDatetime.getSeconds()) + '.000Z'
+                created: currentDatetime.getUTCFullYear() + '-' +
+                    padValue(currentDatetime.getUTCMonth() + 1) + '-' +
+                    padValue(currentDatetime.getUTCDate()) + 'T' +
+                    padValue(currentDatetime.getUTCHours()) + ':' +
+                    padValue(currentDatetime.getUTCMinutes()) + ':' +
+                    padValue(currentDatetime.getUTCSeconds()) + '.000Z'
             };
             if ($("td.editing").hasClass("filled")) {
                 $.getJSON(backendHost + "seedCount/api/retrieveRecord?" +
@@ -294,28 +293,28 @@
             now = new Date();
             //every second decrease the buttonInaccessibleCount by 1
             decreaseInaccessibleCounter(1);
-            //at 55 second mark of each minute increase the buttonInaccessibleCount by 10 to upper limit of 10
-            if (now.getSeconds() === 55) {
-                increaseInaccessibleCounter(10, 10);
-            }
             //enable/disable buttons depending on the value of buttonInaccessibleCounter variable
             if (buttonInaccessibleCounter > 0) {
                 $("button").prop("disabled", true);
             } else {
                 $("button").prop("disabled", false);
             }
-            //set data table to refresh every 60 seconds
-            if (now.getSeconds() % 60 == 0) {
+            //at 58 second mark before each scheduled situation table update, increase the buttonInaccessibleCount by 5
+            if ((now.getUTCMinutes() % 10 == 0) && (now.getUTCSeconds() === 58)) {
+                increaseInaccessibleCounter(5);
+            }
+            //set situation table to refresh every 10 minutes
+            if ((now.getUTCMinutes() % 10 == 0) && (now.getUTCSeconds() % 60 == 0)) {
                 refresh();
             }
             //update the clock banner
             $("#datetimeBanner").text(
-                now.getFullYear() + '-' +
-                padValue(now.getMonth() + 1) + '-' +
-                padValue(now.getDay()) + ' ' +
-                padValue(now.getHours()) + ':' +
-                padValue(now.getMinutes()) + ':' +
-                padValue(now.getSeconds())
+                now.getUTCFullYear() + '-' +
+                padValue(now.getUTCMonth() + 1) + '-' +
+                padValue(now.getUTCDate()) + ' ' +
+                padValue(now.getUTCHours()) + ':' +
+                padValue(now.getUTCMinutes()) + ':' +
+                padValue(now.getUTCSeconds())
             );
         }, 1000);
     };
@@ -338,7 +337,7 @@
         $("tr#situationTableFooter").empty();
         $("tbody#situationTableDataSection").empty();
         $("tr#situationTableHeading").empty();
-        workingDate = moment(workingDate).add(-1, 'd').format("YYYY-MM-DD");
+        workingDate = currentDatetime.getUTCFullYear() + '-' + padValue(currentDatetime.getUTCMonth()) + '-' + padValue(currentDatetime.getUTCDate());
         constructSituationTable(workingDate);
     };
 
@@ -357,7 +356,7 @@
         $("tr#situationTableFooter").empty();
         $("tbody#situationTableDataSection").empty();
         $("tr#situationTableHeading").empty();
-        workingDate = moment().format("YYYY-MM-DD");
+        workingDate = currentDatetime.getUTCFullYear() + '-' + padValue(currentDatetime.getUTCMonth() + 1) + '-' + padValue(currentDatetime.getUTCDate());
         constructSituationTable(workingDate);
     };
 
@@ -367,7 +366,7 @@
         $("tr#situationTableFooter").empty();
         $("tbody#situationTableDataSection").empty();
         $("tr#situationTableHeading").empty();
-        workingDate = moment(workingDate).add(1, 'd').format("YYYY-MM-DD");
+        workingDate = currentDatetime.getUTCFullYear() + '-' + padValue(currentDatetime.getUTCMonth() + 2) + '-' + padValue(currentDatetime.getUTCDate());
         constructSituationTable(workingDate);
     };
 
@@ -389,26 +388,20 @@
         }
     }
 
-    function increaseInaccessibleCounter(numberOfSecond, upperLimit) {
-        if ((buttonInaccessibleCounter + numberOfSecond) <= upperLimit) {
+    function increaseInaccessibleCounter(numberOfSecond) {
+        if ((buttonInaccessibleCounter + numberOfSecond) <= buttonInaccessibleCounterUpperLimit) {
             buttonInaccessibleCounter += numberOfSecond;
         } else {
-            buttonInaccessibleCounter = upperLimit;
+            buttonInaccessibleCounter = buttonInaccessibleCounterUpperLimit;
         }
     }
 
-    //utility function to return the Hour offset when using mement.js due to timezone issue
-    function getHourTimezoneOffset() {
-        var dateValue = new Date();
-        var hourTimezoneOffset = dateValue.getTimezoneOffset() / 60;
-        return hourTimezoneOffset;
+    function getWorkDateString(datetimeObject) {
+        var beginningOfWorkDay = moment(datetimeObject.format("YYYY-MM-DD") + ' 07:30:00');
+        if (datetimeObject >= beginningOfWorkDay) {
+            return (datetimeObject.format("YYYY-MM-DD"));
+        } else {
+            return (beginningOfWorkDay.add(-1, "day").format("YYYY-MM-DD"));
+        }
     };
-
-    //utility function to pad time values(hour,minute,second) with preceeding zeros
-    function padValue(valueToBePadded) {
-        var str = "" + valueToBePadded;
-        var pad = "00";
-        var paddedValue = pad.substring(0, pad.length - str.length) + str;
-        return paddedValue;
-    }
 </script>
