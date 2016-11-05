@@ -137,7 +137,7 @@ app.get('/seedCount/api/retrieveRecord', function(req, res) {
     mssql.connect(mssqlConfig, function(error) {
         if (error) throw error;
         var request = new mssql.Request();
-        var queryString = "SELECT * FROM productionHistory.dbo.seedCount WHERE recordDatetime='" + req.query.workingDate + " " + req.query.timePoint + ":00" + "' AND prodFacilityID='" + req.query.prodFacilityID + "' AND prodLineID='" + req.query.prodLineID + "';";
+        var queryString = "SELECT * FROM productionHistory.dbo.seedCount WHERE recordDatetime='" + req.query.recordDatetime + "' AND prodFacilityID='" + req.query.prodFacilityID + "' AND prodLineID='" + req.query.prodLineID + "';";
         console.log(queryString + '\n');
         request.query(queryString, function(error, resultSet) {
             if (error) {

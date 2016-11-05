@@ -28,10 +28,11 @@
             </div>
             <table id="situationTable" class="table table-bordered table-condensed table-hover">
                 <caption>
-                    <button id="previousButton" class="btn btn-default navigation" onclick="previous()">前一日</button>
-                    <button id="refreshButton" class="btn btn-default navigation" onclick="refresh()">資料重整</button>
-                    <button id="nextButton" class="btn btn-default navigation" onclick="next()">下一日</button>
-                    <button id="todayButton" class="btn btn-default navigation" onclick="today()">返回今日</button>
+                    <button id="previousButton" class="btn btn-default navigation" onclick="previous()" disabled>前一日</button>
+                    <button id="refreshButton" class="btn btn-default navigation" onclick="refresh()" disabled>資料重整</button>
+                    <button id="nextButton" class="btn btn-default navigation" onclick="next()" disabled>下一日</button>
+                    <button id="todayButton" class="btn btn-default navigation" onclick="today()" disabled>返回今日</button>
+                    <button id="editModeToggleButton" class="btn btn-default" onclick="toggleEditMode()" disabled>修改模式</button>
                     <h3><span class="workingDate"></span> 氣泡數統計資料</h3>
                 </caption>
                 <thead>
@@ -47,90 +48,27 @@
             </table>
         </div>
     </div>
-    <div id="seedCountFieldEditModal" class="modal fade modal-lg" role="dialog">
-        <div class="modal-dialog model-sm">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    <h4 class="modal-title">氣泡數資料修改</h4>
-                </div>
-                <div class="modal-body">
-                    <div id="prodFacilityID"></div>
-                    <div id="prodLineID"></div>
-                    <div id="recordDatetime"></div>
-                    <div id="prodReference" contenteditable>產品編號</div>
-                    玻璃厚度 <input id="thickness" type="number" min="0" max="30" step="0.05" placeholder="玻璃厚度" required /><br>
-                    <input id="seedCount_0" type="number" min="0" max="30" step="1" placeholder="取樣1" required /><br>
-                    <input id="seedCount_1" type="number" min="0" max="30" step="1" placeholder="取樣2" /><br>
-                    <input id="seedCount_2" type="number" min="0" max="30" step="1" placeholder="取樣3" /><br>
-                    <input id="seedCount_3" type="number" min="0" max="30" step="1" placeholder="取樣4" /><br>
-                    <input id="seedCount_4" type="number" min="0" max="30" step="1" placeholder="取樣5" /><br>
-                    <input id="seedCount_5" type="number" min="0" max="30" step="1" placeholder="取樣6" /><br>
-                    <textarea id="note" rows="4" placeholder="備註資訊"></textarea><br>
-                    <input id="photo" type="file" accept="image/*" />
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">確認送出</button>
-                    <button type="button" class="btn btn-default" data-dismiss="modal">取消關閉</button>
-                </div>
-            </div>
-        </div>
-    </div>
 </body>
 
 </html>
 
 <script>
     "use strict";
-    var currentDate = new Date();
-    var workingDate = moment().format("YYYY-MM-DD");;
+    var currentDatetime = new Date();
+    var workingDate = moment().format("YYYY-MM-DD");
+    var editMode = false;
 
     $("document").ready(function() {
         $("#datetimeBanner").text(
-            currentDate.getFullYear() + '-' +
-            padValue(currentDate.getMonth() + 1) + '-' +
-            padValue(currentDate.getDay()) + ' ' +
-            padValue(currentDate.getHours()) + ':' +
-            padValue(currentDate.getMinutes()) + ':' +
-            padValue(currentDate.getSeconds())
+            currentDatetime.getFullYear() + '-' +
+            padValue(currentDatetime.getMonth() + 1) + '-' +
+            padValue(currentDatetime.getDay()) + ' ' +
+            padValue(currentDatetime.getHours()) + ':' +
+            padValue(currentDatetime.getMinutes()) + ':' +
+            padValue(currentDatetime.getSeconds())
         );
         constructSituationTable(workingDate);
         autoRefresh();
-        $("#seedCountFieldEditModal").on("shown.bs.modal", function(e) {
-            var workingDate = $("div.modal-body").data("workingDate");
-            var timePoint = $("div.modal-body").data("timePoint").slice(0, 2) + ":" + $("div.modal-body").data("timePoint").slice(2, 4) + ":00";
-            var prodFacilityID = $("div.modal-body").data("prodFacilityID");
-            var prodLineID = $("div.modal-body").data("prodLineID");
-            var existingRecord;
-            $.getJSON(backendHost + "seedCount/api/retrieveRecord?" +
-                "workingDate=" + workingDate +
-                "&timePoint=" + timePoint +
-                "&prodFacilityID=" + prodFacilityID +
-                "&prodLineID=" + prodLineID,
-                function(result) {
-                    if (JSON.parse(result).length === 0) {
-                        existingRecord = false;
-                        $("h4.modal-title").text("氣泡數資料新增");
-                    } else {
-                        var parsedResult = JSON.parse(result)[0];
-                        console.log(parsedResult.count_0);
-                        existingRecord = true;
-                        $("h4.modal-title").text("氣泡數資料修改");
-                        $("div#prodReference").text(parsedResult.prodReference).prop("contenteditable", false);
-                        $("input#thickness").val(parsedResult.thickness);
-                        $("input#seedCount_0").val(parsedResult.count_0);
-                        $("input#seedCount_1").val(parsedResult.count_1);
-                        $("input#seedCount_2").val(parsedResult.count_2);
-                        $("input#seedCount_3").val(parsedResult.count_3);
-                        $("input#seedCount_4").val(parsedResult.count_4);
-                        $("input#seedCount_5").val(parsedResult.count_5);
-                        $("text#note").val(parsedResult.note);
-                    }
-                    $("div#prodFacilityID").text = parsedResult.prodFacilityID;
-                    $("div#prodLineID").text = parsedResult.prodLineID;
-                    $("div#recordDatetime").text = parsedResult.recordDatetime;
-                });
-        });
     });
 
     function constructSituationTable(WorkingDate) {
@@ -272,7 +210,6 @@
         $("td,th").css("border", "1px solid black");
         $("th#prodReferenceFieldLabel,td.prodReferenceField").css("display", "none");
         $("th#situationTableFooterLabel").attr("colspan", "2");
-        $("button.navigation").prop("disabled", false);
         $("td.filled,th.hourlyAverageField,th.prodLineAverageField,th.dailyAverageField").each(function(index, filledSeedCountField) {
             switch (true) {
                 case ($(this).text() < seedCountLevelCap[0].ceiling):
@@ -289,7 +226,61 @@
                     break;
             }
         });
-        enableSeedCountFieldEdit();
+        if (editMode === true) {
+            editSeedCountField();
+        }
+    };
+
+    function editSeedCountField() {
+        //add click-n-edit/insert functionality to seedCountField cells
+        $("td.seedCountField").click(function() {
+            $(this).addClass("editing");
+            var currentDatetime = new Date();
+            var seedCountRecord = {
+                recordDatetime: $(this).data("workingDate") + 'T' + $(this).data("timePoint").slice(0, 2) + ":" + $(this).data("timePoint").slice(2, 4) + ":00" + '.000Z',
+                prodFacilityID: $(this).data("prodFacilityID"),
+                prodLineID: $(this).data("prodLineID"),
+                productReference: "NULL",
+                thickness: "NULL",
+                count_0: "NULL",
+                count_1: "NULL",
+                count_2: "NULL",
+                count_3: "NULL",
+                count_4: "NULL",
+                count_5: "NULL",
+                note: "NULL",
+                photoLocation: "NULL",
+                created: currentDatetime.getFullYear() + '-' +
+                    padValue(currentDatetime.getMonth() + 1) + '-' +
+                    padValue(currentDatetime.getDay()) + 'T' +
+                    padValue(currentDatetime.getHours()) + ':' +
+                    padValue(currentDatetime.getMinutes()) + ':' +
+                    padValue(currentDatetime.getSeconds()) + '.000Z'
+            };
+            if ($("td.editing").hasClass("filled")) {
+                $.getJSON(backendHost + "seedCount/api/retrieveRecord?" +
+                    "recordDatetime=" + seedCountRecord.recordDatetime +
+                    "&prodFacilityID=" + seedCountRecord.prodFacilityID +
+                    "&prodLineID=" + seedCountRecord.prodLineID,
+                    function(recordSet) {
+                        var currentRecord = JSON.parse(recordSet)[0];
+                        Object.keys(currentRecord).forEach(function(currentRecordIndex, index) {
+                            if (
+                                (currentRecordIndex !== 'recordDatetime') &&
+                                (currentRecordIndex !== 'prodFacilityID') &&
+                                (currentRecordIndex !== 'prodLineID') &&
+                                (currentRecord[currentRecordIndex] !== null)) {
+                                //console.log(index + ':' + currentRecordIndex + ' - ' + currentRecord[currentRecordIndex]);
+                                seedCountRecord[currentRecordIndex] = currentRecord[currentRecordIndex];
+                            }
+                        });
+                        //$("td.editing").append('<div id="temporaryContainer"></div>');
+                        $("td.editing").load("./clickNEditTemplate.html");
+                    });
+            } else {
+                console.log("click and insert not implemented yet...");
+            }
+        });
     };
 
     function autoRefresh() {
@@ -297,8 +288,18 @@
         var updateDatetimeBanner = function(clockBannerUpdateInterval) {
             setInterval(function() {
                 now = new Date();
+                //every first 5 and last 5 seconds, all buttons are disabled
+                if ((now.getSeconds() >= 55) || (now.getSeconds() <= 5)) {
+                    $("button").prop("disabled", true);
+                    $("button#submit").prop("disabled", true);
+                    $("button#cancel").prop("disabled", true);
+                } else {
+                    $("button").prop("disabled", false);
+                    $("button#submit").prop("disabled", false);
+                    $("button#cancel").prop("disabled", false);
+                }
+                //set data table to refresh every 60 seconds
                 if (now.getSeconds() % 60 == 0) {
-                    $("button.navigation").prop("disabled", true);
                     refresh();
                 }
                 $("#datetimeBanner").text(
@@ -313,20 +314,7 @@
         }(1);
     };
 
-    function enableSeedCountFieldEdit() {
-        //add click-n-edit functionality to seedCountField cells
-        $("td.seedCountField").click(function() {
-            $("div.modal-body")
-                .data("workingDate", $(this).data("workingDate"))
-                .data("timePoint", $(this).data("timePoint"))
-                .data("prodFacilityID", $(this).data("prodFacilityID"))
-                .data("prodLineID", $(this).data("prodLineID"));
-            $("#seedCountFieldEditModal").modal();
-        });
-    };
-
     function previous() {
-        $("button.navigation").prop("disabled", true);
         $("span.workingDate").empty();
         $("tr#situationTableFooter").empty();
         $("tbody#situationTableDataSection").empty();
@@ -336,7 +324,6 @@
     };
 
     function refresh() {
-        $("button.navigation").prop("disabled", true);
         $("span.workingDate").empty();
         $("tr#situationTableFooter").empty();
         $("tbody#situationTableDataSection").empty();
@@ -345,7 +332,6 @@
     };
 
     function today() {
-        $("button.navigation").prop("disabled", true);
         $("span.workingDate").empty();
         $("tr#situationTableFooter").empty();
         $("tbody#situationTableDataSection").empty();
@@ -355,7 +341,6 @@
     };
 
     function next() {
-        $("button.navigation").prop("disabled", true);
         $("span.workingDate").empty();
         $("tr#situationTableFooter").empty();
         $("tbody#situationTableDataSection").empty();
@@ -364,8 +349,20 @@
         constructSituationTable(workingDate);
     };
 
+    function toggleEditMode() {
+        if (editMode === true) {
+            editMode = false;
+            $("#editModeToggleButton").removeClass("btn-primary").addClass("btn-default");
+            refresh();
+        } else {
+            editMode = true;
+            $("#editModeToggleButton").removeClass("btn-default").addClass("btn-primary");
+            refresh();
+        }
+    }
+
     //utility function to return the Hour offset when using mement.js due to timezone issue
-    var getHourTimezoneOffset = function() {
+    function getHourTimezoneOffset() {
         var dateValue = new Date();
         var hourTimezoneOffset = dateValue.getTimezoneOffset() / 60;
         return hourTimezoneOffset;
