@@ -23,17 +23,19 @@
     <div class="container">
         <div class="row">
             <div class="page-header">
-                <h1>統義玻璃股份有限公司 <small>氣泡數監控程式</small></h1>
+                <h1>統義玻璃股份有限公司&nbsp;<small>氣泡數監控程式</small></h1>
                 <span id="datetimeBanner"></span>
             </div>
             <table id="situationTable" class="table table-bordered table-condensed table-hover">
                 <caption>
-                    <button id="previousButton" class="btn btn-default navigation" onclick="previous()" disabled>前一日</button>
-                    <button id="refreshButton" class="btn btn-default navigation" onclick="refresh()" disabled>資料重整</button>
-                    <button id="nextButton" class="btn btn-default navigation" onclick="next()" disabled>下一日</button>
-                    <button id="todayButton" class="btn btn-default navigation" onclick="today()" disabled>返回今日</button>
-                    <button id="editModeToggleButton" class="btn btn-default" onclick="toggleEditMode()" disabled>修改模式</button>
-                    <h3><span class="workingDate"></span> 氣泡數統計資料</h3>
+                    <button id="editModeToggleButton" class="btn btn-default btn-lg" onclick="toggleEditMode()" disabled>修改模式</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <button id="previousButton" class="btn btn-default btn-lg navigation" onclick="previous()" disabled>前一日</button>
+                    <button id="refreshButton" class="btn btn-default btn-lg navigation" onclick="refresh()" disabled>資料重整</button>
+                    <button id="nextButton" class="btn btn-default btn-lg navigation" onclick="next()" disabled>下一日</button>
+                    <button id="todayButton" class="btn btn-default btn-lg navigation" onclick="today()" disabled>返回今日</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <input id="designatedDate" type="date" class="input-lg">
+                    <button id="switchDateButton" class="btn btn-default btn-lg navigation" onclick="switchToDate()" disabled>指定日期檢視</button>
+                    <h3><span class="workingDate"></span>&nbsp;氣泡數統計資料</h3>
                 </caption>
                 <thead>
                     <tr id="situationTableHeading">
@@ -57,8 +59,11 @@
     var currentDatetime = new Date();
     var workingDate = moment().format("YYYY-MM-DD");
     var editMode = false;
+    var buttonAccessible = false;
+    var buttonInaccessibleCounter = 10;
 
     $("document").ready(function() {
+        $("#designatedDate").val(workingDate);
         $("#datetimeBanner").text(
             currentDatetime.getFullYear() + '-' +
             padValue(currentDatetime.getMonth() + 1) + '-' +
@@ -285,36 +290,50 @@
 
     function autoRefresh() {
         var now = new Date();
-        var updateDatetimeBanner = function(clockBannerUpdateInterval) {
-            setInterval(function() {
-                now = new Date();
-                //every first 5 and last 5 seconds, all buttons are disabled
-                if ((now.getSeconds() >= 55) || (now.getSeconds() <= 5)) {
-                    $("button").prop("disabled", true);
-                    $("button#submit").prop("disabled", true);
-                    $("button#cancel").prop("disabled", true);
-                } else {
-                    $("button").prop("disabled", false);
-                    $("button#submit").prop("disabled", false);
-                    $("button#cancel").prop("disabled", false);
-                }
-                //set data table to refresh every 60 seconds
-                if (now.getSeconds() % 60 == 0) {
-                    refresh();
-                }
-                $("#datetimeBanner").text(
-                    now.getFullYear() + '-' +
-                    padValue(now.getMonth() + 1) + '-' +
-                    padValue(now.getDay()) + ' ' +
-                    padValue(now.getHours()) + ':' +
-                    padValue(now.getMinutes()) + ':' +
-                    padValue(now.getSeconds())
-                );
-            }, clockBannerUpdateInterval * 1000);
-        }(1);
+        setInterval(function() {
+            now = new Date();
+            //every second decrease the buttonInaccessibleCount by 1
+            decreaseInaccessibleCounter(1);
+            //at 55 second mark of each minute increase the buttonInaccessibleCount by 10 to upper limit of 10
+            if (now.getSeconds() === 55) {
+                increaseInaccessibleCounter(10, 10);
+            }
+            //enable/disable buttons depending on the value of buttonInaccessibleCounter variable
+            if (buttonInaccessibleCounter > 0) {
+                $("button").prop("disabled", true);
+            } else {
+                $("button").prop("disabled", false);
+            }
+            //set data table to refresh every 60 seconds
+            if (now.getSeconds() % 60 == 0) {
+                refresh();
+            }
+            //update the clock banner
+            $("#datetimeBanner").text(
+                now.getFullYear() + '-' +
+                padValue(now.getMonth() + 1) + '-' +
+                padValue(now.getDay()) + ' ' +
+                padValue(now.getHours()) + ':' +
+                padValue(now.getMinutes()) + ':' +
+                padValue(now.getSeconds())
+            );
+        }, 1000);
     };
 
+    function switchToDate() {
+        increaseInaccessibleCounter(10, 10);
+        if ($("#designatedDate").val() !== '') {
+            $("span.workingDate").empty();
+            $("tr#situationTableFooter").empty();
+            $("tbody#situationTableDataSection").empty();
+            $("tr#situationTableHeading").empty();
+            workingDate = $("#designatedDate").val();
+            constructSituationTable(workingDate);
+        }
+    }
+
     function previous() {
+        increaseInaccessibleCounter(10, 10);
         $("span.workingDate").empty();
         $("tr#situationTableFooter").empty();
         $("tbody#situationTableDataSection").empty();
@@ -324,6 +343,7 @@
     };
 
     function refresh() {
+        increaseInaccessibleCounter(10, 10);
         $("span.workingDate").empty();
         $("tr#situationTableFooter").empty();
         $("tbody#situationTableDataSection").empty();
@@ -332,6 +352,7 @@
     };
 
     function today() {
+        increaseInaccessibleCounter(10, 10);
         $("span.workingDate").empty();
         $("tr#situationTableFooter").empty();
         $("tbody#situationTableDataSection").empty();
@@ -341,6 +362,7 @@
     };
 
     function next() {
+        increaseInaccessibleCounter(10, 10);
         $("span.workingDate").empty();
         $("tr#situationTableFooter").empty();
         $("tbody#situationTableDataSection").empty();
@@ -358,6 +380,20 @@
             editMode = true;
             $("#editModeToggleButton").removeClass("btn-default").addClass("btn-primary");
             refresh();
+        }
+    }
+
+    function decreaseInaccessibleCounter(numberOfSecond) {
+        if (buttonInaccessibleCounter - numberOfSecond >= 0) {
+            buttonInaccessibleCounter -= numberOfSecond;
+        }
+    }
+
+    function increaseInaccessibleCounter(numberOfSecond, upperLimit) {
+        if ((buttonInaccessibleCounter + numberOfSecond) <= upperLimit) {
+            buttonInaccessibleCounter += numberOfSecond;
+        } else {
+            buttonInaccessibleCounter = upperLimit;
         }
     }
 

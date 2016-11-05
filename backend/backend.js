@@ -8,14 +8,14 @@ var mssql = require('mssql');
 var moment = require('moment');
 var utility = require('./uuidGenerator.js');
 
-var frontendServer = "http://192.168.0.16:80/"; //development environment
-//var frontendServer = "http://upgi.ddns.net:3355/"; //production server
+//var frontendServer = "http://192.168.0.16:80/"; //development environment
+var frontendServer = "http://upgi.ddns.net:3355/"; //production server
 
 var mssqlConfig = {
     user: 'productionHistory',
     password: 'productionHistory',
-    server: 'upgi.ddns.net' //access database from the Internet (development)
-        //server: '192.168.168.5' //access database from LAN (production)
+    //server: 'upgi.ddns.net' //access database from the Internet (development)
+    server: '192.168.168.5' //access database from LAN (production)
 };
 
 app.use(cors());
