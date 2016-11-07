@@ -118,7 +118,7 @@
     };
 
     function getSeedCountData(dateString) {
-        $.getJSON(backendHost + "seedCount/api/recordCountOnDate?date=" + dateString, function(result) {
+        $.getJSON(backendHost + "seedCount/api/getRecordCountOnDate?workingDate=" + dateString, function(result) {
             if (JSON.parse(result)[0].recordCount < 1) {
                 $("#workingDateBanner").text(dateString + " 尚無"); //set the date label on the situation table caption
                 //skip the table data population step and go straight to table formatting
@@ -126,7 +126,7 @@
             } else {
                 $("#workingDateBanner").text(dateString); //set the date label on the situation table caption
                 //ajax POST for seed count data and pass on the data for processing
-                $.getJSON(backendHost + "seedCount/api/dailySeedCountResult?date=" + dateString, function(result) {
+                $.getJSON(backendHost + "seedCount/api/getRecordsetOnDate?workingDate=" + dateString, function(result) {
                     populateSituationTable(JSON.parse(result));
                 });
             }
@@ -254,7 +254,7 @@
                     padValue(currentDatetime.getUTCSeconds()) + '.000Z'
             };
             if ($("td.editing").hasClass("filled")) {
-                $.getJSON(backendHost + "seedCount/api/retrieveRecord?" +
+                $.getJSON(backendHost + "seedCount/api/getRecordAtDatetime?" +
                     "recordDatetime=" + seedCountRecord.recordDatetime +
                     "&prodFacilityID=" + seedCountRecord.prodFacilityID +
                     "&prodLineID=" + seedCountRecord.prodLineID,
