@@ -57,20 +57,21 @@
 
 <script>
     "use strict";
-    var workingDatetime = moment();
-    var workingDate = getWorkDateString(workingDatetime);
+    var workingTimezone = "Asia/Taipei";
+    var initializeDatetime = moment.tz(moment(), workingTimezone);
+    var workingDate = getWorkDateString(initializeDatetime);
     var editMode = false;
     var buttonInaccessibleCounter = 5;
     var buttonInaccessibleCounterUpperLimit = 5;
 
     $("document").ready(function() {
+        $("#clockBanner").text(initializeDatetime.format("YYYY-MM-DD HH:mm:ss"));
         $("#designatedDate").val(workingDate);
-        $("#clockBanner").text(workingDatetime.format("YYYY-MM-DD HH:mm:SS"));
-        constructSituationTable(workingDatetime);
+        constructSituationTable(workingDate);
         autoRefresh();
     });
 
-    function constructSituationTable(datetimeObject) {
+    function constructSituationTable(dateString) {
         // construct the table heading
         $("#situationTableHeading").append('<th class="text-center">班次</th><th class="text-center">時間</th><th id="prodReferenceFieldLabel" class="text-center">產品</th>');
         $.each(prodLineList, function(index, prodLine) {
@@ -93,7 +94,7 @@
                     //create one field for each production line and add appropriate class attributes for identification
                     $("tr.processing").append('<td class="seedCountField processing empty ' + prodLine.reference + '"></td>');
                     $("td." + prodLine.reference + ".processing").addClass("text-center " + facilityList[0].cReference + " " + shift.reference + ' ' + trimmedTimePoint)
-                        .data("workingDate", datetimeObject)
+                        .data("workingDate", dateString)
                         .data("timePoint", trimmedTimePoint)
                         .data("prodFacilityID", facilityList[0].cReference)
                         .data("prodLineID", prodLine.reference);
@@ -113,19 +114,19 @@
         // create daily overall summary
         $("#situationTableFooter").append('<th class="text-center dailyAverageField"></th>');
         // proceed to getting actual table data
-        getSeedCountData(datetimeObject);
+        getSeedCountData(dateString);
     };
 
-    function getSeedCountData(workingDatetime) {
-        $.getJSON(backendHost + "seedCount/api/recordCountOnDate?date=" + getWorkDateString(workingDatetime), function(result) {
+    function getSeedCountData(dateString) {
+        $.getJSON(backendHost + "seedCount/api/recordCountOnDate?date=" + dateString, function(result) {
             if (JSON.parse(result)[0].recordCount < 1) {
-                $(".workingDateBanner").text(getWorkDateString(workingDatetime) + " 尚無"); //set the date label on the situation table caption
+                $("#workingDateBanner").text(dateString + " 尚無"); //set the date label on the situation table caption
                 //skip the table data population step and go straight to table formatting
                 formatSituationTable();
             } else {
-                $(".workingDateBanner").text(getWorkDateString(workingDatetime)); //set the date label on the situation table caption
+                $("#workingDateBanner").text(dateString); //set the date label on the situation table caption
                 //ajax POST for seed count data and pass on the data for processing
-                $.getJSON(backendHost + "seedCount/api/dailySeedCountResult?date=" + getWorkDateString(workingDatetime), function(result) {
+                $.getJSON(backendHost + "seedCount/api/dailySeedCountResult?date=" + dateString, function(result) {
                     populateSituationTable(JSON.parse(result));
                 });
             }
@@ -136,26 +137,17 @@
     function populateSituationTable(seedCountRecordSet) {
         // loop through each record
         $.each(seedCountRecordSet, function(index, seedCountRecord) {
-            var recordDatetime = new Date(seedCountRecord.recordDatetime);
-            var timePoint = padValue(recordDatetime.getUTCHours()) + padValue(recordDatetime.getUTCMinutes())
-            console.log(seedCountRecord.recordDatetime);
-            console.log(recordDatetime);
-            console.log(timePoint);
+            var recordDatetime = moment.tz(seedCountRecord.recordDatetime, workingTimezone);
             // construct identification info for product cell from the index'ed record
-            var productReferenceCellSelector = "td.prodReferenceField" + "." +
-                moment(seedCountRecord.recordDatetime).add(getHourTimezoneOffset(), 'h').format("HH") +
-                moment(seedCountRecord.recordDatetime).format("mm");
+            var productReferenceCellSelector = "td.prodReferenceField" + "." + recordDatetime.format("hhmm");
             // using the ID info to grab the correct <td> to insert data
             $(productReferenceCellSelector).append('<div>' + seedCountRecord.prodReference + '</div>');
             // construct identification info for seedCount Cell from the index'ed record
-            var seedCountCellSelector = "td.seedCountField." +
-                seedCountRecord.prodLineID + "." +
-                moment(seedCountRecord.recordDatetime).add(getHourTimezoneOffset(), 'h').format("HH") +
-                moment(seedCountRecord.recordDatetime).format("mm");
+            var seedCountCellSelector = "td.seedCountField." + seedCountRecord.prodLineID + "." + recordDatetime.format("hhmm");
             // using the ID info to grab the correct <td> to insert data
             $(seedCountCellSelector).append(Math.round(seedCountRecord.unitSeedCount * 100) / 100).removeClass("empty").addClass("filled");
         });
-        //$("td,th").css("vertical-align", "middle");
+        $("td,th").css("vertical-align", "middle");
         situationTableSummaryCalculation();
     };
 
@@ -211,7 +203,7 @@
         $("td.day.seedCountField").addClass("success");
         $("td.night.seedCountField").addClass("warning");
         $("td.graveYard.seedCountField").addClass("info");
-        $("td,th").css("border", "1px solid black");
+        $("td,th").css("border", "1px solid gray");
         $("th#prodReferenceFieldLabel,td.prodReferenceField").css("display", "none");
         $("th#situationTableFooterLabel").attr("colspan", "2");
         $("td.filled,th.hourlyAverageField,th.prodLineAverageField,th.dailyAverageField").each(function(index, filledSeedCountField) {
@@ -231,7 +223,7 @@
             }
         });
         if (editMode === true) {
-            editSeedCountField();
+            //editSeedCountField();
         }
     };
 
@@ -288,9 +280,9 @@
     };
 
     function autoRefresh() {
-        var now = new Date();
+        var now;
         setInterval(function() {
-            now = new Date();
+            now = moment.tz(moment(), workingTimezone);
             //every second decrease the buttonInaccessibleCount by 1
             decreaseInaccessibleCounter(1);
             //enable/disable buttons depending on the value of buttonInaccessibleCounter variable
@@ -300,22 +292,15 @@
                 $("button").prop("disabled", false);
             }
             //at 58 second mark before each scheduled situation table update, increase the buttonInaccessibleCount by 5
-            if ((now.getUTCMinutes() % 10 == 0) && (now.getUTCSeconds() === 58)) {
+            if ((now.format("m") % 10 === 0) && (now.format("s") === 58)) {
                 increaseInaccessibleCounter(5);
             }
             //set situation table to refresh every 10 minutes
-            if ((now.getUTCMinutes() % 10 == 0) && (now.getUTCSeconds() % 60 == 0)) {
+            if ((now.format("m") % 10 === 0) && (now.format("s") % 60 == 0)) {
                 refresh();
             }
             //update the clock banner
-            $("#datetimeBanner").text(
-                now.getUTCFullYear() + '-' +
-                padValue(now.getUTCMonth() + 1) + '-' +
-                padValue(now.getUTCDate()) + ' ' +
-                padValue(now.getUTCHours()) + ':' +
-                padValue(now.getUTCMinutes()) + ':' +
-                padValue(now.getUTCSeconds())
-            );
+            $("#clockBanner").text(now.format("YYYY-MM-DD HH:mm:ss"));
         }, 1000);
     };
 
@@ -337,7 +322,7 @@
         $("tr#situationTableFooter").empty();
         $("tbody#situationTableDataSection").empty();
         $("tr#situationTableHeading").empty();
-        workingDate = currentDatetime.getUTCFullYear() + '-' + padValue(currentDatetime.getUTCMonth()) + '-' + padValue(currentDatetime.getUTCDate());
+        workingDate = moment.tz(workingDate, "Asia/Taipei").add(-1, "day").format("YYYY-MM-DD");
         constructSituationTable(workingDate);
     };
 
@@ -356,7 +341,7 @@
         $("tr#situationTableFooter").empty();
         $("tbody#situationTableDataSection").empty();
         $("tr#situationTableHeading").empty();
-        workingDate = currentDatetime.getUTCFullYear() + '-' + padValue(currentDatetime.getUTCMonth() + 1) + '-' + padValue(currentDatetime.getUTCDate());
+        workingDate = getWorkDateString(moment.tz(moment(), "Asia/Taipei"));
         constructSituationTable(workingDate);
     };
 
@@ -366,7 +351,7 @@
         $("tr#situationTableFooter").empty();
         $("tbody#situationTableDataSection").empty();
         $("tr#situationTableHeading").empty();
-        workingDate = currentDatetime.getUTCFullYear() + '-' + padValue(currentDatetime.getUTCMonth() + 2) + '-' + padValue(currentDatetime.getUTCDate());
+        workingDate = moment.tz(workingDate, "Asia/Taipei").add(1, "day").format("YYYY-MM-DD");
         constructSituationTable(workingDate);
     };
 
@@ -397,11 +382,11 @@
     }
 
     function getWorkDateString(datetimeObject) {
-        var beginningOfWorkDay = moment(datetimeObject.format("YYYY-MM-DD") + ' 07:30:00');
-        if (datetimeObject >= beginningOfWorkDay) {
-            return (datetimeObject.format("YYYY-MM-DD"));
+        if (datetimeObject.isSameOrAfter(datetimeObject.format("YYYY-MM-DD") + ' 07:30:00')) {
+            return (datetimeObject.tz("Asia/Taipei").format("YYYY-MM-DD"));
         } else {
-            return (beginningOfWorkDay.add(-1, "day").format("YYYY-MM-DD"));
+            var tempMoment = moment(beginningOfWorkDay.format("YYYY-MM-DD HH:mm:ss"));
+            return (tempMoment.add(-1, "day").tz("Asia/Taipei").format("YYYY-MM-DD"));
         }
     };
 </script>

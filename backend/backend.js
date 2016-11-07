@@ -5,17 +5,18 @@ var multer = require('multer');
 var upload = multer({ dest: 'seedImage/' });
 var fs = require('fs');
 var mssql = require('mssql');
-var moment = require('moment');
+//var moment = require('moment');
+var moment = require('moment-timezone');
 var utility = require('./uuidGenerator.js');
 
-//var frontendServer = "http://192.168.0.16:80/"; //development environment
-var frontendServer = "http://upgi.ddns.net:3355/"; //production server
+var frontendServer = "http://192.168.0.16:80/"; //development environment
+//var frontendServer = "http://upgi.ddns.net:3355/"; //production server
 
 var mssqlConfig = {
     user: 'productionHistory',
     password: 'productionHistory',
-    //server: 'upgi.ddns.net' //access database from the Internet (development)
-    server: '192.168.168.5' //access database from LAN (production)
+    server: 'upgi.ddns.net' //access database from the Internet (development)
+        //server: '192.168.168.5' //access database from LAN (production)
 };
 
 app.use(cors());
@@ -107,7 +108,11 @@ app.get('/seedCount/api/recordCountOnDate', function(req, res) {
         res.send('{}');
     } else {
         console.log('parameter received...\n');
-        dateToCheck = moment(req.query.date, "YYYY-MM-DD");
+        dateToCheck = moment.tz(req.query.date, "Asia/Taipei");
+        var workDatetimeStart = moment(dateToCheck).add(450, 'm');
+        var workDatetimeEnd = moment(workDatetimeStart).add(1, 'd').subtract(1, 'ms');
+        console.log("workDatetimeStart: " + workDatetimeStart.format("YYYY-MM-DD HH:mm:ss:SSSS"));
+        console.log("workDatetimeEnd: " + workDatetimeEnd.format("YYYY-MM-DD HH:mm:ss:SSSS"));
         if ((!dateToCheck.isValid()) || (req.query.date.length !== 10)) {
             console.log('parameter not valid...\n');
             res.send('{}');
@@ -116,7 +121,9 @@ app.get('/seedCount/api/recordCountOnDate', function(req, res) {
             mssql.connect(mssqlConfig, function(error) {
                 if (error) throw error;
                 var request = new mssql.Request();
-                var queryString = "SELECT COUNT(*) AS recordCount FROM productionHistory.dbo.seedCount WHERE recordDatetime BETWEEN '" + dateToCheck.format("YYYY-MM-DD") + " 07:30:00.000" + "' AND '" + dateToCheck.add(1, "day").format("YYYY-MM-DD") + " 07:29:59.999" + "';";
+                var queryString = "SELECT COUNT(*) AS recordCount FROM productionHistory.dbo.seedCount WHERE recordDatetime BETWEEN '" +
+                    dateToCheck.format("YYYY-MM-DD") + " 07:30:00.000" + "' AND '" +
+                    dateToCheck.add(1, "d").format("YYYY-MM-DD") + " 07:29:59.999" + "';";
                 //console.log(queryString);
                 request.query(queryString, function(error, resultSet) {
                     if (error) {
