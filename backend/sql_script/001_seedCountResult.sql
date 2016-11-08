@@ -18,6 +18,7 @@ SELECT
 	,d.note
 	,d.photoLocation
 	,d.created
+	,d.modified
 FROM (
 	SELECT b.recordDatetime
 		  ,b.prodFacilityID
@@ -36,6 +37,7 @@ FROM (
 		  ,b.note
 		  ,b.photoLocation
 		  ,b.created
+		  ,b.modified
 	FROM productionHistory.dbo.seedCount AS b
 		LEFT JOIN (
 			SELECT a.recordDatetime, a.prodFacilityID, a.prodLineID, COUNT(*) AS validEntryCount
@@ -52,7 +54,7 @@ FROM (
 				UNION ALL
 				SELECT * FROM productionHistory.dbo.seedCount WHERE count_5 IS NOT NULL) AS a
 			GROUP BY a.recordDatetime, a.prodFacilityID, a.prodLineID) AS c ON (b.recordDatetime=c.recordDatetime AND b.prodFacilityID=c.prodFacilityID AND b.prodLineID=c.prodLineID)) AS d
-WHERE CAST(d.recordDatetime AS TIME) BETWEEN '00:00' AND '06:00'
+WHERE CAST(d.recordDatetime AS TIME) BETWEEN '00:00' AND '07:30'
 UNION ALL
 SELECT
 	CONVERT(VARCHAR(10),d.recordDatetime, 120) AS recordDate
@@ -74,6 +76,7 @@ SELECT
 	,d.note
 	,d.photoLocation
 	,d.created
+	,d.modified
 FROM (
 	SELECT b.recordDatetime
 		  ,b.prodFacilityID
@@ -92,6 +95,7 @@ FROM (
 		  ,b.note
 		  ,b.photoLocation
 		  ,b.created
+		  ,b.modified
 	FROM productionHistory.dbo.seedCount AS b
 		LEFT JOIN (
 			SELECT a.recordDatetime, a.prodFacilityID, a.prodLineID, COUNT(*) AS validEntryCount
@@ -108,4 +112,4 @@ FROM (
 				UNION ALL
 				SELECT * FROM productionHistory.dbo.seedCount WHERE count_5 IS NOT NULL) AS a
 			GROUP BY a.recordDatetime, a.prodFacilityID, a.prodLineID) AS c ON (b.recordDatetime=c.recordDatetime AND b.prodFacilityID=c.prodFacilityID AND b.prodLineID=c.prodLineID)) AS d
-WHERE CAST(d.recordDatetime AS TIME) NOT BETWEEN '00:00' AND '06:00';
+WHERE CAST(d.recordDatetime AS TIME) NOT BETWEEN '00:00' AND '07:30';
