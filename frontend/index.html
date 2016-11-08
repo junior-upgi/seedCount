@@ -61,6 +61,7 @@
     var initializeDatetime = moment.tz(moment(), workingTimezone);
     var workingDate = getWorkDateString(initializeDatetime);
     var editMode = false;
+    var editModeInProgress = false;
     var buttonInaccessibleCounter = 5;
     var buttonInaccessibleCounterUpperLimit = 5;
 
@@ -137,13 +138,13 @@
     function populateSituationTable(seedCountRecordSet) {
         // loop through each record
         $.each(seedCountRecordSet, function(index, seedCountRecord) {
-            var recordDatetime = moment.tz(seedCountRecord.recordDatetime, workingTimezone);
+            var recordDatetime = moment(seedCountRecord.recordDatetime, "YYYY-MM-DD HH:mm:ss");
             // construct identification info for product cell from the index'ed record
-            var productReferenceCellSelector = "td.prodReferenceField" + "." + recordDatetime.format("hhmm");
+            var productReferenceCellSelector = "td.prodReferenceField" + "." + recordDatetime.format("HHmm");
             // using the ID info to grab the correct <td> to insert data
             $(productReferenceCellSelector).append('<div>' + seedCountRecord.prodReference + '</div>');
             // construct identification info for seedCount Cell from the index'ed record
-            var seedCountCellSelector = "td.seedCountField." + seedCountRecord.prodLineID + "." + recordDatetime.format("hhmm");
+            var seedCountCellSelector = "td.seedCountField." + seedCountRecord.prodLineID + "." + recordDatetime.format("HHmm");
             // using the ID info to grab the correct <td> to insert data
             $(seedCountCellSelector).append(Math.round(seedCountRecord.unitSeedCount * 100) / 100).removeClass("empty").addClass("filled");
         });
@@ -223,58 +224,84 @@
             }
         });
         if (editMode === true) {
-            //editSeedCountField();
+            editSeedCountField();
         }
     };
 
     function editSeedCountField() {
         //add click-n-edit/insert functionality to seedCountField cells
         $("td.seedCountField").click(function() {
-            $(this).addClass("editing");
-            var currentDatetime = new Date();
-            var seedCountRecord = {
-                recordDatetime: $(this).data("workingDate") + 'T' + $(this).data("timePoint").slice(0, 2) + ":" + $(this).data("timePoint").slice(2, 4) + ":00" + '.000Z',
-                prodFacilityID: $(this).data("prodFacilityID"),
-                prodLineID: $(this).data("prodLineID"),
-                productReference: "NULL",
-                thickness: "NULL",
-                count_0: "NULL",
-                count_1: "NULL",
-                count_2: "NULL",
-                count_3: "NULL",
-                count_4: "NULL",
-                count_5: "NULL",
-                note: "NULL",
-                photoLocation: "NULL",
-                created: currentDatetime.getUTCFullYear() + '-' +
-                    padValue(currentDatetime.getUTCMonth() + 1) + '-' +
-                    padValue(currentDatetime.getUTCDate()) + 'T' +
-                    padValue(currentDatetime.getUTCHours()) + ':' +
-                    padValue(currentDatetime.getUTCMinutes()) + ':' +
-                    padValue(currentDatetime.getUTCSeconds()) + '.000Z'
-            };
-            if ($("td.editing").hasClass("filled")) {
-                $.getJSON(backendHost + "seedCount/api/getRecordAtDatetime?" +
-                    "recordDatetime=" + seedCountRecord.recordDatetime +
-                    "&prodFacilityID=" + seedCountRecord.prodFacilityID +
-                    "&prodLineID=" + seedCountRecord.prodLineID,
-                    function(recordSet) {
-                        var currentRecord = JSON.parse(recordSet)[0];
-                        Object.keys(currentRecord).forEach(function(currentRecordIndex, index) {
-                            if (
-                                (currentRecordIndex !== 'recordDatetime') &&
-                                (currentRecordIndex !== 'prodFacilityID') &&
-                                (currentRecordIndex !== 'prodLineID') &&
-                                (currentRecord[currentRecordIndex] !== null)) {
-                                //console.log(index + ':' + currentRecordIndex + ' - ' + currentRecord[currentRecordIndex]);
-                                seedCountRecord[currentRecordIndex] = currentRecord[currentRecordIndex];
-                            }
-                        });
-                        //$("td.editing").append('<div id="temporaryContainer"></div>');
-                        $("td.editing").load("./clickNEditTemplate.html");
+            if (editModeInProgress === false) {
+                editModeInProgress = true;
+                var workingCell = $(this);
+                var workingRow = $(this).parent();
+                var currentDatetime = moment.tz(moment(), workingTimezone);
+                var seedCountRecord = {
+                    productReference: "NULL",
+                    thickness: "NULL",
+                    count_0: "NULL",
+                    count_1: "NULL",
+                    count_2: "NULL",
+                    count_3: "NULL",
+                    count_4: "NULL",
+                    count_5: "NULL",
+                    note: "NULL",
+                    photoLocation: "NULL"
+                };
+                if (workingCell.hasClass("filled")) {
+                    console.log("click and modify not implemented yet...");
+                } else {
+                    workingCell.removeClass("success warning info").css("background-color", "red"); // highlight elements being edited
+                    workingRow.after('<tr class="dataEntryRow"></tr>'); // insert one row under the current <tr>
+                    $("tr.dataEntryRow").load("./inlineEditTemplate.html", function(response, status) {
+                        if (status === "success") {
+                            $("#prodReference").focus();
+                            // when user presses reset
+                            $("button#resetInlineEdit").click(function() {
+                                console.log("使用者重置表單...");
+                                $(".inlineEditControl").val("");
+                            });
+                            // when user presses cancel
+                            $("button#cancelInlineEdit").on("click", function() {
+                                console.log("使用者取消編輯...");
+                                editModeInProgress = false;
+                                refresh();
+                            });
+                            // when user submits the form
+                            $("button#submitInlineEdit").on("click", function() {
+                                console.log("送出資料...");
+                                var formData = {
+                                    recordDatetime: getWorkDatetimeString(workingCell.workingDate, workingCell.timePoint.slice(0, 2) + ":" + workingCell.timePoint.slice(2)),
+                                    prodFacilityID: seedCountRecord.prodFacilityID,
+                                    prodLineID: seedCountRecord.prodLineID,
+                                    prodReference: $("input#prodReference").val(),
+                                    thickness: $("input#thickness").val(),
+                                    count_0: $("input#count_0").val(),
+                                    count_1: $("input#count_1").val(),
+                                    count_2: $("input#count_2").val(),
+                                    count_3: $("input#count_3").val(),
+                                    count_4: $("input#count_4").val(),
+                                    count_5: $("input#count_5").val(),
+                                    note: $("input#note").val(),
+                                    photo: "NULL"
+                                };
+                                console.log(formData);
+                                $.post({
+                                    url: backendHost + "seedCount/api/insertRecord",
+                                    success: function(data) {
+                                        alert("success");
+                                    },
+                                    dataType: "json"
+                                });
+                                return false;
+                            });
+                        } else {
+                            console.log("編輯面版載入錯誤：" + status);
+                            editModeInProgress = false;
+                            refresh();
+                        }
                     });
-            } else {
-                console.log("click and insert not implemented yet...");
+                }
             }
         });
     };
@@ -311,6 +338,7 @@
             $("tr#situationTableFooter").empty();
             $("tbody#situationTableDataSection").empty();
             $("tr#situationTableHeading").empty();
+            editModeInProgress = false;
             workingDate = $("#designatedDate").val();
             constructSituationTable(workingDate);
         }
@@ -322,6 +350,7 @@
         $("tr#situationTableFooter").empty();
         $("tbody#situationTableDataSection").empty();
         $("tr#situationTableHeading").empty();
+        editModeInProgress = false;
         workingDate = moment.tz(workingDate, "Asia/Taipei").add(-1, "day").format("YYYY-MM-DD");
         constructSituationTable(workingDate);
     };
@@ -332,6 +361,7 @@
         $("tr#situationTableFooter").empty();
         $("tbody#situationTableDataSection").empty();
         $("tr#situationTableHeading").empty();
+        editModeInProgress = false;
         constructSituationTable(workingDate);
     };
 
@@ -341,6 +371,7 @@
         $("tr#situationTableFooter").empty();
         $("tbody#situationTableDataSection").empty();
         $("tr#situationTableHeading").empty();
+        editModeInProgress = false;
         workingDate = getWorkDateString(moment.tz(moment(), "Asia/Taipei"));
         constructSituationTable(workingDate);
     };
@@ -351,6 +382,7 @@
         $("tr#situationTableFooter").empty();
         $("tbody#situationTableDataSection").empty();
         $("tr#situationTableHeading").empty();
+        editModeInProgress = false;
         workingDate = moment.tz(workingDate, "Asia/Taipei").add(1, "day").format("YYYY-MM-DD");
         constructSituationTable(workingDate);
     };
@@ -358,11 +390,12 @@
     function toggleEditMode() {
         if (editMode === true) {
             editMode = false;
-            $("#editModeToggleButton").removeClass("btn-primary").addClass("btn-default");
+            editModeInProgress = false;
+            $("#editModeToggleButton").removeClass("btn-primary").addClass("btn-default").text("修改模式");
             refresh();
         } else {
             editMode = true;
-            $("#editModeToggleButton").removeClass("btn-default").addClass("btn-primary");
+            $("#editModeToggleButton").removeClass("btn-default").addClass("btn-primary").text("取消修改模式");
             refresh();
         }
     }
@@ -387,6 +420,30 @@
         } else {
             var tempMoment = moment(beginningOfWorkDay.format("YYYY-MM-DD HH:mm:ss"));
             return (tempMoment.add(-1, "day").tz("Asia/Taipei").format("YYYY-MM-DD"));
+        }
+    };
+
+    function getWorkDatetimeString(workingDateString, workingTime) {
+        switch (workingTime) {
+            case (shiftList[0].inspectTimePointList[0]):
+            case (shiftList[0].inspectTimePointList[1]):
+            case (shiftList[0].inspectTimePointList[2]):
+            case (shiftList[0].inspectTimePointList[3]):
+            case (shiftList[1].inspectTimePointList[0]):
+            case (shiftList[1].inspectTimePointList[1]):
+            case (shiftList[1].inspectTimePointList[2]):
+            case (shiftList[1].inspectTimePointList[3]):
+                return moment.tz(moment(workingDateString).format("YYYY-MM-DD") + " " + moment(workingTime).format("HH:mm:ss"), "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss");
+                break;
+            case (shiftList[2].inspectTimePointList[0]):
+            case (shiftList[2].inspectTimePointList[1]):
+            case (shiftList[2].inspectTimePointList[2]):
+            case (shiftList[2].inspectTimePointList[3]):
+                return moment.tz(moment(workingDateString).add(1, "days").format("YYYY-MM-DD") + " " + moment(workingTime).format("HH:mm:ss"), "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss");
+                break;
+            default:
+                alert("發現錯誤時間資料，無法建置正確工作時間");
+                refresh();
         }
     };
 </script>

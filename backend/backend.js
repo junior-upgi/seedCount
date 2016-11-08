@@ -23,13 +23,13 @@ var mssqlConfig = {
 app.use(cors());
 
 
-app.post('/seedCount/api/mobileDataEntry', upload.any(), function(req, res) {
+app.post('/seedCount/api/insertRecord', upload.any(), function(req, res) {
     //deal with NULL array in the case that photo isn't uploaded
     var photoLocation;
     if (req.files.length == 0) {
         photoLocation = "NULL";
     } else {
-        photoLocation = req.files[0].destination + req.body.prodLineID + '/' + moment(req.body.recordDate + ' ' + req.body.recordTime + ':00').format("YYYYMMDDHHmm") + '.JPG';
+        photoLocation = req.files[0].destination + req.body.prodLineID + '/' + moment.tz(req.body.recordDatetime, "Asia/Taipei").format("YYYYMMDDHHmmss") + '.JPG';
         fs.rename(req.files[0].path, photoLocation, function(error) {
             if (error) {
                 console.log(req.body.prodLineID + " 圖片上傳錯誤： " + error + '\n');
@@ -44,21 +44,22 @@ app.post('/seedCount/api/mobileDataEntry', upload.any(), function(req, res) {
         if (error) throw error;
         var request = new mssql.Request();
         var queryString = "INSERT INTO productionHistory.dbo.seedCount VALUES ('" +
-            moment(req.body.recordDate + ' ' + req.body.recordTime + ':00').format("YYYY-MM-DD HH:mm:ss") + "','" +
+            moment.tz(req.body.recordDatetime, "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss") + "','" +
             req.body.prodFacilityID + "','" +
             req.body.prodLineID + "','" +
             req.body.prodReference + "','" +
             req.body.thickness + "'," +
-            (req.body.seedCount[0] === '' ? "NULL" : req.body.seedCount[0]) + "," +
-            (req.body.seedCount[1] === '' ? "NULL" : req.body.seedCount[1]) + "," +
-            (req.body.seedCount[2] === '' ? "NULL" : req.body.seedCount[2]) + "," +
-            (req.body.seedCount[3] === '' ? "NULL" : req.body.seedCount[3]) + "," +
-            (req.body.seedCount[4] === '' ? "NULL" : req.body.seedCount[4]) + "," +
-            (req.body.seedCount[5] === '' ? "NULL" : req.body.seedCount[5]) + "," +
+            (req.body.count_0 === '' ? "NULL" : req.body.count_0) + "," +
+            (req.body.count_1 === '' ? "NULL" : req.body.count_1) + "," +
+            (req.body.count_2 === '' ? "NULL" : req.body.count_2) + "," +
+            (req.body.count_3 === '' ? "NULL" : req.body.count_3) + "," +
+            (req.body.count_4 === '' ? "NULL" : req.body.count_4) + "," +
+            (req.body.count_5 === '' ? "NULL" : req.body.count_5) + "," +
             (req.body.note === '' ? "NULL" : "'" + req.body.note + "'") + "," +
             (photoLocation === "NULL" ? "NULL" : "'" + photoLocation + "'") + ",'" +
-            moment().format("YYYY-MM-DD HH:mm:ss") + "');";
-        //console.log(queryString + '\n');
+            moment.tz(moment(), "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss") + "','" +
+            moment.tz(moment(), "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss") + "');";
+        console.log(queryString + '\n');
         // insert data
         request.query(queryString, function(error, resultSet) {
             if (error) {
@@ -66,7 +67,7 @@ app.post('/seedCount/api/mobileDataEntry', upload.any(), function(req, res) {
                 throw error;
             }
             mssql.close();
-            console.log(moment(req.body.recordDate + ' ' + req.body.recordTime + ':00').format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料寫入成功\n");
+            console.log(moment.tz(req.body.recordDatetime, "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料寫入成功\n");
             /*            var trialCount = 0;
                         var seedCountSum = 0;
                         req.body.seedCount.forEach(function(seedCountValue, index) {
@@ -79,7 +80,8 @@ app.post('/seedCount/api/mobileDataEntry', upload.any(), function(req, res) {
                             console.log
                             console.log("系統偵測到氣泡數超過正常值狀況，即將發送通知...！\n");
                         }*/
-            res.send("<div>" + req.body.prodLineID + "氣泡數資料寫入成功</div><div><a href=\"" + frontendServer + "/seedCount/mobileEntry.html\">返回系統</a></div>");
+            //res.send("<div>" + req.body.prodLineID + "氣泡數資料寫入成功</div><div><a href=\"" + frontendServer + "/seedCount/mobileEntry.html\">返回系統</a></div>");
+            res.json({ "status": "success" });
         });
     });
 });
