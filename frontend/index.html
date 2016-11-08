@@ -6,7 +6,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
     <title>氣泡數監控程式</title>
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js" charset="utf-8"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.form/3.51/jquery.form.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.15.2/moment.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.15.2/locale/zh-tw.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.9/moment-timezone-with-data.min.js"></script>
@@ -235,19 +236,6 @@
                 editModeInProgress = true;
                 var workingCell = $(this);
                 var workingRow = $(this).parent();
-                var currentDatetime = moment.tz(moment(), workingTimezone);
-                var seedCountRecord = {
-                    productReference: "NULL",
-                    thickness: "NULL",
-                    count_0: "NULL",
-                    count_1: "NULL",
-                    count_2: "NULL",
-                    count_3: "NULL",
-                    count_4: "NULL",
-                    count_5: "NULL",
-                    note: "NULL",
-                    photoLocation: "NULL"
-                };
                 if (workingCell.hasClass("filled")) {
                     console.log("click and modify not implemented yet...");
                 } else {
@@ -255,44 +243,42 @@
                     workingRow.after('<tr class="dataEntryRow"></tr>'); // insert one row under the current <tr>
                     $("tr.dataEntryRow").load("./inlineEditTemplate.html", function(response, status) {
                         if (status === "success") {
+                            $("input#recordDatetime").val(getWorkDatetimeString(
+                                workingCell.data("workingDate"),
+                                workingCell.data("timePoint").slice(0, 2) + ":" + workingCell.data("timePoint").slice(2)));
+                            $("input#prodFacilityID").val(workingCell.data("prodFacilityID"));
+                            $("input#prodLineID").val(workingCell.data("prodLineID"));
                             $("#prodReference").focus();
-                            // when user presses reset
-                            $("button#resetInlineEdit").click(function() {
-                                console.log("使用者重置表單...");
-                                $(".inlineEditControl").val("");
-                            });
                             // when user presses cancel
                             $("button#cancelInlineEdit").on("click", function() {
                                 console.log("使用者取消編輯...");
                                 editModeInProgress = false;
                                 refresh();
                             });
+                            // confirm form is ready for submission after this point
+                            $("form#inlineEditForm").ajaxForm({
+                                url: backendHost + "seedCount/api/insertRecord",
+                                method: "post",
+                                beforeSend: function() {
+                                    editModeInProgress = false;
+                                    $("input#created").val(moment.tz("Asia/Taipei").format("YYYY-MM-DD HH:mm:ss"));
+                                    $("input#modified").val(moment.tz("Asia/Taipei").format("YYYY-MM-DD HH:mm:ss"));
+                                    alert("prepared to launch...");
+                                },
+                                success: function() {
+                                    alert("success");
+                                },
+                                error: function() {
+                                    alert("failure");
+                                },
+                                complete: function() {
+                                    alert("ready to reset situation table...");
+                                    refresh();
+                                }
+                            });
                             // when user submits the form
-                            $("button#submitInlineEdit").on("click", function() {
-                                console.log("送出資料...");
-                                var formData = {
-                                    recordDatetime: getWorkDatetimeString(workingCell.workingDate, workingCell.timePoint.slice(0, 2) + ":" + workingCell.timePoint.slice(2)),
-                                    prodFacilityID: seedCountRecord.prodFacilityID,
-                                    prodLineID: seedCountRecord.prodLineID,
-                                    prodReference: $("input#prodReference").val(),
-                                    thickness: $("input#thickness").val(),
-                                    count_0: $("input#count_0").val(),
-                                    count_1: $("input#count_1").val(),
-                                    count_2: $("input#count_2").val(),
-                                    count_3: $("input#count_3").val(),
-                                    count_4: $("input#count_4").val(),
-                                    count_5: $("input#count_5").val(),
-                                    note: $("input#note").val(),
-                                    photo: "NULL"
-                                };
-                                console.log(formData);
-                                $.post({
-                                    url: backendHost + "seedCount/api/insertRecord",
-                                    success: function(data) {
-                                        alert("success");
-                                    },
-                                    dataType: "json"
-                                });
+                            $("form#inlineEditForm").submit(function() {
+                                $(this).ajaxSubmit();
                                 return false;
                             });
                         } else {
@@ -315,8 +301,10 @@
             //enable/disable buttons depending on the value of buttonInaccessibleCounter variable
             if (buttonInaccessibleCounter > 0) {
                 $("button").prop("disabled", true);
+                $("input#submitInlineEdit,input#resetInlineEdit").prop("disabled", true);
             } else {
                 $("button").prop("disabled", false);
+                $("input#submitInlineEdit,input#resetInlineEdit").prop("disabled", false);
             }
             //at 58 second mark before each scheduled situation table update, increase the buttonInaccessibleCount by 5
             if ((now.format("m") % 10 === 0) && (now.format("s") === 58)) {
@@ -418,31 +406,31 @@
         if (datetimeObject.isSameOrAfter(datetimeObject.format("YYYY-MM-DD") + ' 07:30:00')) {
             return (datetimeObject.tz("Asia/Taipei").format("YYYY-MM-DD"));
         } else {
-            var tempMoment = moment(beginningOfWorkDay.format("YYYY-MM-DD HH:mm:ss"));
+            var tempMoment = moment(datetimeObject.format("YYYY-MM-DD HH:mm:ss"));
             return (tempMoment.add(-1, "day").tz("Asia/Taipei").format("YYYY-MM-DD"));
         }
     };
 
     function getWorkDatetimeString(workingDateString, workingTime) {
-        switch (workingTime) {
-            case (shiftList[0].inspectTimePointList[0]):
-            case (shiftList[0].inspectTimePointList[1]):
-            case (shiftList[0].inspectTimePointList[2]):
-            case (shiftList[0].inspectTimePointList[3]):
-            case (shiftList[1].inspectTimePointList[0]):
-            case (shiftList[1].inspectTimePointList[1]):
-            case (shiftList[1].inspectTimePointList[2]):
-            case (shiftList[1].inspectTimePointList[3]):
-                return moment.tz(moment(workingDateString).format("YYYY-MM-DD") + " " + moment(workingTime).format("HH:mm:ss"), "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss");
+        switch (true) {
+            case (workingTime == shiftList[0].inspectTimePointList[0]):
+            case (workingTime == shiftList[0].inspectTimePointList[1]):
+            case (workingTime == shiftList[0].inspectTimePointList[2]):
+            case (workingTime == shiftList[0].inspectTimePointList[3]):
+            case (workingTime == shiftList[1].inspectTimePointList[0]):
+            case (workingTime == shiftList[1].inspectTimePointList[1]):
+            case (workingTime == shiftList[1].inspectTimePointList[2]):
+            case (workingTime == shiftList[1].inspectTimePointList[3]):
+                return (moment(workingDateString).format("YYYY-MM-DD") + " " + workingTime + ":00");
                 break;
-            case (shiftList[2].inspectTimePointList[0]):
-            case (shiftList[2].inspectTimePointList[1]):
-            case (shiftList[2].inspectTimePointList[2]):
-            case (shiftList[2].inspectTimePointList[3]):
-                return moment.tz(moment(workingDateString).add(1, "days").format("YYYY-MM-DD") + " " + moment(workingTime).format("HH:mm:ss"), "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss");
+            case (workingTime == shiftList[2].inspectTimePointList[0]):
+            case (workingTime == shiftList[2].inspectTimePointList[1]):
+            case (workingTime == shiftList[2].inspectTimePointList[2]):
+            case (workingTime == shiftList[2].inspectTimePointList[3]):
+                return (moment(workingDateString).add(1, "days").format("YYYY-MM-DD") + " " + workingTime + ":00");
                 break;
             default:
-                alert("發現錯誤時間資料，無法建置正確工作時間");
+                alert("發現錯誤時間資料，無法建置正確工作時間。請通知IT重新啟動系統後台服務...");
                 refresh();
         }
     };

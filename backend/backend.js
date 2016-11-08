@@ -10,23 +10,23 @@ var moment = require('moment-timezone');
 var workingTimezone = "Asia/Taipei";
 var utility = require('./uuidGenerator.js');
 
-//var frontendServer = "http://192.168.0.16:80/"; //development environment
-var frontendServer = "http://upgi.ddns.net:3355/"; //production server
+var frontendServer = "http://192.168.0.16:80/"; //development environment
+//var frontendServer = "http://upgi.ddns.net:3355/"; //production server
 
 var mssqlConfig = {
     user: 'productionHistory',
     password: 'productionHistory',
-    //server: 'upgi.ddns.net' //access database from the Internet (development)
-    server: '192.168.168.5' //access database from LAN (production)
+    server: 'upgi.ddns.net' //access database from the Internet (development)
+        //server: '192.168.168.5' //access database from LAN (production)
 };
 
 app.use(cors());
-
 
 app.post('/seedCount/api/insertRecord', upload.any(), function(req, res) {
     //deal with NULL array in the case that photo isn't uploaded
     var photoLocation;
     if (req.files.length == 0) {
+        console.log("未上傳圖片");
         photoLocation = "NULL";
     } else {
         photoLocation = req.files[0].destination + req.body.prodLineID + '/' + moment.tz(req.body.recordDatetime, "Asia/Taipei").format("YYYYMMDDHHmmss") + '.JPG';
@@ -38,7 +38,6 @@ app.post('/seedCount/api/insertRecord', upload.any(), function(req, res) {
             }
         });
     }
-
     // connect to data server to insert mobile data entry
     mssql.connect(mssqlConfig, function(error) {
         if (error) throw error;
@@ -61,7 +60,7 @@ app.post('/seedCount/api/insertRecord', upload.any(), function(req, res) {
             moment.tz(moment(), "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss") + "');";
         console.log(queryString + '\n');
         // insert data
-        request.query(queryString, function(error, resultSet) {
+        request.query(queryString, function(error) {
             if (error) {
                 console.log("資料寫入錯誤： " + error + '\n')
                 throw error;
