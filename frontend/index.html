@@ -36,7 +36,7 @@
                     <button id="nextButton" class="btn btn-default btn-lg navigation" onclick="next()" disabled>下一日</button>
                     <button id="todayButton" class="btn btn-default btn-lg navigation" onclick="today()" disabled>返回今日</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                     <input id="designatedDate" type="date" class="input-lg">
-                    <button id="switchDateButton" class="btn btn-default btn-lg navigation" onclick="switchToDate()" disabled>指定日期檢視</button>
+                    <button id="switchDateButton" class="btn btn-default btn-lg navigation" onclick="switchToDate()" disabled>檢視指定日期資料</button>
                     <h3><span id="workingDateBanner"></span>&nbsp;氣泡數統計資料</h3>
                 </caption>
                 <thead>
@@ -250,6 +250,21 @@
                             $("input#prodLineID").val(workingCell.data("prodLineID"));
                             $("#prodReference").focus();
                             // when user presses cancel
+                            $("input.inlineEditControl.seedCountField,input#thickness").on("change", function() {
+                                var sum = 0;
+                                var validFieldCount = 0;
+                                if ($("input#thickness").val() !== "") {
+                                    $("input.inlineEditControl.seedCountField").each(function(index) {
+                                        if ($(this).val() !== "") {
+                                            sum += Number($(this).val());
+                                            validFieldCount++;
+                                        }
+                                    });
+                                    if (validFieldCount > 0) {
+                                        workingCell.text(Math.round((sum / validFieldCount) * (10 / Number($("input#thickness").val())) * 100) / 100);
+                                    }
+                                }
+                            });
                             $("button#cancelInlineEdit").on("click", function() {
                                 console.log("使用者取消編輯...");
                                 editModeInProgress = false;
@@ -263,16 +278,8 @@
                                     editModeInProgress = false;
                                     $("input#created").val(moment.tz("Asia/Taipei").format("YYYY-MM-DD HH:mm:ss"));
                                     $("input#modified").val(moment.tz("Asia/Taipei").format("YYYY-MM-DD HH:mm:ss"));
-                                    alert("prepared to launch...");
-                                },
-                                success: function() {
-                                    alert("success");
-                                },
-                                error: function() {
-                                    alert("failure");
                                 },
                                 complete: function() {
-                                    alert("ready to reset situation table...");
                                     refresh();
                                 }
                             });
