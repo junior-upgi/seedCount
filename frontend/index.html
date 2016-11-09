@@ -66,8 +66,8 @@
     var workingDate = getWorkDateString(initializeDatetime);
     var editMode = false;
     var editModeInProgress = false;
-    var buttonInaccessibleCounter = 5;
-    var buttonInaccessibleCounterUpperLimit = 5;
+    var buttonInaccessibleCounter = 5; // 計數器 - 控制按鈕是否可使用 (預防使用者過度點選更新頁面造成錯誤)
+    var buttonInaccessibleCounterUpperLimit = 5; //控制計數器的停用時間長度上限
 
     $("document").ready(function() {
         $("#clockBanner").text(initializeDatetime.format("YYYY-MM-DD HH:mm:ss"));
