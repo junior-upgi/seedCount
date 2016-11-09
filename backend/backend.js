@@ -22,6 +22,18 @@ var mssqlConfig = {
 
 app.use(cors());
 
+// serve photos
+app.use("/seedImage", express.static('./seedImage'));
+
+// update existing record
+app.post('/seedCount/api/updateRecord', upload.any(), function(req, res) {
+    // query for the current record
+    // remove exising photoPath and image file if existing
+    // deal with the possibility when new photo does not exist
+    // connect to data server to update existing record 
+});
+
+// insert a new record
 app.post('/seedCount/api/insertRecord', upload.any(), function(req, res) {
     //deal with NULL array in the case that photo isn't uploaded
     var photoLocation;
@@ -38,7 +50,7 @@ app.post('/seedCount/api/insertRecord', upload.any(), function(req, res) {
             }
         });
     }
-    // connect to data server to insert mobile data entry
+    // connect to data server to insert data entry
     mssql.connect(mssqlConfig, function(error) {
         if (error) throw error;
         var request = new mssql.Request();
