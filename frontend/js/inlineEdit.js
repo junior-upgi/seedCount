@@ -34,7 +34,6 @@ $(document).on("click", "td.seedCountField", function() {
                     }).done(function(result) {
                         //if data retrieval is successful, fill the input fields with returned result
                         var seedCountDataEntry = JSON.parse(result)[0];
-                        console.log(seedCountDataEntry);
                         $("input#prodReference").val(seedCountDataEntry.prodReference);
                         $("input#count_0").val(seedCountDataEntry.count_0);
                         $("input#count_1").val(seedCountDataEntry.count_1);
@@ -52,13 +51,14 @@ $(document).on("click", "td.seedCountField", function() {
                             $("span#existingPhotoPath").text(seedCountDataEntry.photoLocation);
                         }
                         $("input#created").val(moment(seedCountDataEntry.created, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss"));
+                        $("input#modified").val(moment(seedCountDataEntry.modified, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss"));
                         $("form#inlineEditForm").append('&nbsp;&nbsp;&nbsp;&nbsp;<button id="deleteRecord" class="btn btn-danger btn-lg">刪除</button>');
-                        formAction = backendHost + "seedCount/api/updateRecord"; // set the API endpoint to post to update record
                     }).fail(function() {
                         console.log("單筆資料擷取發生錯誤，嘗試重設系統...");
                         editModeInProgress = false;
                         refresh();
                     });
+                    formAction = backendHost + "seedCount/api/updateRecord"; // set the API endpoint to post to update record
                 } else {
                     formAction = backendHost + "seedCount/api/insertRecord"; // set the API endpoint to post to insert record
                 }

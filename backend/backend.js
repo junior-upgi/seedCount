@@ -26,11 +26,57 @@ app.use(cors());
 app.use("/seedImage", express.static('./seedImage'));
 
 // update existing record
-app.post('/seedCount/api/updateRecord', upload.any(), function(req, res) {
+app.post("/seedCount/api/updateRecord", upload.any(), function(req, res) {
     // query for the current record
     // remove exising photoPath and image file if existing
     // deal with the possibility when new photo does not exist
-    // connect to data server to update existing record 
+    var photoLocation;
+    if (req.files.length == 0) {
+        console.log("未上傳圖片");
+        photoLocation = "NULL";
+    } else {
+        photoLocation = req.files[0].destination + req.body.prodLineID + '/' + moment.tz(req.body.recordDatetime, "Asia/Taipei").format("YYYYMMDDHHmmss") + '.JPG';
+        fs.rename(req.files[0].path, photoLocation, function(error) {
+            if (error) {
+                console.log(req.body.prodLineID + " 圖片上傳錯誤： " + error + '\n');
+            } else {
+                console.log(req.body.prodLineID + " 圖片上傳成功" + '\n');
+            }
+        });
+    }
+    // connect to data server to update existing record
+    mssql.connect(mssqlConfig, function(error) {
+        if (error) throw error;
+        var request = new mssql.Request();
+        var queryString =
+            "UPDATE productionHistory.dbo.seedCount SET " +
+            "prodReference='" + req.body.prodReference +
+            "',thickness=" + req.body.thickness +
+            ",count_0=" + (req.body.count_0 === '' ? "NULL" : req.body.count_0) +
+            ",count_1=" + (req.body.count_1 === '' ? "NULL" : req.body.count_1) +
+            ",count_2=" + (req.body.count_2 === '' ? "NULL" : req.body.count_2) +
+            ",count_3=" + (req.body.count_3 === '' ? "NULL" : req.body.count_3) +
+            ",count_4=" + (req.body.count_4 === '' ? "NULL" : req.body.count_4) +
+            ",count_5=" + (req.body.count_5 === '' ? "NULL" : req.body.count_5) +
+            ",note=" + (req.body.note === '' ? "NULL" : "'" + req.body.note + "'") +
+            ",photoLocation=" + (photoLocation === "NULL" ? "NULL" : "'" + photoLocation + "'") +
+            ",modified='" + req.body.modified +
+            "' WHERE " +
+            "recordDatetime='" + req.body.recordDatetime +
+            "' AND prodFacilityID='" + req.body.prodFacilityID +
+            "' AND prodLineID='" + req.body.prodLineID + "';";
+        console.log(queryString + '\n');
+        // insert data
+        request.query(queryString, function(error) {
+            if (error) {
+                console.log("資料更新錯誤： " + error + '\n')
+                throw error;
+            }
+            mssql.close();
+            console.log(moment.tz(req.body.recordDatetime, "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料寫入成功\n");
+            res.json({ "status": "success" });
+        });
+    });
 });
 
 // insert a new record
@@ -79,19 +125,6 @@ app.post('/seedCount/api/insertRecord', upload.any(), function(req, res) {
             }
             mssql.close();
             console.log(moment.tz(req.body.recordDatetime, "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料寫入成功\n");
-            /*            var trialCount = 0;
-                        var seedCountSum = 0;
-                        req.body.seedCount.forEach(function(seedCountValue, index) {
-                            if (seedCountValue !== '') {
-                                trialCount += seedCountValue;
-                                seedCountSum++;
-                            }
-                        });
-                        if (((seedCountSum / trialCount) * (10 / req.body.thickness)) > 10) {
-                            console.log
-                            console.log("系統偵測到氣泡數超過正常值狀況，即將發送通知...！\n");
-                        }*/
-            //res.send("<div>" + req.body.prodLineID + "氣泡數資料寫入成功</div><div><a href=\"" + frontendServer + "/seedCount/mobileEntry.html\">返回系統</a></div>");
             res.json({ "status": "success" });
         });
     });
