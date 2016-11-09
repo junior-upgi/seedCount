@@ -30,6 +30,7 @@
             </div>
             <table id="situationTable" class="table table-bordered table-condensed table-hover">
                 <caption>
+                    <button id="preventDisplayToggleButton" class="btn btn-default btn-lg" onclick="togglePreventDisplay()" disabled>顯示</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                     <button id="editModeToggleButton" class="btn btn-default btn-lg" onclick="toggleEditMode()" disabled>修改模式</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                     <button id="previousButton" class="btn btn-default btn-lg navigation" onclick="previous()" disabled>前一日</button>
                     <button id="refreshButton" class="btn btn-default btn-lg navigation" onclick="refresh()" disabled>資料重整</button>
@@ -58,6 +59,7 @@
 
 <script>
     "use strict";
+    var hideProdReferenceColumn = true;
     var workingTimezone = "Asia/Taipei";
     var initializeDatetime = moment.tz(moment(), workingTimezone);
     var workingDate = getWorkDateString(initializeDatetime);
@@ -77,33 +79,44 @@
         // construct the table heading
         $("#situationTableHeading").append('<th class="text-center">班次</th><th class="text-center">時間</th><th id="prodReferenceFieldLabel" class="text-center">產品</th>');
         $.each(prodLineList, function(index, prodLine) {
-            $("#situationTableHeading").append('<th class="text-center">' + prodLine.reference + '</th>');
+            $("#situationTableHeading").append('<th class="text-center ' + prodLine.reference + '">' + prodLine.reference + '</th>');
+            //check if the index production line has the hidden property being true, if so, add a prevent display class attributes
+            if (prodLine.hidden === true) {
+                $("th." + prodLine.reference).addClass("preventDisplay");
+            }
         });
         $("#situationTableHeading").append('<th class="text-center">平均</th>');
         // loop through each shift
         $.each(shiftList, function(index, shift) {
             //loop though each seed count examin check point
-            $.each(shift.inspectTimePointList, function(index, timePoint) {
-                var trimmedTimePoint = timePoint.slice(0, 2) + timePoint.slice(3);
+            $.each(shift.inspectTimePointList, function(index, inspectTimePoint) {
                 //create first three fields and add appropriate class attributes for identification
                 $("#situationTableDataSection").append('<tr class="processing"><td class="processing shiftField"></td><td class="processing timePointField"></td><td class="processing prodReferenceField"></td></tr>');
-                $("tr.processing").addClass(shift.reference + ' ' + trimmedTimePoint);
-                $("td.processing.shiftField").html(shift.cReference).addClass("text-center " + shift.reference + ' ' + trimmedTimePoint);
-                $("td.processing.timePointField").html(trimmedTimePoint).addClass("text-center " + shift.reference + ' ' + trimmedTimePoint);
-                $("td.processing.prodReferenceField").addClass("text-center " + shift.reference + ' ' + trimmedTimePoint);
+                $("tr.processing").addClass(shift.reference + ' ' + inspectTimePoint.trimmedTimePoint);
+                $("td.processing.shiftField").html(shift.cReference).addClass("text-center " + shift.reference + ' ' + inspectTimePoint.trimmedTimePoint);
+                $("td.processing.timePointField").html(inspectTimePoint.trimmedTimePoint).addClass("text-center " + shift.reference + ' ' + inspectTimePoint.trimmedTimePoint);
+                $("td.processing.prodReferenceField").addClass("text-center " + shift.reference + ' ' + inspectTimePoint.trimmedTimePoint);
+                //review the shiftList for items with hidden property of true, add a 'preventDisplay' class
+                if (inspectTimePoint.hidden === true) {
+                    $("tr.processing." + inspectTimePoint.trimmedTimePoint).addClass("preventDisplay");
+                }
                 //loop though each production line
                 $.each(prodLineList, function(index, prodLine) {
                     //create one field for each production line and add appropriate class attributes for identification
                     $("tr.processing").append('<td class="seedCountField processing empty ' + prodLine.reference + '"></td>');
-                    $("td." + prodLine.reference + ".processing").addClass("text-center " + facilityList[0].cReference + " " + shift.reference + ' ' + trimmedTimePoint)
+                    $("td." + prodLine.reference + ".processing").addClass("text-center " + facilityList[0].cReference + " " + shift.reference + ' ' + inspectTimePoint.trimmedTimePoint)
                         .data("workingDate", dateString)
-                        .data("timePoint", trimmedTimePoint)
+                        .data("timePoint", inspectTimePoint.trimmedTimePoint)
                         .data("prodFacilityID", facilityList[0].cReference)
                         .data("prodLineID", prodLine.reference);
+                    //review the prodLineList for items with hidden property of true, add a 'preventDisplay' class
+                    if (prodLine.hidden === true) {
+                        $("td.processing." + prodLine.reference).addClass("preventDisplay");
+                    }
                 });
                 // add one cell for summary
                 $("tr.processing").append('<th class="processing hourlyAverageField"></td>')
-                $("th.processing.hourlyAverageField").addClass("text-center " + shift.reference + ' ' + trimmedTimePoint);
+                $("th.processing.hourlyAverageField").addClass("text-center " + shift.reference + ' ' + inspectTimePoint.trimmedTimePoint);
                 $(".processing").removeClass("processing"); // remove all temp processing class attrib
             });
         });
@@ -112,6 +125,10 @@
         // loop though each production line
         $.each(prodLineList, function(index, prodLine) {
             $("#situationTableFooter").append('<th class="text-center prodLineAverageField ' + prodLine.reference + '"></th>');
+            //review the prodLineList for items with hidden property of true, add a 'preventDisplay' class
+            if (prodLine.hidden === true) {
+                $("th.prodLineAverageField." + prodLine.reference).addClass("preventDisplay");
+            }
         });
         // create daily overall summary
         $("#situationTableFooter").append('<th class="text-center dailyAverageField"></th>');
@@ -158,18 +175,17 @@
         // cycle through each shift (每兩小時當日平均)
         $.each(shiftList, function(index, shift) {
             //cycle through each inspectTimePoint
-            $.each(shift.inspectTimePointList, function(index, timePoint) {
+            $.each(shift.inspectTimePointList, function(index, inspectTimePoint) {
                 var validEntryCount = 0,
                     seedCountSum = 0;
-                var trimmedTimePoint = timePoint.slice(0, 2) + timePoint.slice(3);
                 //cycle through each bi-hourly <tr> and count the valid entries and get the sum of the entries
-                $("td.seedCountField.filled." + trimmedTimePoint).each(function(index, seedCountCell) {
+                $("td.seedCountField.filled." + inspectTimePoint.trimmedTimePoint).each(function(index, seedCountCell) {
                     seedCountSum += Number($(this).text());
                     validEntryCount++;
                 });
                 if (validEntryCount > 0) {
                     // if there are valid entries, calculate the bi-hourly average
-                    $("th.hourlyAverageField." + trimmedTimePoint).text(Math.round(((Math.round(seedCountSum * 100) / 100) / validEntryCount) * 100) / 100);
+                    $("th.hourlyAverageField." + inspectTimePoint.trimmedTimePoint).text(Math.round(((Math.round(seedCountSum * 100) / 100) / validEntryCount) * 100) / 100);
                 }
             });
         });
@@ -206,8 +222,10 @@
         $("td.night.seedCountField").addClass("warning");
         $("td.graveYard.seedCountField").addClass("info");
         $("td,th").css("border", "1px solid gray");
-        $("th#prodReferenceFieldLabel,td.prodReferenceField").css("display", "none");
-        $("th#situationTableFooterLabel").attr("colspan", "2");
+        if (hideProdReferenceColumn === true) {
+            $("th#prodReferenceFieldLabel,td.prodReferenceField").css("display", "none");
+            $("th#situationTableFooterLabel").attr("colspan", "2");
+        }
         $("td.filled,th.hourlyAverageField,th.prodLineAverageField,th.dailyAverageField").each(function(index, filledSeedCountField) {
             switch (true) {
                 case ($(this).text() < seedCountLevelCap[0].ceiling):
@@ -224,6 +242,7 @@
                     break;
             }
         });
+        $(".preventDisplay").hide();
         if (editMode === true) {
             editSeedCountField();
         }
@@ -382,6 +401,18 @@
         constructSituationTable(workingDate);
     };
 
+    function togglePreventDisplay() {
+        if ($("button#preventDisplayToggleButton").text() === "顯示") {
+            $(".preventDisplay").show();
+            $("th#situationTableFooterLabel").attr("colspan", "3");
+            $("button#preventDisplayToggleButton").text("隱藏");
+        } else {
+            $(".preventDisplay").hide();
+            $("th#situationTableFooterLabel").attr("colspan", "2");
+            $("button#preventDisplayToggleButton").text("顯示");
+        }
+    };
+
     function toggleEditMode() {
         if (editMode === true) {
             editMode = false;
@@ -420,20 +451,20 @@
 
     function getWorkDatetimeString(workingDateString, workingTime) {
         switch (true) {
-            case (workingTime == shiftList[0].inspectTimePointList[0]):
-            case (workingTime == shiftList[0].inspectTimePointList[1]):
-            case (workingTime == shiftList[0].inspectTimePointList[2]):
-            case (workingTime == shiftList[0].inspectTimePointList[3]):
-            case (workingTime == shiftList[1].inspectTimePointList[0]):
-            case (workingTime == shiftList[1].inspectTimePointList[1]):
-            case (workingTime == shiftList[1].inspectTimePointList[2]):
-            case (workingTime == shiftList[1].inspectTimePointList[3]):
+            case (workingTime == shiftList[0].inspectTimePointList[0].timePoint):
+            case (workingTime == shiftList[0].inspectTimePointList[1].timePoint):
+            case (workingTime == shiftList[0].inspectTimePointList[2].timePoint):
+            case (workingTime == shiftList[0].inspectTimePointList[3].timePoint):
+            case (workingTime == shiftList[1].inspectTimePointList[0].timePoint):
+            case (workingTime == shiftList[1].inspectTimePointList[1].timePoint):
+            case (workingTime == shiftList[1].inspectTimePointList[2].timePoint):
+            case (workingTime == shiftList[1].inspectTimePointList[3].timePoint):
                 return (moment(workingDateString).format("YYYY-MM-DD") + " " + workingTime + ":00");
                 break;
-            case (workingTime == shiftList[2].inspectTimePointList[0]):
-            case (workingTime == shiftList[2].inspectTimePointList[1]):
-            case (workingTime == shiftList[2].inspectTimePointList[2]):
-            case (workingTime == shiftList[2].inspectTimePointList[3]):
+            case (workingTime == shiftList[2].inspectTimePointList[0].timePoint):
+            case (workingTime == shiftList[2].inspectTimePointList[1].timePoint):
+            case (workingTime == shiftList[2].inspectTimePointList[2].timePoint):
+            case (workingTime == shiftList[2].inspectTimePointList[3].timePoint):
                 return (moment(workingDateString).add(1, "days").format("YYYY-MM-DD") + " " + workingTime + ":00");
                 break;
             default:
