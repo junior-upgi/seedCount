@@ -30,7 +30,7 @@
             </div>
             <table id="situationTable" class="table table-bordered table-condensed table-hover">
                 <caption>
-                    <button id="preventDisplayToggleButton" class="btn btn-default btn-lg" onclick="togglePreventDisplay()" disabled>顯示</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <button id="preventDisplayToggleButton" class="btn btn-default btn-lg" onclick="togglePreventDisplay()">顯示</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                     <button id="editModeToggleButton" class="btn btn-default btn-lg" onclick="toggleEditMode()" disabled>修改模式</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                     <button id="previousButton" class="btn btn-default btn-lg navigation" onclick="previous()" disabled>前一日</button>
                     <button id="refreshButton" class="btn btn-default btn-lg navigation" onclick="refresh()" disabled>資料重整</button>
@@ -60,6 +60,7 @@
 <script>
     "use strict";
     var hideProdReferenceColumn = true;
+    var preventDisplay = true;
     var workingTimezone = "Asia/Taipei";
     var initializeDatetime = moment.tz(moment(), workingTimezone);
     var workingDate = getWorkDateString(initializeDatetime);
@@ -242,7 +243,13 @@
                     break;
             }
         });
-        $(".preventDisplay").hide();
+        if (preventDisplay === true) {
+            $(".preventDisplay").hide();
+            $("button#preventDisplayToggleButton").text("顯示");
+        } else {
+            $(".preventDisplay").show();
+            $("button#preventDisplayToggleButton").text("隱藏");
+        }
         if (editMode === true) {
             editSeedCountField();
         }
@@ -326,10 +333,10 @@
             decreaseInaccessibleCounter(1);
             //enable/disable buttons depending on the value of buttonInaccessibleCounter variable
             if (buttonInaccessibleCounter > 0) {
-                $("button").prop("disabled", true);
+                $("button:not(button#preventDisplayToggleButton)").prop("disabled", true);
                 $("input#submitInlineEdit,input#resetInlineEdit").prop("disabled", true);
             } else {
-                $("button").prop("disabled", false);
+                $("button:not(button#preventDisplayToggleButton)").prop("disabled", false);
                 $("input#submitInlineEdit,input#resetInlineEdit").prop("disabled", false);
             }
             //at 58 second mark before each scheduled situation table update, increase the buttonInaccessibleCount by 5
@@ -402,14 +409,19 @@
     };
 
     function togglePreventDisplay() {
-        if ($("button#preventDisplayToggleButton").text() === "顯示") {
-            $(".preventDisplay").show();
-            $("th#situationTableFooterLabel").attr("colspan", "3");
-            $("button#preventDisplayToggleButton").text("隱藏");
-        } else {
-            $(".preventDisplay").hide();
-            $("th#situationTableFooterLabel").attr("colspan", "2");
-            $("button#preventDisplayToggleButton").text("顯示");
+        // prevent user from changing the preventDisplay status when inlineEdit mode is enabled
+        // 1. to prevent unexpected behavior
+        // 2. so that only visible cells should be possible to edit
+        if (editMode === false) {
+            if (preventDisplay === true) {
+                preventDisplay = false;
+                $(".preventDisplay").show();
+                $("button#preventDisplayToggleButton").text("隱藏");
+            } else {
+                preventDisplay = true;
+                $(".preventDisplay").hide();
+                $("button#preventDisplayToggleButton").text("顯示");
+            }
         }
     };
 
@@ -417,11 +429,13 @@
         if (editMode === true) {
             editMode = false;
             editModeInProgress = false;
-            $("#editModeToggleButton").removeClass("btn-primary").addClass("btn-default").text("修改模式");
+            $("button#preventDisplayToggleButton").prop("disabled", "");
+            $("button#editModeToggleButton").removeClass("btn-primary").addClass("btn-default").text("修改模式");
             refresh();
         } else {
             editMode = true;
-            $("#editModeToggleButton").removeClass("btn-default").addClass("btn-primary").text("取消修改模式");
+            $("button#preventDisplayToggleButton").prop("disabled", "true");
+            $("button#editModeToggleButton").removeClass("btn-default").addClass("btn-primary").text("取消修改模式");
             refresh();
         }
     }
