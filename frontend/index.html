@@ -92,7 +92,12 @@
             //loop though each seed count examin check point
             $.each(shift.inspectTimePointList, function(index, inspectTimePoint) {
                 //create first three fields and add appropriate class attributes for identification
-                $("#situationTableDataSection").append('<tr class="processing"><td class="processing shiftField"></td><td class="processing timePointField"></td><td class="processing prodReferenceField"></td></tr>');
+                $("#situationTableDataSection").append(
+                    '<tr class="processing">' +
+                    '<td class="processing shiftField"></td>' +
+                    '<td class="processing timePointField"></td>' +
+                    '<td class="processing prodReferenceField"></td>' +
+                    '</tr>');
                 $("tr.processing").addClass(shift.reference + ' ' + inspectTimePoint.trimmedTimePoint);
                 $("td.processing.shiftField").html(shift.cReference).addClass("text-center " + shift.reference + ' ' + inspectTimePoint.trimmedTimePoint);
                 $("td.processing.timePointField").html(inspectTimePoint.trimmedTimePoint).addClass("text-center " + shift.reference + ' ' + inspectTimePoint.trimmedTimePoint);
@@ -262,11 +267,27 @@
                 editModeInProgress = true;
                 var workingCell = $(this);
                 var workingRow = $(this).parent();
+                // highlight element being edited
+                workingCell.removeClass("success warning info")
+                    .css("background-color", "red")
+                    .css("color", "white")
+                    .css("font-weight", "bold");
+                // insert one row under the current <tr>
+                workingRow.after('<tr class="dataEntryRow"></tr>');
                 if (workingCell.hasClass("filled")) {
-                    console.log("click and modify not implemented yet...");
+                    console.log("record inline edit is to be implemented...");
+                    // ---load the inline edit template
+                    // ------if template successfully loaded
+                    // ---------put existing data into the template control
+                    // ---------setup user action events
+                    // ------------real time update average seed count when values are modified
+                    // ------------cancel
+                    // ------------reset
+                    // ---------setup jquery.form
+                    // ---------submit form action
+                    // ------template loading failure
                 } else {
-                    workingCell.removeClass("success warning info").css("background-color", "red"); // highlight elements being edited
-                    workingRow.after('<tr class="dataEntryRow"></tr>'); // insert one row under the current <tr>
+                    //load the template
                     $("tr.dataEntryRow").load("./inlineEditTemplate.html", function(response, status) {
                         if (status === "success") {
                             $("input#recordDatetime").val(getWorkDatetimeString(
