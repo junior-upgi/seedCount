@@ -1,14 +1,14 @@
-var express = require('express');
-var cors = require('cors');
+var express = require("express");
+var CronJob = require("cron").CronJob;
+var cors = require("cors");
 var app = express();
-var multer = require('multer');
-var upload = multer({ dest: 'seedImage/' });
-var fs = require('fs');
-var mssql = require('mssql');
-//var moment = require('moment');
-var moment = require('moment-timezone');
+var multer = require("multer");
+var upload = multer({ dest: "seedImage/" });
+var fs = require("fs");
+var mssql = require("mssql");
+var moment = require("moment-timezone");
 var workingTimezone = "Asia/Taipei";
-var utility = require('./uuidGenerator.js');
+var utility = require("./uuidGenerator.js");
 
 var frontendServer = "http://192.168.0.16:80/"; //development environment
 //var frontendServer = "http://upgi.ddns.net:3355/"; //production server
@@ -206,3 +206,30 @@ app.get('/seedCount/api/getRecordset', function(req, res) {
 
 app.listen(4949);
 console.log('seedCount backend server is running on port 4949...\n');
+
+var currentDatetime;
+new CronJob('*/5 * * * * *', function() {
+    currentDatetime = moment(moment(), "YYYY-MM-DD HH:mm:ss");
+    console.log("目前時間: " + currentDatetime.format("YYYY-MM-DD HH:mm:ss"));
+    if ((currentDatetime.format("mm") % 1 === 0) && (currentDatetime.format("ss") % 30 === 0)) {
+        console.log("進行氣泡數據檢查");
+        mssql.connect(mssqlConfig, function(error) {
+            if (error) throw error;
+            var request = new mssql.Request();
+            var queryString = "SELECT * FROM productionHistory.dbo.seedCountResult WHERE unitSeedCount>10 AND recordDatetime>'" +
+                moment(currentDatetime, "YYYY-MM-DD HH:mm:ss").subtract(2, "hours").format("YYYY-MM-DD HH:mm:ss") + "'";
+            console.log("查詢範圍：" + moment(currentDatetime, "YYYY-MM-DD HH:mm:ss").subtract(2, "hours").format("YYYY-MM-DD HH:mm:ss") + " 之後資料");
+            request.query(queryString, function(error, resultSet) {
+                if (error) {
+                    console.log("查詢失敗： " + error);
+                    throw error;
+                }
+                mssql.close();
+                console.log("查詢成功，發現[" + resultSet.length + "]筆數據異常");
+                resultSet.forEach(function(irregularEntry) {
+                    console.log(irregularEntry.recordDate + " " + irregularEntry.prodLineID + "線 -" + irregularEntry.recordTime + "氣泡數：" + irregularEntry.unitSeedCount);
+                });
+            });
+        });
+    }
+}, null, true, 'Asia/Taipei');

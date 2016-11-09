@@ -1,35 +1,36 @@
 {
-    "name": "seed-count",
-    "version": "1.0.0",
-    "description": "seed count project",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/junior-upgi/seedCount.git"
-    },
-    "author": "Chia-Yu Tsai",
-    "license": "ISC",
-    "bugs": {
-        "url": "https://github.com/junior-upgi/seedCount/issues"
-    },
-    "homepage": "https://github.com/junior-upgi/seedCount#readme",
-    "dependencies": {
-        "body-parser": "*",
-        "bootstrap": "*",
-        "cors": "*",
-        "cron": "*",
-        "express": "*",
-        "jquery": "*",
-        "moment": "*",
-        "moment-timezone": "*",
-        "mssql": "*",
-        "multer": "*",
-        "numeral": "*"
-    },
-    "devDependencies": {
-        "eslint": "*",
-        "bootlint": "*"
-    }
+  "name": "seed-count",
+  "version": "1.0.0",
+  "description": "seed count project",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/junior-upgi/seedCount.git"
+  },
+  "author": "Chia-Yu Tsai",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/junior-upgi/seedCount/issues"
+  },
+  "homepage": "https://github.com/junior-upgi/seedCount#readme",
+  "dependencies": {
+    "body-parser": "*",
+    "bootstrap": "*",
+    "cors": "*",
+    "cron": "*",
+    "express": "*",
+    "jquery": "*",
+    "moment": "*",
+    "moment-timezone": "*",
+    "mssql": "*",
+    "multer": "*",
+    "mysql": "^2.12.0",
+    "numeral": "*"
+  },
+  "devDependencies": {
+    "eslint": "*",
+    "bootlint": "*"
+  }
 }
