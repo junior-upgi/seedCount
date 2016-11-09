@@ -16,7 +16,7 @@ $(document).on("click", "td.seedCountField", function() {
             .css("font-weight", "bold");
         workingRow.after('<tr class="dataEntryRow"></tr>'); // insert one row under the current <tr>
         // load the inline edit template
-        $("tr.dataEntryRow").load("./inlineEditTemplate.html", function(response, status) {
+        $("tr.dataEntryRow").load("./template/inlineEdit.html", function(response, status) {
             if (status === "success") { // if template successfully loaded
                 //load data into common fields 時間、廠區、產線
                 $("input#recordDatetime").val(getWorkDatetimeString(
@@ -52,6 +52,7 @@ $(document).on("click", "td.seedCountField", function() {
                             $("span#existingPhotoPath").text(seedCountDataEntry.photoLocation);
                         }
                         $("input#created").val(moment(seedCountDataEntry.created, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss"));
+                        $("form#inlineEditForm").append('&nbsp;&nbsp;&nbsp;&nbsp;<button id="deleteRecord" class="btn btn-danger btn-lg">刪除</button>');
                         formAction = backendHost + "seedCount/api/updateRecord"; // set the API endpoint to post to update record
                     }).fail(function() {
                         console.log("單筆資料擷取發生錯誤，嘗試重設系統...");

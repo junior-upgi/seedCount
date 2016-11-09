@@ -49,7 +49,7 @@ function previous() {
     $("tbody#situationTableDataSection").empty();
     $("tr#situationTableHeading").empty();
     editModeInProgress = false;
-    workingDate = moment.tz(workingDate, "Asia/Taipei").add(-1, "day").format("YYYY-MM-DD");
+    workingDate = moment.tz(workingDate, "Asia/Taipei").add(-1, "days").format("YYYY-MM-DD");
     constructSituationTable(workingDate);
 };
 
@@ -81,7 +81,7 @@ function next() {
     $("tbody#situationTableDataSection").empty();
     $("tr#situationTableHeading").empty();
     editModeInProgress = false;
-    workingDate = moment.tz(workingDate, "Asia/Taipei").add(1, "day").format("YYYY-MM-DD");
+    workingDate = moment.tz(workingDate, "Asia/Taipei").add(1, "days").format("YYYY-MM-DD");
     constructSituationTable(workingDate);
 };
 
