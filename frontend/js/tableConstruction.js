@@ -66,7 +66,7 @@ function constructSituationTable(dateString) {
     // create daily overall summary
     $("#situationTableFooter").append('<th class="text-center dailyAverageField"></th>');
     // proceed to getting actual table data
-    $.getJSON(backendHost + "seedCount/api/getRecordCountOnDate?workingDate=" + dateString, function(result) {
+    $.getJSON(backendHost + "seedCount/api/getRecordCount?workingDate=" + dateString, function(result) {
         if (JSON.parse(result)[0].recordCount < 1) {
             $("#workingDateBanner").text(dateString + " 尚無"); //set the date label on the situation table caption
             //skip the table data population step and go straight to table formatting
@@ -74,7 +74,7 @@ function constructSituationTable(dateString) {
         } else {
             $("#workingDateBanner").text(dateString); //set the date label on the situation table caption
             //ajax POST for seed count data and pass on the data for processing
-            $.getJSON(backendHost + "seedCount/api/getRecordsetOnDate?workingDate=" + dateString, function(result) {
+            $.getJSON(backendHost + "seedCount/api/getRecordset?workingDate=" + dateString, function(result) {
                 populateSituationTable(JSON.parse(result));
             });
         }
@@ -189,5 +189,14 @@ function togglePreventDisplay() {
             $(".preventDisplay").hide();
             $("button#preventDisplayToggleButton").text("顯示");
         }
+    } else {
+        alert("要改變顯示內容請先將修改模式關閉！");
     }
 };
+
+function removeTableComponent() {
+    $("span.workingDate").empty();
+    $("tr#situationTableFooter").empty();
+    $("tbody#situationTableDataSection").empty();
+    $("tr#situationTableHeading").empty();
+}

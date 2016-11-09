@@ -2,15 +2,15 @@
     <form id="inlineEditForm" action="" method="post" enctype="multipart/form-data" style="margin:10px;padding:10px;">
         <input id="recordDatetime" name="recordDatetime" type="text" class="text-center" required readonly hidden>
         <input id="prodFacilityID" name="prodFacilityID" type="text" class="text-center" required readonly hidden>
-        <input id="prodLineID" name="prodLineID" type="text" class="text-center" required readonly hidden><br>
+        <input id="prodLineID" name="prodLineID" type="text" class="text-center" required readonly hidden>
         <input id="prodReference" name="prodReference" type="text" placeholder="產品編號(必填)" style="width:180px;" class="inlineEditControl text-center" required>
+        <input id="thickness" name="thickness" type="number" min="1" max="10" step="0.05" style="width:180px;" class="inlineEditControl text-center" placeholder="玻璃厚度(必填)" required>
         <input id="count_0" name="count_0" type="number" min="0" max="30" step="1" style="width:180px;" placeholder="取樣1(必填)" class="inlineEditControl seedCountField text-center" required>
         <input id="count_1" name="count_1" type="number" min="0" max="30" step="1" placeholder="取樣2" class="inlineEditControl seedCountField text-center">
         <input id="count_2" name="count_2" type="number" min="0" max="30" step="1" placeholder="取樣3" class="inlineEditControl seedCountField text-center">
         <input id="count_3" name="count_3" type="number" min="0" max="30" step="1" placeholder="取樣4" class="inlineEditControl seedCountField text-center">
         <input id="count_4" name="count_4" type="number" min="0" max="30" step="1" placeholder="取樣5" class="inlineEditControl seedCountField text-center">
-        <input id="count_5" name="count_5" type="number" min="0" max="30" step="1" placeholder="取樣6" class="inlineEditControl seedCountField text-center">
-        <input id="thickness" name="thickness" type="number" min="1" max="10" step="0.05" style="width:180px;" class="inlineEditControl text-center" placeholder="玻璃厚度(必填)" required><br><br>
+        <input id="count_5" name="count_5" type="number" min="0" max="30" step="1" placeholder="取樣6" class="inlineEditControl seedCountField text-center"><br><br>
         <textarea id="note" name="note" rows="4" cols="50" placeholder="備註資訊" class="inlineEditControl"></textarea><br><br>
         <div id="photoControlGroup">
             <input id="photo" name="photo" type="file" accept="image/*" class="inlineEditControl">

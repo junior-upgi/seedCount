@@ -10,14 +10,14 @@ var moment = require('moment-timezone');
 var workingTimezone = "Asia/Taipei";
 var utility = require('./uuidGenerator.js');
 
-//var frontendServer = "http://192.168.0.16:80/"; //development environment
-var frontendServer = "http://upgi.ddns.net:3355/"; //production server
+var frontendServer = "http://192.168.0.16:80/"; //development environment
+//var frontendServer = "http://upgi.ddns.net:3355/"; //production server
 
 var mssqlConfig = {
     user: 'productionHistory',
     password: 'productionHistory',
-    //server: 'upgi.ddns.net' //access database from the Internet (development)
-    server: '192.168.168.5' //access database from LAN (production)
+    server: 'upgi.ddns.net' //access database from the Internet (development)
+        //server: '192.168.168.5' //access database from LAN (production)
 };
 
 app.use(cors());
@@ -130,25 +130,7 @@ app.post('/seedCount/api/insertRecord', upload.any(), function(req, res) {
     });
 });
 
-app.get('/seedCount/api/getRecordsetOnDate', function(req, res) {
-    mssql.connect(mssqlConfig, function(error) {
-        if (error) throw error;
-        var request = new mssql.Request();
-        var queryString = "SELECT * FROM productionHistory.dbo.seedCountResult WHERE recordDate='" + req.query.workingDate + "' ORDER BY prodLineID,recordDatetime;";
-        //console.log(queryString + '\n');
-        request.query(queryString, function(error, resultSet) {
-            if (error) {
-                console.log("氣泡數資料讀取錯誤： " + error + '\n')
-                throw error;
-            }
-            console.log("氣泡數計算結果讀取成功\n");
-            mssql.close();
-            res.json(JSON.stringify(resultSet));
-        });
-    });
-});
-
-app.get('/seedCount/api/getRecordCountOnDate', function(req, res) {
+app.get('/seedCount/api/getRecordCount', function(req, res) {
     var dateToCheck = '';
     if (req.query.workingDate === undefined) {
         console.log('parameter not received, empty results returned to the client...\n');
@@ -185,7 +167,7 @@ app.get('/seedCount/api/getRecordCountOnDate', function(req, res) {
     }
 });
 
-app.get('/seedCount/api/getRecordAtDatetime', function(req, res) {
+app.get('/seedCount/api/getRecord', function(req, res) {
     mssql.connect(mssqlConfig, function(error) {
         if (error) throw error;
         var request = new mssql.Request();
@@ -198,6 +180,24 @@ app.get('/seedCount/api/getRecordAtDatetime', function(req, res) {
                 throw error;
             }
             console.log("retrieveRecord success...!\n");
+            mssql.close();
+            res.json(JSON.stringify(resultSet));
+        });
+    });
+});
+
+app.get('/seedCount/api/getRecordset', function(req, res) {
+    mssql.connect(mssqlConfig, function(error) {
+        if (error) throw error;
+        var request = new mssql.Request();
+        var queryString = "SELECT * FROM productionHistory.dbo.seedCountResult WHERE recordDate='" + req.query.workingDate + "' ORDER BY prodLineID,recordDatetime;";
+        //console.log(queryString + '\n');
+        request.query(queryString, function(error, resultSet) {
+            if (error) {
+                console.log("氣泡數資料讀取錯誤： " + error + '\n')
+                throw error;
+            }
+            console.log("氣泡數計算結果讀取成功\n");
             mssql.close();
             res.json(JSON.stringify(resultSet));
         });

@@ -32,10 +32,7 @@ function autoRefresh() {
 function switchToDate() {
     increaseInaccessibleCounter(10, 10);
     if ($("#designatedDate").val() !== '') {
-        $("span.workingDate").empty();
-        $("tr#situationTableFooter").empty();
-        $("tbody#situationTableDataSection").empty();
-        $("tr#situationTableHeading").empty();
+        removeTableComponent();
         editModeInProgress = false;
         workingDate = $("#designatedDate").val();
         constructSituationTable(workingDate);
@@ -44,10 +41,7 @@ function switchToDate() {
 
 function previous() {
     increaseInaccessibleCounter(10, 10);
-    $("span.workingDate").empty();
-    $("tr#situationTableFooter").empty();
-    $("tbody#situationTableDataSection").empty();
-    $("tr#situationTableHeading").empty();
+    removeTableComponent();
     editModeInProgress = false;
     workingDate = moment.tz(workingDate, "Asia/Taipei").add(-1, "days").format("YYYY-MM-DD");
     constructSituationTable(workingDate);
@@ -55,20 +49,14 @@ function previous() {
 
 function refresh() {
     increaseInaccessibleCounter(10, 10);
-    $("span.workingDate").empty();
-    $("tr#situationTableFooter").empty();
-    $("tbody#situationTableDataSection").empty();
-    $("tr#situationTableHeading").empty();
+    removeTableComponent();
     editModeInProgress = false;
     constructSituationTable(workingDate);
 };
 
 function today() {
     increaseInaccessibleCounter(10, 10);
-    $("span.workingDate").empty();
-    $("tr#situationTableFooter").empty();
-    $("tbody#situationTableDataSection").empty();
-    $("tr#situationTableHeading").empty();
+    removeTableComponent();
     editModeInProgress = false;
     workingDate = getWorkDateString(moment.tz(moment(), "Asia/Taipei"));
     constructSituationTable(workingDate);
@@ -76,10 +64,7 @@ function today() {
 
 function next() {
     increaseInaccessibleCounter(10, 10);
-    $("span.workingDate").empty();
-    $("tr#situationTableFooter").empty();
-    $("tbody#situationTableDataSection").empty();
-    $("tr#situationTableHeading").empty();
+    removeTableComponent();
     editModeInProgress = false;
     workingDate = moment.tz(workingDate, "Asia/Taipei").add(1, "days").format("YYYY-MM-DD");
     constructSituationTable(workingDate);
