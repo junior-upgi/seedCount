@@ -17,7 +17,6 @@ var shiftList = [{
     cReference: "早班",
     start: "07:30",
     end: "15:30",
-    //inspectTimePointList: ['08:00', '10:00', '12:00', '14:00'],
     inspectTimePointList: [{
             timePoint: "08:00",
             trimmedTimePoint: "0800",
@@ -45,7 +44,6 @@ var shiftList = [{
     cReference: "中班",
     start: "15:30",
     end: "23:30",
-    //inspectTimePointList: ['16:00', '18:00', '20:00', '22:00'],
     inspectTimePointList: [{
             timePoint: "16:00",
             trimmedTimePoint: "1600",
@@ -73,7 +71,6 @@ var shiftList = [{
     cReference: "夜班",
     start: "23:30",
     end: "07:30",
-    //inspectTimePointList: ['00:00', '02:00', '04:00', '06:00'],
     inspectTimePointList: [{
             timePoint: "00:00",
             trimmedTimePoint: "0000",

@@ -1,6 +1,7 @@
 "use strict";
 
-var hideProdReferenceColumn = true;
+var hideProdReferenceColumn = false;
+var hideTimePointColumn = false;
 var preventDisplay = true;
 
 function constructSituationTable(dateString) {
