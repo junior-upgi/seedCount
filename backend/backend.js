@@ -1,24 +1,25 @@
-var express = require("express");
 var CronJob = require("cron").CronJob;
 var cors = require("cors");
-var app = express();
-var multer = require("multer");
-var upload = multer({ dest: "seedImage/" });
+var express = require("express");
 var fs = require("fs");
-var mysql = require('mysql');
-var mssql = require("mssql");
+var app = express();
 var moment = require("moment-timezone");
-var workingTimezone = "Asia/Taipei";
+var mssql = require("mssql");
+var multer = require("multer");
+var mysql = require("mysql");
+var REQUEST = require("request");
+var upload = multer({ dest: "seedImage/" });
 var utility = require("./uuidGenerator.js");
 
-//var frontendServer = "http://192.168.0.16:80/"; //development environment
-var frontendServer = "http://upgi.ddns.net:3355/"; //production server
+//var frontendServer = "http://192.168.0.16:80/"; // development environment
+var frontendServer = "http://upgi.ddns.net:3355/"; // production server
+var broadcastServer = "http://192.168.168.25:3939/"; // broadcast server
 
 var mssqlConfig = {
     user: 'productionHistory',
     password: 'productionHistory',
-    //server: 'upgi.ddns.net' //access database from the Internet (development)
-    server: '192.168.168.5' //access database from LAN (production)
+    //server: 'upgi.ddns.net' // access database from the Internet (development)
+    server: '192.168.168.5' // access database from LAN (production)
 };
 
 // host for the mobile messaging system 
@@ -30,6 +31,8 @@ var mysqlConfig = {
     password: 'overdueMonitor',
     charset: 'utf8_bin'
 };
+
+var workingTimezone = "Asia/Taipei";
 
 app.use(cors());
 
@@ -222,12 +225,13 @@ var currentDatetime;
 new CronJob('*/5 * * * * *', function() {
     currentDatetime = moment(moment(), "YYYY-MM-DD HH:mm:ss");
     console.log("目前時間: " + currentDatetime.format("YYYY-MM-DD HH:mm:ss"));
-    if ((currentDatetime.format("mm") % 1 === 0) && (currentDatetime.format("ss") % 30 === 0)) {
+    // server inspects system data every minute
+    if ((currentDatetime.format("mm") % 1 === 0) && (currentDatetime.format("ss") % 60 === 0)) {
         console.log("進行氣泡數據檢查");
         mssql.connect(mssqlConfig, function(error) {
             if (error) throw error;
             var request = new mssql.Request();
-            var queryString = "SELECT * FROM productionHistory.dbo.seedCountResult WHERE unitSeedCount>10 AND recordDatetime>'" +
+            var queryString = "SELECT * FROM productionHistory.dbo.seedCountResult WHERE unitSeedCount>=10 AND recordDatetime>'" +
                 moment(currentDatetime, "YYYY-MM-DD HH:mm:ss").subtract(2, "hours").format("YYYY-MM-DD HH:mm:ss") + "'";
             console.log("查詢範圍：" + moment(currentDatetime, "YYYY-MM-DD HH:mm:ss").subtract(2, "hours").format("YYYY-MM-DD HH:mm:ss") + " 之後資料");
             request.query(queryString, function(error, resultSet) {
@@ -237,33 +241,33 @@ new CronJob('*/5 * * * * *', function() {
                 }
                 mssql.close();
                 console.log("查詢成功，發現[" + resultSet.length + "]筆數據異常");
+
                 console.log("發佈行動裝置通知");
                 resultSet.forEach(function(irregularEntry) {
-                    console.log(irregularEntry.recordDate + " " + irregularEntry.prodLineID + "線 -" + irregularEntry.recordTime + "氣泡數：" + irregularEntry.unitSeedCount);
-                    /////////////////////////////////////////////////////////////////
-                    /*
-                    var recipientID = "";
-                    var messageID = utility.uuidGenerator();
-                    var broadcastStatusID = utility.uuidGenerator();
-                    // establish connection to mobileMessagingSystem server
-                    var mysqlConn = mysql.createConnection(mysqlConfig);
-                    mysqlConn.connect();
-                    // write to the mobileMessagingSystem.message table
-                    mysqlConn.query("INSERT INTO mobileMessagingSystem.message (`ID`,`messageCategoryID`,`systemCategoryID`,`manualTopic`,`content`,`created_at`) VALUES ('" + messageID + "'," + item.messageCategoryID + "," + item.systemCategoryID + ",'" + item.manualTopic + "','" + item.content + "','" + convertDateTime(item.generated) + "');", function(error) {
-                        if (error) throw error;
+                    console.log(irregularEntry.recordDate + " " + irregularEntry.prodLineID + " 線 - " + irregularEntry.recordTime + " 氣泡數：" + irregularEntry.unitSeedCount);
+                    REQUEST({
+                        url: broadcastServer + "broadcast",
+                        method: "post",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        json: {
+                            "messageCategoryID": "999",
+                            "systemCategoryID": "4",
+                            "manualTopic": "氣泡數異常通報",
+                            "content": irregularEntry.recordDate + " " + irregularEntry.prodLineID + "線 - " + irregularEntry.recordTime + " 氣泡數：" + irregularEntry.unitSeedCount,
+                            "recipientID": "05060001",
+                            "userGroup": "Admin",
+                            "url": "http://upgi.ddns.net:3355/seedCount",
+                            "audioFile": "alert.mp3"
+                        }
+                    }, function(error, response, body) {
+                        if (error) {
+                            console.log(error);
+                        } else {
+                            //console.log(response.statusCode, body);
+                        }
                     });
-                    // check the user ID used by the mobile messaging system (compare against the particular sales' ERP ID or 員工編號)
-                    mysqlConn.query("SELECT a.userID,c.erpID FROM upgiSystem.userGroupMembership a INNER JOIN (SELECT ID FROM upgiSystem.userGroup WHERE reference='Sales') b ON a.userGroupID=b.ID LEFT JOIN upgiSystem.user c ON a.userID=c.ID WHERE a.deprecated IS NULL AND c.erpID='" + item.recipientID + "';", function(error, data, fieldList) {
-                        if (error) throw error;
-                        recipientID = data[0].userID;
-                        // write the mobileMessagingSystem.broadcastStatus table
-                        mysqlConn.query("INSERT INTO mobileMessagingSystem.broadcastStatus (`ID`,`messageID`,`recipientID`,`primaryRecipient`,`url`,`audioFile`,`permanent`,`created_at`) VALUES ('" + broadcastStatusID + "','" + messageID + "','" + recipientID + "','1','" + item.url + "','" + item.audioFile + "',0,'" + convertDateTime(item.generated) + "');", function(error) {
-                            if (error) throw error;
-                        });
-                        mysqlConn.end();
-                    });
-                    */
-                    ///////////////////////////////////////////////////////////////////////
                 });
             });
         });
