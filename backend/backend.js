@@ -1,3 +1,5 @@
+var bodyParser = require("body-parser");
+var urlencodedParser = bodyParser.urlencoded({ extended: false });
 var CronJob = require("cron").CronJob;
 var cors = require("cors");
 var express = require("express");
@@ -94,22 +96,26 @@ app.post("/seedCount/api/updateRecord", upload.any(), function(req, res) {
 });
 
 // delete a record
-app.post("/seedCount/api/deleteRecord", function(req, res) {
+app.post("/seedCount/api/deleteRecord", urlencodedParser, function(req, res) {
+    //console.log(req.body);
     mssql.connect(mssqlConfig, function(error) {
-        if (error) throw error;
+        if (error) {
+            console.log("資料庫連結發生錯誤： " + error + '\n');
+            res.status(500).send("資料庫連結發生錯誤： " + error).end();
+        }
         var mssqlRequest = new mssql.Request();
         var queryString = "SELECT photoLocation FROM productionHistory.dbo.seedCount WHERE " +
-            "recordDatetime='" + req.query.recordDatetime + "' AND " +
-            "prodFacilityID='" + req.query.prodFacilityID + "' AND " +
-            "prodLineID='" + req.query.prodLineID + "';";
-        console.log(queryString);
+            "recordDatetime='" + req.body.recordDatetime + "' AND " +
+            "prodFacilityID='" + req.body.prodFacilityID + "' AND " +
+            "prodLineID='" + req.body.prodLineID + "';";
+        //console.log(queryString);
         mssqlRequest.query(queryString, function(error, resultset) { // query the database and get the matching file's photoLocation data
             if (error) {
                 console.log("資料讀取發生錯誤： " + error + '\n');
                 res.status(500).send("資料讀取發生錯誤： " + error).end();
             }
-            console.log(resultset);
-            console.log(resultset.length);
+            //console.log(resultset);
+            //console.log(resultset.length);
             if (resultset.length === 0) {
                 console.log("資料不存在");
                 res.status(200).send("資料不存在").end();
@@ -123,9 +129,9 @@ app.post("/seedCount/api/deleteRecord", function(req, res) {
                         } else {
                             console.log("資料附加檔案刪除成功");
                             queryString = "DELETE FROM productionHistory.dbo.seedCount WHERE " +
-                                "recordDatetime='" + req.query.recordDatetime + "' AND " +
-                                "prodFacilityID='" + req.query.prodFacilityID + "' AND " +
-                                "prodLineID='" + req.query.prodLineID + "';";
+                                "recordDatetime='" + req.body.recordDatetime + "' AND " +
+                                "prodFacilityID='" + req.body.prodFacilityID + "' AND " +
+                                "prodLineID='" + req.body.prodLineID + "';";
                             console.log(queryString);
                             mssqlRequest.query(queryString, function(error) {
                                 if (error) {
@@ -142,9 +148,9 @@ app.post("/seedCount/api/deleteRecord", function(req, res) {
                 } else {
                     console.log("發現資料且無附加檔案");
                     queryString = "DELETE FROM productionHistory.dbo.seedCount WHERE " +
-                        "recordDatetime='" + req.query.recordDatetime + "' AND " +
-                        "prodFacilityID='" + req.query.prodFacilityID + "' AND " +
-                        "prodLineID='" + req.query.prodLineID + "';";
+                        "recordDatetime='" + req.body.recordDatetime + "' AND " +
+                        "prodFacilityID='" + req.body.prodFacilityID + "' AND " +
+                        "prodLineID='" + req.body.prodLineID + "';";
                     mssqlRequest.query(queryString, function(error) {
                         if (error) {
                             mssql.close();
@@ -173,6 +179,7 @@ app.post('/seedCount/api/insertRecord', upload.any(), function(req, res) {
         fs.rename(req.files[0].path, photoLocation, function(error) {
             if (error) {
                 console.log(req.body.prodLineID + " 圖片上傳錯誤： " + error + '\n');
+                res.status(500).send(req.body.prodLineID + " 圖片上傳錯誤： " + error).end();
             } else {
                 console.log(req.body.prodLineID + " 圖片上傳成功" + '\n');
             }
@@ -180,7 +187,10 @@ app.post('/seedCount/api/insertRecord', upload.any(), function(req, res) {
     }
     // connect to data server to insert data entry
     mssql.connect(mssqlConfig, function(error) {
-        if (error) throw error;
+        if (error) {
+            console.log("資料庫連結發生錯誤： " + error + '\n');
+            res.status(500).send("資料庫連結發生錯誤： " + error).end();
+        }
         var mssqlRequest = new mssql.Request();
         var queryString = "INSERT INTO productionHistory.dbo.seedCount VALUES ('" +
             moment.tz(req.body.recordDatetime, "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss") + "','" +
@@ -198,16 +208,16 @@ app.post('/seedCount/api/insertRecord', upload.any(), function(req, res) {
             (photoLocation === "NULL" ? "NULL" : "'" + photoLocation + "'") + ",'" +
             moment.tz(moment(), "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss") + "','" +
             moment.tz(moment(), "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss") + "');";
-        console.log(queryString + '\n');
+        // console.log(queryString + '\n');
         // insert data
         mssqlRequest.query(queryString, function(error) {
             if (error) {
-                console.log("資料寫入錯誤： " + error + '\n')
-                throw error;
+                console.log("資料讀取發生錯誤： " + error + '\n');
+                res.status(500).send("資料讀取發生錯誤： " + error).end();
             }
             mssql.close();
             console.log(moment.tz(req.body.recordDatetime, "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料寫入成功\n");
-            res.json({ "status": "success" });
+            res.status(200).send(moment.tz(req.body.recordDatetime, "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料寫入成功").end();
         });
     });
 });

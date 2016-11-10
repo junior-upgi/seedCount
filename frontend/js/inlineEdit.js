@@ -37,6 +37,21 @@ $(document).on("click", "td.seedCountField", function() {
                 $("#prodReference").focus(); // set keyboard focus on the first input field
                 processDataInput(); // when cell data changes, calcuate the result on-the-fly
                 $("form#inlineEditForm").submit(function() { // when user clicks on the submit button on the inline edit form
+                    if (workingCell.hasClass("filled")) {
+                        $("input#created").val(moment(moment(), "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss"));
+                        $("input#modified").val(moment(moment(), "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss"));
+                    }
+                    var formData = new FormData($(this)[0]);
+                    $.ajax({
+                        url: formAction,
+                        type: "post",
+                        data: formData,
+                        async: false,
+                        cache: false,
+                        contentType: false,
+                        processData: false
+                    });
+                    refresh();
                     return false;
                 });
                 $("form#inlineEditForm").on("reset", function() { // when user clicks on the reset button on the inline edit form
@@ -48,18 +63,12 @@ $(document).on("click", "td.seedCountField", function() {
                 $("button#deleteRecord").on("click", function() {
                     formAction = backendHost + "/seedCount/api/deleteRecord";
                     $.post(
-                        formAction, {
-                            "recordDatetime": getWorkDatetimeString(
-                                workingCell.data("workingDate"),
-                                workingCell.data("timePoint").slice(0, 2) + ":" + workingCell.data("timePoint").slice(2)),
-                            "prodFacilityID": workingCell.data("prodFacilityID"),
-                            "prodLineID": workingCell.data("prodLineID")
-                        },
-                        function() {
-                            refresh();
-                            return false;
-                        }
+                        formAction,
+                        $("form#inlineEditForm").serialize(),
+                        "json"
                     );
+                    refresh();
+                    return false;
                 });
             } else { // when template loading does not present a successful result, reset the page
                 console.log("編輯面版載入錯誤：" + status);
