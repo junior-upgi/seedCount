@@ -11,14 +11,14 @@ var moment = require("moment-timezone");
 var workingTimezone = "Asia/Taipei";
 var utility = require("./uuidGenerator.js");
 
-var frontendServer = "http://192.168.0.16:80/"; //development environment
-//var frontendServer = "http://upgi.ddns.net:3355/"; //production server
+//var frontendServer = "http://192.168.0.16:80/"; //development environment
+var frontendServer = "http://upgi.ddns.net:3355/"; //production server
 
 var mssqlConfig = {
     user: 'productionHistory',
     password: 'productionHistory',
-    server: 'upgi.ddns.net' //access database from the Internet (development)
-        //server: '192.168.168.5' //access database from LAN (production)
+    //server: 'upgi.ddns.net' //access database from the Internet (development)
+    server: '192.168.168.5' //access database from LAN (production)
 };
 
 // host for the mobile messaging system 
@@ -237,9 +237,9 @@ new CronJob('*/5 * * * * *', function() {
                 }
                 mssql.close();
                 console.log("查詢成功，發現[" + resultSet.length + "]筆數據異常");
+                console.log("發佈行動裝置通知");
                 resultSet.forEach(function(irregularEntry) {
                     console.log(irregularEntry.recordDate + " " + irregularEntry.prodLineID + "線 -" + irregularEntry.recordTime + "氣泡數：" + irregularEntry.unitSeedCount);
-                    console.log("發佈行動裝置通知");
                     /////////////////////////////////////////////////////////////////
                     /*
                     var recipientID = "";
