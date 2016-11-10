@@ -128,9 +128,13 @@ app.post("/seedCount/api/deleteRecord", function(req, res) {
                                 "prodLineID='" + req.query.prodLineID + "';";
                             mssqlRequest.query(queryString, function(error) {
                                 if (error) {
+                                    mssql.close();
                                     console.log("資料刪除發生錯誤： " + error + '\n');
                                     res.status(500).send("資料刪除發生錯誤： " + error).end();
                                 }
+                                mssql.close();
+                                console.log("資料刪除成功");
+                                res.status(200).send("資料刪除成功").end();
                             });
                         }
                     });
@@ -142,14 +146,15 @@ app.post("/seedCount/api/deleteRecord", function(req, res) {
                         "prodLineID='" + req.query.prodLineID + "';";
                     mssqlRequest.query(queryString, function(error) {
                         if (error) {
+                            mssql.close();
                             console.log("資料刪除發生錯誤： " + error + '\n');
                             res.status(500).send("資料刪除發生錯誤： " + error).end();
                         }
+                        mssql.close();
+                        console.log("資料刪除成功");
+                        res.status(200).send("資料刪除成功").end();
                     });
                 }
-                mssql.close();
-                console.log("資料刪除成功");
-                res.status(200).send("資料刪除成功").end();
             }
         });
     });
