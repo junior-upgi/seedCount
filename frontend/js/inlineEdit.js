@@ -35,26 +35,32 @@ $(document).on("click", "td.seedCountField", function() {
                     formAction = backendHost + "/seedCount/api/insertRecord"; // set the API endpoint to post to insert record
                 }
                 $("#prodReference").focus(); // set keyboard focus on the first input field
-                readyFormForSubmission(workingCell); // confirm form is ready for submission after this point
                 processDataInput(); // when cell data changes, calcuate the result on-the-fly
                 $("form#inlineEditForm").submit(function() { // when user clicks on the submit button on the inline edit form
-                    $(this).ajaxSubmit();
                     return false;
                 });
                 $("form#inlineEditForm").on("reset", function() { // when user clicks on the reset button on the inline edit form
                     loadExistingData(workingCell);
                 });
                 $("button#cancelInlineEdit").on("click", function() { // when user clicks on the cancel button in the inline edit form
-                    //due to the way jquery.form.js works, the only way known to cancel a submission is through 'return false' in the beforeSubmit option
-                    $(this).ajaxSubmit({
-                        beforeSubmit: function() {
+                    return false;
+                });
+                $("button#deleteRecord").on("click", function() {
+                    formAction = backendHost + "/seedCount/api/deleteRecord";
+                    $.post(
+                        formAction, {
+                            "recordDatetime": getWorkDatetimeString(
+                                workingCell.data("workingDate"),
+                                workingCell.data("timePoint").slice(0, 2) + ":" + workingCell.data("timePoint").slice(2)),
+                            "prodFacilityID": workingCell.data("prodFacilityID"),
+                            "prodLineID": workingCell.data("prodLineID")
+                        },
+                        function() {
                             refresh();
                             return false;
                         }
-                    });
-                    return false;
+                    );
                 });
-                deleteRecord();
             } else { // when template loading does not present a successful result, reset the page
                 console.log("編輯面版載入錯誤：" + status);
                 refresh();
@@ -62,10 +68,6 @@ $(document).on("click", "td.seedCountField", function() {
         });
     }
 });
-
-function deleteRecord() {
-    formAction = "";
-};
 
 function loadExistingData(cellObject) {
     $.getJSON(backendHost + "/seedCount/api/getRecord", {
@@ -105,24 +107,6 @@ function loadExistingData(cellObject) {
         console.log("單筆資料擷取發生錯誤，嘗試重設系統...");
         editModeInProgress = false;
         refresh();
-    });
-};
-
-function readyFormForSubmission(cellObject) {
-    $("form#inlineEditForm").ajaxForm({
-        url: formAction,
-        method: "post",
-        beforeSubmit: function() {
-            editModeInProgress = false;
-            if (cellObject.hasClass("empty")) {
-                // generate a new created datetime if it's a new record, 'filled' records should already have a created datetime value
-                $("input#created").val(moment.tz("Asia/Taipei").format("YYYY-MM-DD HH:mm:ss"));
-            }
-            $("input#modified").val(moment.tz("Asia/Taipei").format("YYYY-MM-DD HH:mm:ss"));
-        },
-        success: function() {
-            refresh();
-        }
     });
 };
 

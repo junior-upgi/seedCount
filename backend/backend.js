@@ -102,11 +102,11 @@ app.post("/seedCount/api/deleteRecord", function(req, res) {
             "recordDatetime='" + req.query.recordDatetime + "' AND " +
             "prodFacilityID='" + req.query.prodFacilityID + "' AND " +
             "prodLineID='" + req.query.prodLineID + "';";
+        console.log(queryString);
         mssqlRequest.query(queryString, function(error, resultset) { // query the database and get the matching file's photoLocation data
             if (error) {
                 console.log("資料讀取發生錯誤： " + error + '\n');
-                res.status(500).send("資料讀取發生錯誤： " + error);
-                throw error;
+                res.status(500).send("資料讀取發生錯誤： " + error).end();
             }
             console.log(resultset);
             console.log(resultset.length);
@@ -126,6 +126,7 @@ app.post("/seedCount/api/deleteRecord", function(req, res) {
                                 "recordDatetime='" + req.query.recordDatetime + "' AND " +
                                 "prodFacilityID='" + req.query.prodFacilityID + "' AND " +
                                 "prodLineID='" + req.query.prodLineID + "';";
+                            console.log(queryString);
                             mssqlRequest.query(queryString, function(error) {
                                 if (error) {
                                     mssql.close();
