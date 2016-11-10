@@ -1,12 +1,12 @@
 "use strict";
 
-var hideProdReferenceColumn = false;
-var hideTimePointColumn = false;
+var hideProdReferenceColumn = true;
+var hideTimePointColumn = true;
 var preventDisplay = true;
 
 function constructSituationTable(dateString) {
     // construct the table heading
-    $("#situationTableHeading").append('<th class="text-center">班次</th><th class="text-center">時間</th><th id="prodReferenceFieldLabel" class="text-center">產品</th>');
+    $("#situationTableHeading").append('<th class="text-center">班次</th><th id="timePointFieldLabel" class="text-center">時間</th><th id="prodReferenceFieldLabel" class="text-center">產品</th>');
     $.each(prodLineList, function(index, prodLine) {
         $("#situationTableHeading").append('<th class="text-center ' + prodLine.reference + '">' + prodLine.reference + '</th>');
         //check if the index production line has the hidden property being true, if so, add a prevent display class attributes
@@ -147,11 +147,16 @@ function formatSituationTable() {
     $("td.night.seedCountField").addClass("warning");
     $("td.graveYard.seedCountField").addClass("info");
     $("td,th").css("border", "1px solid gray");
+    if (hideTimePointColumn === true) {
+        $("th#timePointFieldLabel,td.timePointField").css("display", "none");
+        $("th#situationTableFooterLabel").attr("colspan", $("th#situationTableFooterLabel").attr("colspan") - 1);
+    }
     if (hideProdReferenceColumn === true) {
         $("th#prodReferenceFieldLabel,td.prodReferenceField").css("display", "none");
-        $("th#situationTableFooterLabel").attr("colspan", "2");
+        $("th#situationTableFooterLabel").attr("colspan", $("th#situationTableFooterLabel").attr("colspan") - 1);
     }
     $("td.filled,th.hourlyAverageField,th.prodLineAverageField,th.dailyAverageField").each(function(index, filledSeedCountField) {
+        版
         switch (true) {
             case ($(this).text() < seedCountLevelCap[0].ceiling):
                 $(this).css("color", "green");
