@@ -156,7 +156,6 @@ function formatSituationTable() {
         $("th#situationTableFooterLabel").attr("colspan", $("th#situationTableFooterLabel").attr("colspan") - 1);
     }
     $("td.filled,th.hourlyAverageField,th.prodLineAverageField,th.dailyAverageField").each(function(index, filledSeedCountField) {
-        版
         switch (true) {
             case ($(this).text() < seedCountLevelCap[0].ceiling):
                 $(this).css("color", "green");
