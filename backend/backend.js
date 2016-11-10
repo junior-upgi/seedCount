@@ -8,12 +8,12 @@ var mssql = require("mssql");
 var multer = require("multer");
 var upload = multer({ dest: "seedImage/" });
 var mysql = require("mysql");
-var REQUEST = require("request");
+var httpRequest = require("request");
 var utility = require("./uuidGenerator.js");
 
-//var frontendServer = "http://192.168.0.16:80/"; // development environment
-var frontendServer = "http://upgi.ddns.net:3355/"; // production server
-var broadcastServer = "http://192.168.168.25:3939/"; // broadcast server
+//var frontendServer = "http://192.168.0.16:80"; // development environment
+var frontendServer = "http://upgi.ddns.net:3355"; // production server
+var broadcastServer = "http://upgi.ddns.net:3939"; // broadcast server
 
 var mssqlConfig = {
     user: 'productionHistory',
@@ -61,7 +61,7 @@ app.post("/seedCount/api/updateRecord", upload.any(), function(req, res) {
     // connect to data server to update existing record
     mssql.connect(mssqlConfig, function(error) {
         if (error) throw error;
-        var request = new mssql.Request();
+        var mssqlRequest = new mssql.Request();
         var queryString =
             "UPDATE productionHistory.dbo.seedCount SET " +
             "prodReference='" + req.body.prodReference +
@@ -81,7 +81,7 @@ app.post("/seedCount/api/updateRecord", upload.any(), function(req, res) {
             "' AND prodLineID='" + req.body.prodLineID + "';";
         console.log(queryString + '\n');
         // insert data
-        request.query(queryString, function(error) {
+        mssqlRequest.query(queryString, function(error) {
             if (error) {
                 console.log("資料更新錯誤： " + error + '\n')
                 throw error;
@@ -89,6 +89,41 @@ app.post("/seedCount/api/updateRecord", upload.any(), function(req, res) {
             mssql.close();
             console.log(moment.tz(req.body.recordDatetime, "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料寫入成功\n");
             res.json({ "status": "success" });
+        });
+    });
+});
+
+// delete a record
+app.post("/seedCount/api/deleteRecord", function(req, res) {
+    mssql.connect(mssqlConfig, function(error) {
+        if (error) throw error;
+        var mssqlRequest = new mssql.Request();
+        var queryString = "SELECT photoLocation FROM productionHistory.dbo.seedCount WHERE " +
+            "recordDatetime='" + req.query.recordDatetime + "' AND " +
+            "prodFacilityID='" + req.query.prodFacilityID + "' AND " +
+            "prodLineID='" + req.query.prodLineID + "';";
+        mssqlRequest.query(queryString, function(error, resultset) { // query the database and get the matching file's photoLocation data
+            if (error) {
+                console.log("資料讀取發生錯誤： " + error + '\n');
+                res.sendStatus(500);
+                throw error;
+            }
+            if (resultset[0].photoLocation !== null) { // if photoLocation is not empty, delete the file
+                fs.unlink(resultset[0].photoLocation);
+            }
+            queryString = "DELETE FROM productionHistory.dbo.seedCount WHERE " +
+                "recordDatetime='" + req.query.recordDatetime + "' AND " +
+                "prodFacilityID='" + req.query.prodFacilityID + "' AND " +
+                "prodLineID='" + req.query.prodLineID + "';";
+            mssqlRequest.query(queryString, function(error) {
+                if (error) {
+                    console.log("資料刪除發生錯誤： " + error + '\n');
+                    res.sendStatus(500);
+                    throw error;
+                }
+            });
+            mssql.close();
+            res.sendStatus(200);
         });
     });
 });
@@ -113,7 +148,7 @@ app.post('/seedCount/api/insertRecord', upload.any(), function(req, res) {
     // connect to data server to insert data entry
     mssql.connect(mssqlConfig, function(error) {
         if (error) throw error;
-        var request = new mssql.Request();
+        var mssqlRequest = new mssql.Request();
         var queryString = "INSERT INTO productionHistory.dbo.seedCount VALUES ('" +
             moment.tz(req.body.recordDatetime, "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss") + "','" +
             req.body.prodFacilityID + "','" +
@@ -132,7 +167,7 @@ app.post('/seedCount/api/insertRecord', upload.any(), function(req, res) {
             moment.tz(moment(), "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss") + "');";
         console.log(queryString + '\n');
         // insert data
-        request.query(queryString, function(error) {
+        mssqlRequest.query(queryString, function(error) {
             if (error) {
                 console.log("資料寫入錯誤： " + error + '\n')
                 throw error;
@@ -161,12 +196,12 @@ app.get('/seedCount/api/getRecordCount', function(req, res) {
             console.log('parameter is valid...\n');
             mssql.connect(mssqlConfig, function(error) {
                 if (error) throw error;
-                var request = new mssql.Request();
+                var mssqlRequest = new mssql.Request();
                 var queryString = "SELECT COUNT(*) AS recordCount FROM productionHistory.dbo.seedCount WHERE recordDatetime BETWEEN '" +
                     workDateStartTime.format("YYYY-MM-DD HH:mm:ss:SSS") + "' AND '" +
                     workDateEndTime.format("YYYY-MM-DD HH:mm:ss:SSS") + "';";
                 //console.log(queryString);
-                request.query(queryString, function(error, resultset) {
+                mssqlRequest.query(queryString, function(error, resultset) {
                     if (error) {
                         console.log("recordCountOnDate API failure： " + error + '\n')
                         res.send('{}');
@@ -184,10 +219,10 @@ app.get('/seedCount/api/getRecordCount', function(req, res) {
 app.get('/seedCount/api/getRecord', function(req, res) {
     mssql.connect(mssqlConfig, function(error) {
         if (error) throw error;
-        var request = new mssql.Request();
+        var mssqlRequest = new mssql.Request();
         var queryString = "SELECT * FROM productionHistory.dbo.seedCount WHERE recordDatetime='" + req.query.recordDatetime + "' AND prodFacilityID='" + req.query.prodFacilityID + "' AND prodLineID='" + req.query.prodLineID + "';";
         console.log(queryString + '\n');
-        request.query(queryString, function(error, resultset) {
+        mssqlRequest.query(queryString, function(error, resultset) {
             if (error) {
                 console.log("retrieveRecord API failure： " + error + '\n')
                 res.send('{}');
@@ -203,10 +238,10 @@ app.get('/seedCount/api/getRecord', function(req, res) {
 app.get('/seedCount/api/getRecordset', function(req, res) {
     mssql.connect(mssqlConfig, function(error) {
         if (error) throw error;
-        var request = new mssql.Request();
+        var mssqlRequest = new mssql.Request();
         var queryString = "SELECT * FROM productionHistory.dbo.seedCountResult WHERE recordDate='" + req.query.workingDate + "' ORDER BY prodLineID,recordDatetime;";
         //console.log(queryString + '\n');
-        request.query(queryString, function(error, resultset) {
+        mssqlRequest.query(queryString, function(error, resultset) {
             if (error) {
                 console.log("氣泡數資料讀取錯誤： " + error + '\n')
                 throw error;
@@ -221,11 +256,11 @@ app.get('/seedCount/api/getRecordset', function(req, res) {
 app.listen(4949);
 console.log('seedCount backend server is running on port 4949...\n');
 
-var broadcast = true;
+var broadcast = false;
 var examinePeriod = 8;
 var alertLevel = 10;
-var taskSchedule = "0 45 7,15,23 * * *"; // everyday at 07:45, 15:45, and 23:45
-//var taskSchedule = "0 * * * * *"; // every minute
+//var taskSchedule = "0 45 7,15,23 * * *"; // everyday at 07:45, 15:45, and 23:45
+var taskSchedule = "0 * * * * *"; // every minute
 var currentDatetime;
 var seedCountAlert = new CronJob(taskSchedule, function() {
     currentDatetime = moment(moment(), "YYYY-MM-DD HH:mm:ss");
@@ -234,47 +269,69 @@ var seedCountAlert = new CronJob(taskSchedule, function() {
     console.log("進行氣泡數據檢查");
     mssql.connect(mssqlConfig, function(error) {
         if (error) throw error;
-        var request = new mssql.Request();
+        var mssqlRequest = new mssql.Request();
         var queryString = "SELECT * FROM productionHistory.dbo.seedCountResult WHERE unitSeedCount>=" + alertLevel + " AND recordDatetime>'" +
             moment(currentDatetime, "YYYY-MM-DD HH:mm:ss").subtract(examinePeriod, "hours").format("YYYY-MM-DD HH:mm:ss") + "' ORDER BY recordDatetime, prodLineID;";
         console.log("查詢範圍：" + moment(currentDatetime, "YYYY-MM-DD HH:mm:ss").subtract(examinePeriod, "hours").format("YYYY-MM-DD HH:mm:ss") + " 之後資料");
-        request.query(queryString, function(error, resultset) {
+        mssqlRequest.query(queryString, function(error, resultset) {
             if (error) {
                 console.log("查詢失敗： " + error);
                 throw error;
             }
             mssql.close();
             console.log("查詢完畢，發現[" + resultset.length + "]筆數據異常");
-            if ((broadcast === true) && (resultset.length > 0)) {
+            if (broadcast === true) {
                 var topicString = currentDatetime.format("MM/DD HH:mm") + " 氣泡數異常通報";
-                var contentString = "";
-                resultset.forEach(function(irregularity) {
-                    contentString += moment(irregularity.recordDate, "YYYY-MM-DD").format("MM/DD") + " " + moment(irregularity.recordTime, "HH:mm:ss").format("HH:mm") + " " + irregularity.prodLineID + "線 - " + " 氣泡數：" + irregularity.unitSeedCount + "\n";
-                });
-                console.log("發佈行動裝置通知");
-                REQUEST({
-                    url: broadcastServer + "broadcast",
-                    method: "post",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    json: {
-                        "messageCategoryID": "999",
-                        "systemCategoryID": "4",
-                        "manualTopic": topicString,
-                        "content": contentString,
-                        "recipientID": "05060001",
-                        "userGroup": "Admin",
-                        "url": "http://upgi.ddns.net:3355/seedCount",
-                        "audioFile": "alert.mp3"
-                    }
-                }, function(error, response, body) {
-                    if (error) {
-                        console.log(error);
-                    } else {
-                        //console.log(response.statusCode, body);
-                    }
-                });
+                if (resultset.length > 0) {
+                    var contentString = "";
+                    resultset.forEach(function(irregularity) {
+                        contentString += moment(irregularity.recordDate, "YYYY-MM-DD").format("MM/DD") + " " + moment(irregularity.recordTime, "HH:mm:ss").format("HH:mm") + " " + irregularity.prodLineID + " - " + " 氣泡數：" + irregularity.unitSeedCount + "\n";
+                    });
+                    console.log("發佈行動裝置通知");
+                    httpRequest({
+                        url: broadcastServer + "/broadcast",
+                        method: "post",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        json: {
+                            "messageCategoryID": "999",
+                            "systemCategoryID": "4",
+                            "manualTopic": topicString,
+                            "content": contentString,
+                            "recipientID": "05060001",
+                            "userGroup": "Admin",
+                            "url": frontendServer + "/seedCount",
+                            "audioFile": "" // available sounds: alert.mp3 beep.mp3 warning.mp3 alarm.mp3
+                        }
+                    }, function(error, response, body) {
+                        if (error) {
+                            console.log(error);
+                        } // else { // console.log(response.statusCode, body); }
+                    });
+                } else {
+                    httpRequest({
+                        url: broadcastServer + "/broadcast",
+                        method: "post",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        json: {
+                            "messageCategoryID": "999",
+                            "systemCategoryID": "4",
+                            "manualTopic": topicString,
+                            "content": "前一個工作班次氣泡狀況正常",
+                            "recipientID": "05060001",
+                            "userGroup": "Admin",
+                            "url": frontendServer + "/seedCount",
+                            "audioFile": "alert.mp3" // available sounds: alert.mp3 beep.mp3 warning.mp3 alarm.mp3
+                        }
+                    }, function(error, response, body) {
+                        if (error) {
+                            console.log(error);
+                        } // else { // console.log(response.statusCode, body); }
+                    });
+                }
             }
         });
     });

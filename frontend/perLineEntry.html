@@ -121,7 +121,7 @@
 
 <script>
     $("document").ready(function() {
-        $("#seedCountForm").attr("action", backendHost + "seedCount/api/insertRecord");
+        $("#seedCountForm").attr("action", backendHost + "/seedCount/api/insertRecord");
         $("#title").text(getUrlParameter("prodLineID") + " " + $("#title").text());
         $("#mockRecordDate").val(moment().format("YYYY-MM-DD"));
         $("#recordDate").val(moment().format("YYYY-MM-DD")).css("display", "none");

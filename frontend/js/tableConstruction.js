@@ -67,7 +67,7 @@ function constructSituationTable(dateString) {
     // create daily overall summary
     $("#situationTableFooter").append('<th class="text-center dailyAverageField"></th>');
     // proceed to getting actual table data
-    $.getJSON(backendHost + "seedCount/api/getRecordCount?workingDate=" + dateString, function(result) {
+    $.getJSON(backendHost + "/seedCount/api/getRecordCount?workingDate=" + dateString, function(result) {
         if (JSON.parse(result)[0].recordCount < 1) {
             $("#workingDateBanner").text(dateString + " 尚無"); //set the date label on the situation table caption
             //skip the table data population step and go straight to table formatting
@@ -75,7 +75,7 @@ function constructSituationTable(dateString) {
         } else {
             $("#workingDateBanner").text(dateString); //set the date label on the situation table caption
             //ajax POST for seed count data and pass on the data for processing
-            $.getJSON(backendHost + "seedCount/api/getRecordset?workingDate=" + dateString, function(result) {
+            $.getJSON(backendHost + "/seedCount/api/getRecordset?workingDate=" + dateString, function(result) {
                 populateSituationTable(JSON.parse(result));
             });
         }

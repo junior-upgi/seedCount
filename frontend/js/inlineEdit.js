@@ -24,7 +24,7 @@ $(document).on("click", "td.seedCountField", function() {
                 if (workingCell.hasClass("filled")) { // if it's an edit and not a new record
                     loadExistingData(workingCell); // ajax for the existing record
                     $("form#inlineEditForm").append('&nbsp;&nbsp;&nbsp;&nbsp;<button id="deleteRecord" class="btn btn-danger btn-lg">刪除</button>');
-                    formAction = backendHost + "seedCount/api/updateRecord"; // set the API endpoint to post to update record
+                    formAction = backendHost + "/seedCount/api/updateRecord"; // set the API endpoint to post to update record
                 } else {
                     //load data into common fields 時間、廠區、產線
                     $("input#recordDatetime").val(getWorkDatetimeString(
@@ -32,7 +32,7 @@ $(document).on("click", "td.seedCountField", function() {
                         workingCell.data("timePoint").slice(0, 2) + ":" + workingCell.data("timePoint").slice(2)));
                     $("input#prodFacilityID").val(workingCell.data("prodFacilityID"));
                     $("input#prodLineID").val(workingCell.data("prodLineID"));
-                    formAction = backendHost + "seedCount/api/insertRecord"; // set the API endpoint to post to insert record
+                    formAction = backendHost + "/seedCount/api/insertRecord"; // set the API endpoint to post to insert record
                 }
                 $("#prodReference").focus(); // set keyboard focus on the first input field
                 readyFormForSubmission(workingCell); // confirm form is ready for submission after this point
@@ -54,6 +54,7 @@ $(document).on("click", "td.seedCountField", function() {
                     });
                     return false;
                 });
+                deleteRecord();
             } else { // when template loading does not present a successful result, reset the page
                 console.log("編輯面版載入錯誤：" + status);
                 refresh();
@@ -62,8 +63,12 @@ $(document).on("click", "td.seedCountField", function() {
     }
 });
 
-var loadExistingData = function(cellObject) {
-    $.getJSON(backendHost + "seedCount/api/getRecord", {
+function deleteRecord() {
+    formAction = "";
+};
+
+function loadExistingData(cellObject) {
+    $.getJSON(backendHost + "/seedCount/api/getRecord", {
         recordDatetime: getWorkDatetimeString(
             cellObject.data("workingDate"),
             cellObject.data("timePoint").slice(0, 2) + ":" + cellObject.data("timePoint").slice(2)),
@@ -90,7 +95,7 @@ var loadExistingData = function(cellObject) {
         //work with possible existence of photos
         if (seedCountDataEntry.photoLocation !== null) {
             $("div#photoControlGroup").prepend('<img id="existingPhoto" height="120" width="120"><br>');
-            $("img#existingPhoto").prop("src", backendHost + seedCountDataEntry.photoLocation);
+            $("img#existingPhoto").prop("src", backendHost + "/" + seedCountDataEntry.photoLocation);
             $("div#photoControlGroup").prepend('<span id="existingPhotoPath"></span><br>');
             $("span#existingPhotoPath").text(seedCountDataEntry.photoLocation);
         }
@@ -103,7 +108,7 @@ var loadExistingData = function(cellObject) {
     });
 };
 
-var readyFormForSubmission = function(cellObject) {
+function readyFormForSubmission(cellObject) {
     $("form#inlineEditForm").ajaxForm({
         url: formAction,
         method: "post",
@@ -121,7 +126,7 @@ var readyFormForSubmission = function(cellObject) {
     });
 };
 
-var processDataInput = function() {
+function processDataInput() {
     $("input.inlineEditControl.seedCountField,input#thickness").on("change", function() {
         var seedCountSum = 0;
         var validEntryCount = 0;
