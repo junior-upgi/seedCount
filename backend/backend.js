@@ -105,25 +105,52 @@ app.post("/seedCount/api/deleteRecord", function(req, res) {
         mssqlRequest.query(queryString, function(error, resultset) { // query the database and get the matching file's photoLocation data
             if (error) {
                 console.log("資料讀取發生錯誤： " + error + '\n');
-                res.sendStatus(500);
+                res.status(500).send("資料讀取發生錯誤： " + error);
                 throw error;
             }
-            if (resultset[0].photoLocation !== null) { // if photoLocation is not empty, delete the file
-                fs.unlink(resultset[0].photoLocation);
-            }
-            queryString = "DELETE FROM productionHistory.dbo.seedCount WHERE " +
-                "recordDatetime='" + req.query.recordDatetime + "' AND " +
-                "prodFacilityID='" + req.query.prodFacilityID + "' AND " +
-                "prodLineID='" + req.query.prodLineID + "';";
-            mssqlRequest.query(queryString, function(error) {
-                if (error) {
-                    console.log("資料刪除發生錯誤： " + error + '\n');
-                    res.sendStatus(500);
-                    throw error;
+            console.log(resultset);
+            console.log(resultset.length);
+            if (resultset.length === 0) {
+                console.log("資料不存在");
+                res.status(200).send("資料不存在").end();
+            } else {
+                if (resultset[0].photoLocation !== null) { // if photoLocation is not empty, delete the file
+                    console.log("發現資料存在附加檔案");
+                    fs.unlink(resultset[0].photoLocation, function(error) {
+                        if (error) {
+                            console.log("資料附加檔案刪除發生錯誤： " + error + '\n');
+                            res.status(500).send("資料附加檔案刪除發生錯誤： " + error).end();
+                        } else {
+                            console.log("資料附加檔案刪除成功");
+                            queryString = "DELETE FROM productionHistory.dbo.seedCount WHERE " +
+                                "recordDatetime='" + req.query.recordDatetime + "' AND " +
+                                "prodFacilityID='" + req.query.prodFacilityID + "' AND " +
+                                "prodLineID='" + req.query.prodLineID + "';";
+                            mssqlRequest.query(queryString, function(error) {
+                                if (error) {
+                                    console.log("資料刪除發生錯誤： " + error + '\n');
+                                    res.status(500).send("資料刪除發生錯誤： " + error).end();
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    console.log("發現資料且無附加檔案");
+                    queryString = "DELETE FROM productionHistory.dbo.seedCount WHERE " +
+                        "recordDatetime='" + req.query.recordDatetime + "' AND " +
+                        "prodFacilityID='" + req.query.prodFacilityID + "' AND " +
+                        "prodLineID='" + req.query.prodLineID + "';";
+                    mssqlRequest.query(queryString, function(error) {
+                        if (error) {
+                            console.log("資料刪除發生錯誤： " + error + '\n');
+                            res.status(500).send("資料刪除發生錯誤： " + error).end();
+                        }
+                    });
                 }
-            });
-            mssql.close();
-            res.sendStatus(200);
+                mssql.close();
+                console.log("資料刪除成功");
+                res.status(200).send("資料刪除成功").end();
+            }
         });
     });
 });
