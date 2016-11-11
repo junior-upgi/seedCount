@@ -68,8 +68,8 @@
     var workingDate = getWorkDateString(initializeDatetime);
 
     $(document).ready(function() {
-        $("#clockBanner").text(initializeDatetime.format("YYYY-MM-DD HH:mm:ss"));
-        $("span#designatedDate").val(workingDate);
+        $("h5#clockBanner").text(initializeDatetime.format("YYYY-MM-DD HH:mm:ss"));
+        $("input#designatedDate").val(workingDate);
         constructSituationTable(workingDate);
         autoRefresh();
     });
