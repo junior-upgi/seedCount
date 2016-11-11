@@ -13,8 +13,14 @@ var mysql = require("mysql");
 var httpRequest = require("request");
 var utility = require("./uuidGenerator.js");
 
-var frontendServer = "http://192.168.0.16:80"; // development environment
-//var frontendServer = "http://upgi.ddns.net:3355"; // production server
+var backendHost = "http://localhost"; // development environment
+var BackendHostPort = 4949; // development environment
+var frontendHost = "http://192.168.0.16"; // development environment
+var frontendHostPort = 80; // development environment port
+//var backendHost = "http://upgi.ddns.net"; // development environment
+//var BackendHostPort = 4949; // development environment
+//var frontendHost = "http://upgi.ddns.net"; // production server
+//var frontendHostPort = 3355; // production server port
 var broadcastServer = "http://upgi.ddns.net:3939"; // broadcast server
 
 var mssqlConfig = {
@@ -37,9 +43,6 @@ var mysqlConfig = {
 var workingTimezone = "Asia/Taipei";
 
 app.use(cors());
-
-// serve photos
-app.use("/seedImage", express.static("./seedImage"));
 
 // get one single record
 app.get("/seedCount/api/getRecord", function(req, res) {
@@ -336,13 +339,18 @@ app.post("/seedCount/api/deleteRecord", urlencodedParser, function(req, res) {
     });
 });
 
-app.listen(4949);
-console.log("氣泡數監測系統伺服器服務於運行中... (端口：4949)");
+app.listen(BackendHostPort);
+console.log("氣泡數監測系統伺服器服務於運行中... (" + backendHost + ":" + BackendHostPort + ")");
+
+// serve photos
+var seedImageDirectory = "/seedImage";
+app.use(seedImageDirectory, express.static("." + seedImageDirectory));
+console.log("影像伺服器服務於運行中... (" + backendHost + ":" + BackendHostPort + seedImageDirectory + ")");
 
 var taskControl = {
     seedCountAlert: {
-        //taskSchedule: "0 30 7,15,23 * * *", // everyday at 07:30, 15:30, and 23:30
-        taskSchedule: "0 */2 * * * *", // for tesing
+        taskSchedule: "0 30 7,15,23 * * *", // everyday at 07:30, 15:30, and 23:30
+        //taskSchedule: "0 */2 * * * *", // for tesing
         broadcast: true,
         observePeriod: 8,
         alertLevel: 10
@@ -392,7 +400,7 @@ var seedCountAlert = new CronJob(taskControl.seedCountAlert.taskSchedule, functi
                             "content": contentString,
                             "recipientID": "05060001",
                             "userGroup": "Admin",
-                            "url": frontendServer + "/seedCount",
+                            "url": frontendHost + ":" + frontendHostPort + "/seedCount",
                             "audioFile": "warning.mp3" // available sounds: alert.mp3 beep.mp3 warning.mp3 alarm.mp3
                         }
                     }, function(error, response, body) {
@@ -404,6 +412,7 @@ var seedCountAlert = new CronJob(taskControl.seedCountAlert.taskSchedule, functi
                         }
                     });
                 } else {
+                    console.log("     發佈行動裝置通知");
                     httpRequest({
                         url: broadcastServer + "/broadcast",
                         method: "post",
@@ -417,7 +426,7 @@ var seedCountAlert = new CronJob(taskControl.seedCountAlert.taskSchedule, functi
                             "content": "請點選檢視今日氣泡數狀況",
                             "recipientID": "05060001",
                             "userGroup": "Admin",
-                            "url": frontendServer + "/seedCount",
+                            "url": frontendHost + ":" + frontendHostPort + "/seedCount",
                             "audioFile": "alert.mp3" // available sounds: alert.mp3 beep.mp3 warning.mp3 alarm.mp3
                         }
                     }, function(error, response, body) {

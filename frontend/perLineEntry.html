@@ -86,17 +86,17 @@
                     <span class="input-group-addon">取樣1</span>
                     <input type="number" class="form-control input-sm text-center" name="seedCount[0]" min="0" max="30" step="1" required>
                     <span class="input-group-addon">取樣2</span>
-                    <input type="number" class="form-control input-sm text-center" name="seedCount[1]" min="0" max="30" step="1">
+                    <input type="number" class="form-control input-sm text-center" name="seedCount[1]" min="0" max="30" step="1" required>
                     <span class="input-group-addon">取樣3</span>
-                    <input type="number" class="form-control input-sm text-center" name="seedCount[2]" min="0" max="30" step="1">
+                    <input type="number" class="form-control input-sm text-center" name="seedCount[2]" min="0" max="30" step="1" required>
                 </div>
                 <div class="input-group">
                     <span class="input-group-addon">取樣4</span>
-                    <input type="number" class="form-control input-sm text-center" name="seedCount[3]" min="0" max="30" step="1">
+                    <input type="number" class="form-control input-sm text-center" name="seedCount[3]" min="0" max="30" step="1" required>
                     <span class="input-group-addon">取樣5</span>
-                    <input type="number" class="form-control input-sm text-center" name="seedCount[4]" min="0" max="30" step="1">
+                    <input type="number" class="form-control input-sm text-center" name="seedCount[4]" min="0" max="30" step="1" required>
                     <span class="input-group-addon">取樣6</span>
-                    <input type="number" class="form-control input-sm text-center" name="seedCount[5]" min="0" max="30" step="1">
+                    <input type="number" class="form-control input-sm text-center" name="seedCount[5]" min="0" max="30" step="1" required>
                 </div>
             </div>
             <div class="form-group">
@@ -121,7 +121,7 @@
 
 <script>
     $("document").ready(function() {
-        $("#seedCountForm").attr("action", backendHost + "/seedCount/api/insertRecord");
+        $("#seedCountForm").attr("action", backendHost + ":" + backendHostPort + "/seedCount/api/insertRecord");
         $("#title").text(getUrlParameter("prodLineID") + " " + $("#title").text());
         $("#mockRecordDate").val(moment().format("YYYY-MM-DD"));
         $("#recordDate").val(moment().format("YYYY-MM-DD")).css("display", "none");
