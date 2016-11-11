@@ -299,23 +299,26 @@ app.get('/seedCount/api/getRecordset', function(req, res) {
 app.listen(4949);
 console.log('seedCount backend server is running on port 4949...\n');
 
-var broadcast = false;
-var examinePeriod = 8;
-var alertLevel = 10;
-//var taskSchedule = "0 45 7,15,23 * * *"; // everyday at 07:45, 15:45, and 23:45
-var taskSchedule = "0 * * * * *"; // every minute
-var currentDatetime;
-var seedCountAlert = new CronJob(taskSchedule, function() {
-    currentDatetime = moment(moment(), "YYYY-MM-DD HH:mm:ss");
+var taskControl = {
+    seedCountAlert: {
+        broadcast: true,
+        observePeriod: 8,
+        alertLevel: 10,
+        taskSchedule: "0 35 7,15,23 * * *" // everyday at 07:35, 15:35, and 23:35
+    }
+};
+
+var seedCountAlert = new CronJob(taskControl.seedCountAlert.taskSchedule, function() {
+    var currentDatetime = moment(moment(), "YYYY-MM-DD HH:mm:ss");
     console.log("目前時間: " + currentDatetime.format("YYYY-MM-DD HH:mm:ss"));
     // server inspects system data
     console.log("進行氣泡數據檢查");
     mssql.connect(mssqlConfig, function(error) {
         if (error) throw error;
         var mssqlRequest = new mssql.Request();
-        var queryString = "SELECT * FROM productionHistory.dbo.seedCountResult WHERE unitSeedCount>=" + alertLevel + " AND recordDatetime>'" +
-            moment(currentDatetime, "YYYY-MM-DD HH:mm:ss").subtract(examinePeriod, "hours").format("YYYY-MM-DD HH:mm:ss") + "' ORDER BY recordDatetime, prodLineID;";
-        console.log("查詢範圍：" + moment(currentDatetime, "YYYY-MM-DD HH:mm:ss").subtract(examinePeriod, "hours").format("YYYY-MM-DD HH:mm:ss") + " 之後資料");
+        var queryString = "SELECT * FROM productionHistory.dbo.seedCountResult WHERE unitSeedCount>=" + taskControl.seedCountAlert.alertLevel + " AND recordDatetime>'" +
+            moment(currentDatetime, "YYYY-MM-DD HH:mm:ss").subtract(taskControl.seedCountAlert.observePeriod, "hours").format("YYYY-MM-DD HH:mm:ss") + "' ORDER BY recordDatetime, prodLineID;";
+        console.log("查詢範圍：" + moment(currentDatetime, "YYYY-MM-DD HH:mm:ss").subtract(taskControl.seedCountAlert.observePeriod, "hours").format("YYYY-MM-DD HH:mm:ss") + " 之後資料");
         mssqlRequest.query(queryString, function(error, resultset) {
             if (error) {
                 console.log("查詢失敗： " + error);
@@ -323,7 +326,7 @@ var seedCountAlert = new CronJob(taskSchedule, function() {
             }
             mssql.close();
             console.log("查詢完畢，發現[" + resultset.length + "]筆數據異常");
-            if (broadcast === true) {
+            if (taskControl.seedCountAlert.broadcast === true) {
                 var topicString = currentDatetime.format("MM/DD HH:mm") + " 氣泡數異常通報";
                 if (resultset.length > 0) {
                     var contentString = "";
@@ -363,7 +366,7 @@ var seedCountAlert = new CronJob(taskSchedule, function() {
                             "messageCategoryID": "999",
                             "systemCategoryID": "4",
                             "manualTopic": topicString,
-                            "content": "前一個工作班次氣泡狀況正常",
+                            "content": "請點選檢視今日氣泡數狀況",
                             "recipientID": "05060001",
                             "userGroup": "Admin",
                             "url": frontendServer + "/seedCount",
