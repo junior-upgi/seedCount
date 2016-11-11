@@ -118,6 +118,61 @@ app.get('/seedCount/api/getRecordset', function(req, res) {
     });
 });
 
+// insert a new record
+app.post('/seedCount/api/insertRecord', upload.any(), function(req, res) {
+    //deal with NULL array in the case that photo isn't uploaded
+    var photoLocation;
+    if (req.files.length == 0) {
+        console.log("未上傳圖片");
+        photoLocation = "NULL";
+    } else {
+        photoLocation = req.files[0].destination + req.body.prodLineID + '/' + moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYYMMDDHHmmss") + '.JPG';
+        fs.rename(req.files[0].path, photoLocation, function(error) {
+            if (error) {
+                console.log(req.body.prodLineID + " 圖片上傳錯誤： " + error + '\n');
+                res.status(500).send(req.body.prodLineID + " 圖片上傳錯誤： " + error).end();
+            } else {
+                console.log(req.body.prodLineID + " 圖片上傳成功" + '\n');
+            }
+        });
+    }
+    // connect to data server to insert data entry
+    mssql.connect(mssqlConfig, function(error) {
+        if (error) {
+            console.log("資料庫連結發生錯誤： " + error + '\n');
+            res.status(500).send("資料庫連結發生錯誤： " + error).end();
+        }
+        var mssqlRequest = new mssql.Request();
+        var queryString = "INSERT INTO productionHistory.dbo.seedCount VALUES ('" +
+            req.body.recordDatetime + "','" +
+            req.body.prodFacilityID + "','" +
+            req.body.prodLineID + "','" +
+            req.body.prodReference + "','" +
+            req.body.thickness + "'," +
+            (req.body.count_0 === '' ? "NULL" : req.body.count_0) + "," +
+            (req.body.count_1 === '' ? "NULL" : req.body.count_1) + "," +
+            (req.body.count_2 === '' ? "NULL" : req.body.count_2) + "," +
+            (req.body.count_3 === '' ? "NULL" : req.body.count_3) + "," +
+            (req.body.count_4 === '' ? "NULL" : req.body.count_4) + "," +
+            (req.body.count_5 === '' ? "NULL" : req.body.count_5) + "," +
+            (req.body.note === '' ? "NULL" : "'" + req.body.note + "'") + "," +
+            (photoLocation === "NULL" ? "NULL" : "'" + photoLocation + "'") + ",'" +
+            req.body.created + "','" +
+            req.body.modified + "');";
+        // console.log(queryString + '\n');
+        // insert data
+        mssqlRequest.query(queryString, function(error) {
+            if (error) {
+                console.log("資料讀取發生錯誤： " + error + '\n');
+                res.status(500).send("資料讀取發生錯誤： " + error).end();
+            }
+            mssql.close();
+            console.log(moment.tz(req.body.recordDatetime, "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料新增成功\n");
+            res.status(200).send(req.body.recordDatetime + " " + req.body.prodLineID + " 氣泡數資料新增成功").end();
+        });
+    });
+});
+
 // update existing record
 app.post("/seedCount/api/updateRecord", upload.any(), function(req, res) {
     // query for the current record
@@ -128,10 +183,11 @@ app.post("/seedCount/api/updateRecord", upload.any(), function(req, res) {
         console.log("未上傳圖片");
         photoLocation = "NULL";
     } else {
-        photoLocation = req.files[0].destination + req.body.prodLineID + '/' + moment.tz(req.body.recordDatetime, "Asia/Taipei").format("YYYYMMDDHHmmss") + '.JPG';
+        photoLocation = req.files[0].destination + req.body.prodLineID + '/' + moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYYMMDDHHmmss") + '.JPG';
         fs.rename(req.files[0].path, photoLocation, function(error) {
             if (error) {
                 console.log(req.body.prodLineID + " 圖片上傳錯誤： " + error + '\n');
+                res.status(500).send(req.body.prodLineID + " 圖片上傳錯誤： " + error).end();
             } else {
                 console.log(req.body.prodLineID + " 圖片上傳成功" + '\n');
             }
@@ -139,7 +195,10 @@ app.post("/seedCount/api/updateRecord", upload.any(), function(req, res) {
     }
     // connect to data server to update existing record
     mssql.connect(mssqlConfig, function(error) {
-        if (error) throw error;
+        if (error) {
+            console.log("資料庫連結發生錯誤： " + error + '\n');
+            res.status(500).send("資料庫連結發生錯誤： " + error).end();
+        }
         var mssqlRequest = new mssql.Request();
         var queryString =
             "UPDATE productionHistory.dbo.seedCount SET " +
@@ -158,16 +217,16 @@ app.post("/seedCount/api/updateRecord", upload.any(), function(req, res) {
             "recordDatetime='" + req.body.recordDatetime +
             "' AND prodFacilityID='" + req.body.prodFacilityID +
             "' AND prodLineID='" + req.body.prodLineID + "';";
-        console.log(queryString + '\n');
-        // insert data
+        // console.log(queryString + '\n');
+        // update data
         mssqlRequest.query(queryString, function(error) {
             if (error) {
-                console.log("資料更新錯誤： " + error + '\n')
-                throw error;
+                console.log("資料更新錯誤： " + error + '\n');
+                res.status(500).send("資料更新錯誤： " + error).end();
             }
             mssql.close();
-            console.log(moment.tz(req.body.recordDatetime, "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料寫入成功\n");
-            res.json({ "status": "success" });
+            console.log(moment.tz(req.body.recordDatetime, "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料修改成功\n");
+            res.status(200).send(req.body.recordDatetime + " " + req.body.prodLineID + " 氣泡數資料修改成功").end();
         });
     });
 });
@@ -240,61 +299,6 @@ app.post("/seedCount/api/deleteRecord", urlencodedParser, function(req, res) {
                     });
                 }
             }
-        });
-    });
-});
-
-// insert a new record
-app.post('/seedCount/api/insertRecord', upload.any(), function(req, res) {
-    //deal with NULL array in the case that photo isn't uploaded
-    var photoLocation;
-    if (req.files.length == 0) {
-        console.log("未上傳圖片");
-        photoLocation = "NULL";
-    } else {
-        photoLocation = req.files[0].destination + req.body.prodLineID + '/' + moment.tz(req.body.recordDatetime, "Asia/Taipei").format("YYYYMMDDHHmmss") + '.JPG';
-        fs.rename(req.files[0].path, photoLocation, function(error) {
-            if (error) {
-                console.log(req.body.prodLineID + " 圖片上傳錯誤： " + error + '\n');
-                res.status(500).send(req.body.prodLineID + " 圖片上傳錯誤： " + error).end();
-            } else {
-                console.log(req.body.prodLineID + " 圖片上傳成功" + '\n');
-            }
-        });
-    }
-    // connect to data server to insert data entry
-    mssql.connect(mssqlConfig, function(error) {
-        if (error) {
-            console.log("資料庫連結發生錯誤： " + error + '\n');
-            res.status(500).send("資料庫連結發生錯誤： " + error).end();
-        }
-        var mssqlRequest = new mssql.Request();
-        var queryString = "INSERT INTO productionHistory.dbo.seedCount VALUES ('" +
-            moment.tz(req.body.recordDatetime, "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss") + "','" +
-            req.body.prodFacilityID + "','" +
-            req.body.prodLineID + "','" +
-            req.body.prodReference + "','" +
-            req.body.thickness + "'," +
-            (req.body.count_0 === '' ? "NULL" : req.body.count_0) + "," +
-            (req.body.count_1 === '' ? "NULL" : req.body.count_1) + "," +
-            (req.body.count_2 === '' ? "NULL" : req.body.count_2) + "," +
-            (req.body.count_3 === '' ? "NULL" : req.body.count_3) + "," +
-            (req.body.count_4 === '' ? "NULL" : req.body.count_4) + "," +
-            (req.body.count_5 === '' ? "NULL" : req.body.count_5) + "," +
-            (req.body.note === '' ? "NULL" : "'" + req.body.note + "'") + "," +
-            (photoLocation === "NULL" ? "NULL" : "'" + photoLocation + "'") + ",'" +
-            moment.tz(moment(), "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss") + "','" +
-            moment.tz(moment(), "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss") + "');";
-        // console.log(queryString + '\n');
-        // insert data
-        mssqlRequest.query(queryString, function(error) {
-            if (error) {
-                console.log("資料讀取發生錯誤： " + error + '\n');
-                res.status(500).send("資料讀取發生錯誤： " + error).end();
-            }
-            mssql.close();
-            console.log(moment.tz(req.body.recordDatetime, "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料寫入成功\n");
-            res.status(200).send(moment.tz(req.body.recordDatetime, "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料寫入成功").end();
         });
     });
 });
