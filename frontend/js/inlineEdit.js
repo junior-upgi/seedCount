@@ -118,7 +118,7 @@ function loadExistingData(cellObject) {
                 $("div#photoControlGroup").prepend('&nbsp;&nbsp;&nbsp;&nbsp;<button id="deletePhoto" type="button" class="inlineEditControl subjectToAccessControl btn btn-danger" onclick="deletePhotoAction()">刪圖</button>');
                 $("div#photoControlGroup").prepend('<button id="replacePhoto" type="button" class="inlineEditControl subjectToAccessControl btn btn-primary" onclick="replacePhotoAction()">換圖</button>');
                 $("div#photoControlGroup").prepend('<img id="existingPhoto" height="120" width="120"><br>');
-                $("img#existingPhoto").prop("src", backendHost + ":" + backendHostPort + "/" + seedCountDataEntry.photoLocation);
+                $("img#existingPhoto").prop("src", backendHost + ":" + backendHostPort + "/" + seedCountDataEntry.photoLocation + "?timestamp=" + new Date().getTime());
                 $("div#photoControlGroup").prepend('<input id="existingPhotoPath" name="existingPhotoPath" type="text" class="text-center" size="30" readonly><br>');
                 $("input#existingPhotoPath").val(seedCountDataEntry.photoLocation);
                 $("input#photo").hide();
@@ -152,7 +152,7 @@ function processDataInput() {
 };
 
 function deletePhotoAction() { // when user clicks on the delete photo button
-    //$("input#existingPhotoPath").val("");
+    $("input#existingPhotoPath").val("");
     $("img#existingPhoto").prop("src", "").hide();
     $("button#deletePhoto").hide();
     $("button#replacePhoto").hide();

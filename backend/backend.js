@@ -200,23 +200,143 @@ app.post("/seedCount/api/updateRecord", upload.any(), function(req, res) {
     // deal with image add, change or deletion
     var photoLocation;
     /////////////////////////////////////////
-    switch (true) {
-        case ((req.files.length === 0) && (req.body.existingPhotoPath !== "")):
-            console.log("A");
-            break;
-        case ((req.files.length === 0) && (req.body.existingPhotoPath === "")):
-            console.log("B");
-            break;
-        case ((req.files.length === 1) && (req.body.existingPhotoPath !== "")):
-            console.log("C");
-            break;
-        case ((req.files.length === 1) && (req.body.existingPhotoPath === "")):
-            console.log("D");
-            break;
-        default:
-    }
+    // prior to the update process, check if a photo exists
+    mssql.connect(mssqlConfig, function(error) {
+        if (error) {
+            console.log("     資料庫連結發生錯誤：" + error);
+            res.status(500).send("資料庫連結發生錯誤：" + error).end();
+        }
+        var mssqlRequest = new mssql.Request();
+        var queryString = "SELECT photoLocation FROM productionHistory.dbo.seedCount WHERE " +
+            "recordDatetime='" + req.body.recordDatetime + "' AND " +
+            "prodFacilityID='" + req.body.prodFacilityID + "' AND " +
+            "prodLineID='" + req.body.prodLineID + "';";
+        console.log("     SQL查詢：" + queryString);
+        mssqlRequest.query(queryString, function(error, resultset) { // query the database and get the matching file's photoLocation data
+            if (error) {
+                console.log("     資料讀取發生錯誤：" + error);
+                res.status(500).send("資料讀取發生錯誤：" + error).end();
+            }
+            if (resultset.length === 0) {
+                console.log("     資料不存在");
+                res.status(500).send("資料不存在").end();
+            } else {
+                if (resultset[0].photoLocation !== null) { // if photoLocation is not empty
+                    photoLocation = resultset[0].photoLocation;
+                } else { // if photoLocation is empty
+                    photoLocation = "NULL";
+                }
+                switch (true) {
+                    case ((req.files.length === 0) && // no photo exists and no new uploads
+                        (req.body.existingPhotoPath === undefined) &&
+                        (photoLocation === "NULL")):
+                        console.log("     原始資料無附加檔案且無新上傳");
+                        break;
+                    case ((req.files.length === 0) && // prior photo exists and no new uploads
+                        (req.body.existingPhotoPath !== "") &&
+                        (photoLocation !== "NULL") &&
+                        (req.body.existingPhotoPath === photoLocation)):
+                        break;
+                    case ((req.files.length === 1) && // user delete the photo and uploaded a new one
+                        (req.body.existingPhotoPath === "") &&
+                        (photoLocation !== "NULL")):
+                        fs.unlink(photoLocation, function(error) {
+                            if (error) {
+                                console.log("     資料附加檔案刪除發生錯誤：" + error);
+                                res.status(500).send("資料附加檔案刪除發生錯誤：" + error).end();
+                            } else {
+                                console.log("     資料附加檔案刪除成功");
+                                photoLocation = "NULL";
+                            }
+                        });
+                    case ((req.files.length === 1) && // no prior photo exists but a new upload is made
+                        (req.body.existingPhotoPath === undefined) &&
+                        (photoLocation === "NULL")):
+                        photoLocation = req.files[0].destination + req.body.prodLineID + '/' +
+                            moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYYMMDDHHmmss") + '.JPG';
+                        fs.rename(req.files[0].path, photoLocation, function(error) {
+                            if (error) {
+                                console.log("     " + req.body.prodLineID + " 圖片上傳錯誤： " + error);
+                                res.status(500).send(req.body.prodLineID + " 圖片上傳錯誤： " + error).end();
+                            } else {
+                                console.log("     " + req.body.prodLineID + " 圖片上傳成功");
+                            }
+                        });
+                        break;
+                    case ((req.files.length === 0) && // user presses the image delete button at the front end and did not upload a new one
+                        (req.body.existingPhotoPath === "") &&
+                        (photoLocation !== "NULL")):
+                        fs.unlink(photoLocation, function(error) {
+                            if (error) {
+                                console.log("     資料附加檔案刪除發生錯誤：" + error);
+                                res.status(500).send("資料附加檔案刪除發生錯誤：" + error).end();
+                            } else {
+                                console.log("     資料附加檔案刪除成功");
+                                photoLocation = "NULL";
+                            }
+                        });
+                        break;
+                    case ((req.files.length === 1) && // prior photo exists but a new photo is uploaded
+                        (req.body.existingPhotoPath !== "") &&
+                        (photoLocation !== "NULL")):
+                        fs.unlink(photoLocation, function(error) {
+                            if (error) {
+                                console.log("     資料附加檔案刪除發生錯誤：" + error);
+                                res.status(500).send("資料附加檔案刪除發生錯誤：" + error).end();
+                            } else {
+                                console.log("     資料附加檔案刪除成功");
+                                photoLocation = req.files[0].destination + req.body.prodLineID + '/' +
+                                    moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYYMMDDHHmmss") + '.JPG';
+                                fs.rename(req.files[0].path, photoLocation, function(error) {
+                                    if (error) {
+                                        console.log("     " + req.body.prodLineID + " 新圖片上傳錯誤： " + error);
+                                        res.status(500).send(req.body.prodLineID + " 新圖片上傳錯誤： " + error).end();
+                                    } else {
+                                        console.log("     " + req.body.prodLineID + " 新圖片上傳成功");
+                                    }
+                                });
+                            }
+                        });
+                        break;
+                    case ((req.files.length === 1) && (req.body.existingPhotoPath !== "") && (photoLocation === "NULL")):
+                    case ((req.files.length === 0) && (req.body.existingPhotoPath !== "") && (photoLocation === "NULL")):
+                    default:
+                        console.log("     發生嚴重錯誤(資料)，請通知 IT 檢視系統");
+                        res.status(500).send("發生嚴重錯誤，請通知 IT 檢視系統").end();
+                }
+                var queryString =
+                    "UPDATE productionHistory.dbo.seedCount SET " +
+                    "prodReference='" + req.body.prodReference +
+                    "',thickness=" + req.body.thickness +
+                    ",count_0=" + (req.body.count_0 === "" ? "NULL" : req.body.count_0) +
+                    ",count_1=" + (req.body.count_1 === "" ? "NULL" : req.body.count_1) +
+                    ",count_2=" + (req.body.count_2 === "" ? "NULL" : req.body.count_2) +
+                    ",count_3=" + (req.body.count_3 === "" ? "NULL" : req.body.count_3) +
+                    ",count_4=" + (req.body.count_4 === "" ? "NULL" : req.body.count_4) +
+                    ",count_5=" + (req.body.count_5 === "" ? "NULL" : req.body.count_5) +
+                    ",note=" + (req.body.note === "" ? "NULL" : "'" + req.body.note + "'") +
+                    ",photoLocation=" + (photoLocation === "NULL" ? "NULL" : "'" + photoLocation + "'") +
+                    ",modified='" + req.body.modified +
+                    "' WHERE " +
+                    "recordDatetime='" + req.body.recordDatetime +
+                    "' AND prodFacilityID='" + req.body.prodFacilityID +
+                    "' AND prodLineID='" + req.body.prodLineID + "';";
+                console.log("     SQL查詢：" + queryString);
+                // update data
+                mssqlRequest.query(queryString, function(error) {
+                    if (error) {
+                        console.log("     資料更新錯誤： " + error);
+                        res.status(500).send("資料更新錯誤： " + error).end();
+                    }
+                    mssql.close();
+                    console.log("     " + moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料修改成功");
+                    res.status(200).send(req.body.recordDatetime + " " + req.body.prodLineID + " 氣泡數資料修改成功").end();
+                });
+            }
+        });
+    });
     /////////////////////////////////////////
-    if (req.files.length === 0) {
+    /*if (req.files.length === 0) {
         console.log("     未上傳圖片");
         photoLocation = "NULL";
     } else {
@@ -265,7 +385,7 @@ app.post("/seedCount/api/updateRecord", upload.any(), function(req, res) {
             console.log("     " + moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料修改成功");
             res.status(200).send(req.body.recordDatetime + " " + req.body.prodLineID + " 氣泡數資料修改成功").end();
         });
-    });
+    });*/
 });
 
 // delete a record
@@ -284,12 +404,12 @@ app.post("/seedCount/api/deleteRecord", urlencodedParser, function(req, res) {
         console.log("     SQL查詢：" + queryString);
         mssqlRequest.query(queryString, function(error, resultset) { // query the database and get the matching file's photoLocation data
             if (error) {
-                console.log("資料讀取發生錯誤：" + error);
+                console.log("     資料讀取發生錯誤：" + error);
                 res.status(500).send("資料讀取發生錯誤：" + error).end();
             }
             if (resultset.length === 0) {
                 console.log("     資料不存在");
-                res.status(200).send("資料不存在").end();
+                res.status(500).send("資料不存在").end();
             } else {
                 if (resultset[0].photoLocation !== null) { // if photoLocation is not empty, delete the file
                     console.log("     發現資料存在附加檔案");
