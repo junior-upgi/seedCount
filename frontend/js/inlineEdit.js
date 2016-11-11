@@ -58,9 +58,9 @@ $(document).on("click", "td.seedCountField", function() {
                     loadExistingData(workingCell);
                 });
                 $("button#cancelInlineEdit").on("click", function() { // when user clicks on the cancel button in the inline edit form
-                    return false;
+                    refresh();
                 });
-                $("button#deleteRecord").on("click", function() {
+                $("button#deleteRecord").on("click", function() { // when user clicks on the delete record button
                     formAction = backendHost + "/seedCount/api/deleteRecord";
                     $.post(
                         formAction,

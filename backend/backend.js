@@ -41,6 +41,83 @@ app.use(cors());
 // serve photos
 app.use("/seedImage", express.static('./seedImage'));
 
+// get one single record
+app.get('/seedCount/api/getRecord', function(req, res) {
+    mssql.connect(mssqlConfig, function(error) {
+        if (error) throw error;
+        var mssqlRequest = new mssql.Request();
+        var queryString = "SELECT * FROM productionHistory.dbo.seedCount WHERE recordDatetime='" + req.query.recordDatetime + "' AND prodFacilityID='" + req.query.prodFacilityID + "' AND prodLineID='" + req.query.prodLineID + "';";
+        console.log(queryString + '\n');
+        mssqlRequest.query(queryString, function(error, resultset) {
+            if (error) {
+                console.log("retrieveRecord API failure： " + error + '\n')
+                res.send('{}');
+                throw error;
+            }
+            console.log("retrieveRecord success...!\n");
+            mssql.close();
+            res.json(JSON.stringify(resultset));
+        });
+    });
+});
+
+// get the count of how many records is within the queried condition 
+app.get('/seedCount/api/getRecordCount', function(req, res) {
+    var dateToCheck = '';
+    if (req.query.workingDate === undefined) {
+        console.log('parameter not received, empty results returned to the client...\n');
+        res.send('{}');
+    } else {
+        console.log('parameter received...\n');
+        dateToCheck = moment.tz(req.query.workingDate, workingTimezone);
+        var workDateStartTime = moment(dateToCheck).add(450, 'm');
+        var workDateEndTime = moment(workDateStartTime).add(1, 'd').subtract(1, 'ms');
+        if ((!dateToCheck.isValid()) || (req.query.workingDate.length !== 10)) {
+            console.log('parameter not valid...\n');
+            res.send('{}');
+        } else {
+            console.log('parameter is valid...\n');
+            mssql.connect(mssqlConfig, function(error) {
+                if (error) throw error;
+                var mssqlRequest = new mssql.Request();
+                var queryString = "SELECT COUNT(*) AS recordCount FROM productionHistory.dbo.seedCount WHERE recordDatetime BETWEEN '" +
+                    workDateStartTime.format("YYYY-MM-DD HH:mm:ss:SSS") + "' AND '" +
+                    workDateEndTime.format("YYYY-MM-DD HH:mm:ss:SSS") + "';";
+                //console.log(queryString);
+                mssqlRequest.query(queryString, function(error, resultset) {
+                    if (error) {
+                        console.log("recordCountOnDate API failure： " + error + '\n')
+                        res.send('{}');
+                        throw error;
+                    }
+                    console.log("recordCountOnDate success...!\n");
+                    mssql.close();
+                    res.json(JSON.stringify(resultset));
+                });
+            });
+        }
+    }
+});
+
+// get a set of records
+app.get('/seedCount/api/getRecordset', function(req, res) {
+    mssql.connect(mssqlConfig, function(error) {
+        if (error) throw error;
+        var mssqlRequest = new mssql.Request();
+        var queryString = "SELECT * FROM productionHistory.dbo.seedCountResult WHERE recordDate='" + req.query.workingDate + "' ORDER BY prodLineID,recordDatetime;";
+        //console.log(queryString + '\n');
+        mssqlRequest.query(queryString, function(error, resultset) {
+            if (error) {
+                console.log("氣泡數資料讀取錯誤： " + error + '\n')
+                throw error;
+            }
+            console.log("氣泡數計算結果讀取成功\n");
+            mssql.close();
+            res.json(JSON.stringify(resultset));
+        });
+    });
+});
+
 // update existing record
 app.post("/seedCount/api/updateRecord", upload.any(), function(req, res) {
     // query for the current record
@@ -218,80 +295,6 @@ app.post('/seedCount/api/insertRecord', upload.any(), function(req, res) {
             mssql.close();
             console.log(moment.tz(req.body.recordDatetime, "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料寫入成功\n");
             res.status(200).send(moment.tz(req.body.recordDatetime, "Asia/Taipei").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料寫入成功").end();
-        });
-    });
-});
-
-app.get('/seedCount/api/getRecordCount', function(req, res) {
-    var dateToCheck = '';
-    if (req.query.workingDate === undefined) {
-        console.log('parameter not received, empty results returned to the client...\n');
-        res.send('{}');
-    } else {
-        console.log('parameter received...\n');
-        dateToCheck = moment.tz(req.query.workingDate, workingTimezone);
-        var workDateStartTime = moment(dateToCheck).add(450, 'm');
-        var workDateEndTime = moment(workDateStartTime).add(1, 'd').subtract(1, 'ms');
-        if ((!dateToCheck.isValid()) || (req.query.workingDate.length !== 10)) {
-            console.log('parameter not valid...\n');
-            res.send('{}');
-        } else {
-            console.log('parameter is valid...\n');
-            mssql.connect(mssqlConfig, function(error) {
-                if (error) throw error;
-                var mssqlRequest = new mssql.Request();
-                var queryString = "SELECT COUNT(*) AS recordCount FROM productionHistory.dbo.seedCount WHERE recordDatetime BETWEEN '" +
-                    workDateStartTime.format("YYYY-MM-DD HH:mm:ss:SSS") + "' AND '" +
-                    workDateEndTime.format("YYYY-MM-DD HH:mm:ss:SSS") + "';";
-                //console.log(queryString);
-                mssqlRequest.query(queryString, function(error, resultset) {
-                    if (error) {
-                        console.log("recordCountOnDate API failure： " + error + '\n')
-                        res.send('{}');
-                        throw error;
-                    }
-                    console.log("recordCountOnDate success...!\n");
-                    mssql.close();
-                    res.json(JSON.stringify(resultset));
-                });
-            });
-        }
-    }
-});
-
-app.get('/seedCount/api/getRecord', function(req, res) {
-    mssql.connect(mssqlConfig, function(error) {
-        if (error) throw error;
-        var mssqlRequest = new mssql.Request();
-        var queryString = "SELECT * FROM productionHistory.dbo.seedCount WHERE recordDatetime='" + req.query.recordDatetime + "' AND prodFacilityID='" + req.query.prodFacilityID + "' AND prodLineID='" + req.query.prodLineID + "';";
-        console.log(queryString + '\n');
-        mssqlRequest.query(queryString, function(error, resultset) {
-            if (error) {
-                console.log("retrieveRecord API failure： " + error + '\n')
-                res.send('{}');
-                throw error;
-            }
-            console.log("retrieveRecord success...!\n");
-            mssql.close();
-            res.json(JSON.stringify(resultset));
-        });
-    });
-});
-
-app.get('/seedCount/api/getRecordset', function(req, res) {
-    mssql.connect(mssqlConfig, function(error) {
-        if (error) throw error;
-        var mssqlRequest = new mssql.Request();
-        var queryString = "SELECT * FROM productionHistory.dbo.seedCountResult WHERE recordDate='" + req.query.workingDate + "' ORDER BY prodLineID,recordDatetime;";
-        //console.log(queryString + '\n');
-        mssqlRequest.query(queryString, function(error, resultset) {
-            if (error) {
-                console.log("氣泡數資料讀取錯誤： " + error + '\n')
-                throw error;
-            }
-            console.log("氣泡數計算結果讀取成功\n");
-            mssql.close();
-            res.json(JSON.stringify(resultset));
         });
     });
 });
