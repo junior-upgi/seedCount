@@ -10,11 +10,13 @@ function autoRefresh() {
         decreaseInaccessibleCounter(1);
         //enable/disable buttons depending on the value of buttonInaccessibleCounter variable
         if (buttonInaccessibleCounter > 0) {
-            $("button:not(button#preventDisplayToggleButton)").prop("disabled", true);
-            $("input#submitInlineEdit,input#resetInlineEdit").prop("disabled", true);
+            $(".subjectToAccessControl").prop("disabled", true);
+            //$("button:not(button#preventDisplayToggleButton)").prop("disabled", true);
+            //$("input#submitInlineEditForm,input#resetInlineEditForm").prop("disabled", true);
         } else {
-            $("button:not(button#preventDisplayToggleButton)").prop("disabled", false);
-            $("input#submitInlineEdit,input#resetInlineEdit").prop("disabled", false);
+            $(".subjectToAccessControl").prop("disabled", false);
+            //$("button:not(button#preventDisplayToggleButton)").prop("disabled", false);
+            //$("input#submitInlineEditForm,input#resetInlineEditForm").prop("disabled", false);
         }
         //at 58 second mark before each scheduled situation table update, increase the buttonInaccessibleCount by 5
         if ((now.format("m") % 10 === 0) && (now.format("s") === 58)) {

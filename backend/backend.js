@@ -122,7 +122,7 @@ app.get('/seedCount/api/getRecordset', function(req, res) {
 app.post('/seedCount/api/insertRecord', upload.any(), function(req, res) {
     //deal with NULL array in the case that photo isn't uploaded
     var photoLocation;
-    if (req.files.length == 0) {
+    if (req.files.length === 0) {
         console.log("未上傳圖片");
         photoLocation = "NULL";
     } else {
@@ -175,11 +175,28 @@ app.post('/seedCount/api/insertRecord', upload.any(), function(req, res) {
 
 // update existing record
 app.post("/seedCount/api/updateRecord", upload.any(), function(req, res) {
-    // query for the current record
-    // remove exising photoPath and image file if existing
-    // deal with the possibility when new photo does not exist
+    console.log(req.files.length);
+    console.log(req.body);
+    // deal with image add, change or deletion
     var photoLocation;
-    if (req.files.length == 0) {
+    /////////////////////////////////////////
+    switch (true) {
+        case ((req.files.length === 0) && (req.body.existingPhotoPath !== "")):
+            console.log("A");
+            break;
+        case ((req.files.length === 0) && (req.body.existingPhotoPath === "")):
+            console.log("B");
+            break;
+        case ((req.files.length === 1) && (req.body.existingPhotoPath !== "")):
+            console.log("C");
+            break;
+        case ((req.files.length === 1) && (req.body.existingPhotoPath === "")):
+            console.log("D");
+            break;
+        default:
+    }
+    /////////////////////////////////////////
+    if (req.files.length === 0) {
         console.log("未上傳圖片");
         photoLocation = "NULL";
     } else {

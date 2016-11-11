@@ -34,13 +34,13 @@
             <table id="situationTable" class="table table-bordered table-condensed table-hover">
                 <caption>
                     <button id="preventDisplayToggleButton" class="btn btn-default btn-lg" onclick="togglePreventDisplay()">顯示</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                    <button id="editModeToggleButton" class="btn btn-default btn-lg" onclick="toggleEditMode()" disabled>修改模式</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                    <button id="previousButton" class="btn btn-default btn-lg navigation" onclick="previous()" disabled>前一日</button>
-                    <button id="refreshButton" class="btn btn-default btn-lg navigation" onclick="refresh()" disabled>資料重整</button>
-                    <button id="nextButton" class="btn btn-default btn-lg navigation" onclick="next()" disabled>下一日</button>
-                    <button id="todayButton" class="btn btn-default btn-lg navigation" onclick="today()" disabled>返回今日</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <button id="editModeToggleButton" class="subjectToAccessControl btn btn-default btn-lg" onclick="toggleEditMode()" disabled>修改模式</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <button id="previousButton" class="subjectToAccessControl btn btn-default btn-lg navigation" onclick="previous()" disabled>前一日</button>
+                    <button id="refreshButton" class="subjectToAccessControl btn btn-default btn-lg navigation" onclick="refresh()" disabled>資料重整</button>
+                    <button id="nextButton" class="subjectToAccessControl btn btn-default btn-lg navigation" onclick="next()" disabled>下一日</button>
+                    <button id="todayButton" class="subjectToAccessControl btn btn-default btn-lg navigation" onclick="today()" disabled>返回今日</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                     <input id="designatedDate" type="date" class="input-lg">
-                    <button id="switchDateButton" class="btn btn-default btn-lg navigation" onclick="switchToDate()" disabled>檢視指定日期資料</button>
+                    <button id="switchDateButton" class="subjectToAccessControl btn btn-default btn-lg navigation" onclick="switchToDate()" disabled>檢視指定日期資料</button>
                     <h3><span id="workingDateBanner"></span>&nbsp;氣泡數統計資料</h3>
                 </caption>
                 <thead>
@@ -69,7 +69,7 @@
 
     $(document).ready(function() {
         $("#clockBanner").text(initializeDatetime.format("YYYY-MM-DD HH:mm:ss"));
-        $("#designatedDate").val(workingDate);
+        $("span#designatedDate").val(workingDate);
         constructSituationTable(workingDate);
         autoRefresh();
     });
