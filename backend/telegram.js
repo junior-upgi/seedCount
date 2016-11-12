@@ -23,6 +23,14 @@ var userList = [{
     joinedChatGroupID: [-150874076, -155069392]
 }];
 
+var systemList = [{
+    id: "wasteReduction"
+}, {
+    id: "overdueMonitor"
+}, {
+    id: "seedCount"
+}];
+
 var chatGroupList = [{
     id: -150874076,
     title: "業務"
@@ -31,4 +39,12 @@ var chatGroupList = [{
     title: "玻璃製造"
 }];
 
-var botAPIurl = "https://api.telegram.org/bot";
+const botAPIurl = "https://api.telegram.org/bot";
+
+module.exports = {
+    botList,
+    userList,
+    systemList,
+    chatGroupList,
+    botAPIurl
+}
