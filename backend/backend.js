@@ -7,21 +7,27 @@ var fs = require("fs");
 var app = express();
 var moment = require("moment-timezone");
 var mssql = require("mssql");
-var multer = require("multer");
-var upload = multer({ dest: "seedImage/" });
 var mysql = require("mysql");
 var httpRequest = require("request");
 var utility = require("./uuidGenerator.js");
 
-var backendHost = "http://localhost"; // development environment
-var BackendHostPort = 4949; // development environment
-var frontendHost = "http://192.168.0.16"; // development environment
-var frontendHostPort = 80; // development environment port
-//var backendHost = "http://upgi.ddns.net"; // development environment
+//var backendHost = "http://localhost"; // development environment
 //var BackendHostPort = 4949; // development environment
-//var frontendHost = "http://upgi.ddns.net"; // production server
-//var frontendHostPort = 3355; // production server port
+//var frontendHost = "http://192.168.0.16"; // development environment
+//var frontendHostPort = 80; // development environment port
+var backendHost = "http://upgi.ddns.net"; // development environment
+var BackendHostPort = 4949; // development environment
+var frontendHost = "http://upgi.ddns.net"; // production server
+var frontendHostPort = 3355; // production server port
 var broadcastServer = "http://upgi.ddns.net:3939"; // broadcast server
+var broadcastServerAPIEndpoint = "/broadcast";
+
+// serve static photos
+var seedImageDirectory = "seedImage";
+var multer = require("multer");
+var upload = multer({ dest: seedImageDirectory + "/" });
+app.use("/" + seedImageDirectory, express.static("./" + seedImageDirectory));
+console.log("影像伺服器服務於運行中... (" + backendHost + ":" + BackendHostPort + "/" + seedImageDirectory + ")");
 
 var mssqlConfig = {
     server: "upgi.ddns.net", // access database from the Internet (development)
@@ -195,158 +201,31 @@ app.post("/seedCount/api/insertRecord", upload.any(), function(req, res) {
 // update existing record
 app.post("/seedCount/api/updateRecord", upload.any(), function(req, res) {
     console.log("\n/seedCount/api/updateRecord");
-    console.log(req.files.length);
-    console.log(req.body);
     // deal with image add, change or deletion
-    var photoLocation;
-    /////////////////////////////////////////
-    // prior to the update process, check if a photo exists
-    mssql.connect(mssqlConfig, function(error) {
-        if (error) {
-            console.log("     資料庫連結發生錯誤：" + error);
-            res.status(500).send("資料庫連結發生錯誤：" + error).end();
+    var photoLocation = "";
+    if (req.files.length === 0) { // no new file is uploaded
+        console.log("     未發現新上傳圖片");
+        if (req.body.existingPhotoPath === "") {
+            console.log("     移除原始圖片資料");
+            photoLocation = seedImageDirectory + "/" + req.body.prodLineID + "/" +
+                moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYYMMDDHHmmss") + '.JPG';
+            fs.unlink(photoLocation, function(error) {
+                if (error) {
+                    console.log("     原始圖片資料檔案刪除發生錯誤，嘗試繼續執行程式：" + error);
+                }
+            });
         }
-        var mssqlRequest = new mssql.Request();
-        var queryString = "SELECT photoLocation FROM productionHistory.dbo.seedCount WHERE " +
-            "recordDatetime='" + req.body.recordDatetime + "' AND " +
-            "prodFacilityID='" + req.body.prodFacilityID + "' AND " +
-            "prodLineID='" + req.body.prodLineID + "';";
-        console.log("     SQL查詢：" + queryString);
-        mssqlRequest.query(queryString, function(error, resultset) { // query the database and get the matching file's photoLocation data
-            if (error) {
-                console.log("     資料讀取發生錯誤：" + error);
-                res.status(500).send("資料讀取發生錯誤：" + error).end();
-            }
-            if (resultset.length === 0) {
-                console.log("     資料不存在");
-                res.status(500).send("資料不存在").end();
-            } else {
-                if (resultset[0].photoLocation !== null) { // if photoLocation is not empty
-                    photoLocation = resultset[0].photoLocation;
-                } else { // if photoLocation is empty
-                    photoLocation = "NULL";
-                }
-                switch (true) {
-                    case ((req.files.length === 0) && // no photo exists and no new uploads
-                        (req.body.existingPhotoPath === undefined) &&
-                        (photoLocation === "NULL")):
-                        console.log("     原始資料無附加檔案且無新上傳");
-                        break;
-                    case ((req.files.length === 0) && // prior photo exists and no new uploads
-                        (req.body.existingPhotoPath !== "") &&
-                        (photoLocation !== "NULL") &&
-                        (req.body.existingPhotoPath === photoLocation)):
-                        break;
-                    case ((req.files.length === 1) && // user delete the photo and uploaded a new one
-                        (req.body.existingPhotoPath === "") &&
-                        (photoLocation !== "NULL")):
-                        fs.unlink(photoLocation, function(error) {
-                            if (error) {
-                                console.log("     資料附加檔案刪除發生錯誤：" + error);
-                                res.status(500).send("資料附加檔案刪除發生錯誤：" + error).end();
-                            } else {
-                                console.log("     資料附加檔案刪除成功");
-                                photoLocation = "NULL";
-                            }
-                        });
-                    case ((req.files.length === 1) && // no prior photo exists but a new upload is made
-                        (req.body.existingPhotoPath === undefined) &&
-                        (photoLocation === "NULL")):
-                        photoLocation = req.files[0].destination + req.body.prodLineID + '/' +
-                            moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYYMMDDHHmmss") + '.JPG';
-                        fs.rename(req.files[0].path, photoLocation, function(error) {
-                            if (error) {
-                                console.log("     " + req.body.prodLineID + " 圖片上傳錯誤： " + error);
-                                res.status(500).send(req.body.prodLineID + " 圖片上傳錯誤： " + error).end();
-                            } else {
-                                console.log("     " + req.body.prodLineID + " 圖片上傳成功");
-                            }
-                        });
-                        break;
-                    case ((req.files.length === 0) && // user presses the image delete button at the front end and did not upload a new one
-                        (req.body.existingPhotoPath === "") &&
-                        (photoLocation !== "NULL")):
-                        fs.unlink(photoLocation, function(error) {
-                            if (error) {
-                                console.log("     資料附加檔案刪除發生錯誤：" + error);
-                                res.status(500).send("資料附加檔案刪除發生錯誤：" + error).end();
-                            } else {
-                                console.log("     資料附加檔案刪除成功");
-                                photoLocation = "NULL";
-                            }
-                        });
-                        break;
-                    case ((req.files.length === 1) && // prior photo exists but a new photo is uploaded
-                        (req.body.existingPhotoPath !== "") &&
-                        (photoLocation !== "NULL")):
-                        fs.unlink(photoLocation, function(error) {
-                            if (error) {
-                                console.log("     資料附加檔案刪除發生錯誤：" + error);
-                                res.status(500).send("資料附加檔案刪除發生錯誤：" + error).end();
-                            } else {
-                                console.log("     資料附加檔案刪除成功");
-                                photoLocation = req.files[0].destination + req.body.prodLineID + '/' +
-                                    moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYYMMDDHHmmss") + '.JPG';
-                                fs.rename(req.files[0].path, photoLocation, function(error) {
-                                    if (error) {
-                                        console.log("     " + req.body.prodLineID + " 新圖片上傳錯誤： " + error);
-                                        res.status(500).send(req.body.prodLineID + " 新圖片上傳錯誤： " + error).end();
-                                    } else {
-                                        console.log("     " + req.body.prodLineID + " 新圖片上傳成功");
-                                    }
-                                });
-                            }
-                        });
-                        break;
-                    case ((req.files.length === 1) && (req.body.existingPhotoPath !== "") && (photoLocation === "NULL")):
-                    case ((req.files.length === 0) && (req.body.existingPhotoPath !== "") && (photoLocation === "NULL")):
-                    default:
-                        console.log("     發生嚴重錯誤(資料)，請通知 IT 檢視系統");
-                        res.status(500).send("發生嚴重錯誤，請通知 IT 檢視系統").end();
-                }
-                var queryString =
-                    "UPDATE productionHistory.dbo.seedCount SET " +
-                    "prodReference='" + req.body.prodReference +
-                    "',thickness=" + req.body.thickness +
-                    ",count_0=" + (req.body.count_0 === "" ? "NULL" : req.body.count_0) +
-                    ",count_1=" + (req.body.count_1 === "" ? "NULL" : req.body.count_1) +
-                    ",count_2=" + (req.body.count_2 === "" ? "NULL" : req.body.count_2) +
-                    ",count_3=" + (req.body.count_3 === "" ? "NULL" : req.body.count_3) +
-                    ",count_4=" + (req.body.count_4 === "" ? "NULL" : req.body.count_4) +
-                    ",count_5=" + (req.body.count_5 === "" ? "NULL" : req.body.count_5) +
-                    ",note=" + (req.body.note === "" ? "NULL" : "'" + req.body.note + "'") +
-                    ",photoLocation=" + (photoLocation === "NULL" ? "NULL" : "'" + photoLocation + "'") +
-                    ",modified='" + req.body.modified +
-                    "' WHERE " +
-                    "recordDatetime='" + req.body.recordDatetime +
-                    "' AND prodFacilityID='" + req.body.prodFacilityID +
-                    "' AND prodLineID='" + req.body.prodLineID + "';";
-                console.log("     SQL查詢：" + queryString);
-                // update data
-                mssqlRequest.query(queryString, function(error) {
-                    if (error) {
-                        console.log("     資料更新錯誤： " + error);
-                        res.status(500).send("資料更新錯誤： " + error).end();
-                    }
-                    mssql.close();
-                    console.log("     " + moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料修改成功");
-                    res.status(200).send(req.body.recordDatetime + " " + req.body.prodLineID + " 氣泡數資料修改成功").end();
-                });
-            }
-        });
-    });
-    /////////////////////////////////////////
-    /*if (req.files.length === 0) {
-        console.log("     未上傳圖片");
         photoLocation = "NULL";
-    } else {
-        photoLocation = req.files[0].destination + req.body.prodLineID + '/' + moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYYMMDDHHmmss") + '.JPG';
+    } else { // a new uploaded file is found
+        console.log("     發現新上傳圖片");
+        photoLocation = req.files[0].destination + req.body.prodLineID + '/' +
+            moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYYMMDDHHmmss") + '.JPG';
         fs.rename(req.files[0].path, photoLocation, function(error) {
             if (error) {
                 console.log("     " + req.body.prodLineID + " 圖片上傳錯誤： " + error);
                 res.status(500).send(req.body.prodLineID + " 圖片上傳錯誤： " + error).end();
             } else {
-                console.log("     " + req.body.prodLineID + " 圖片上傳成功" + '\n');
+                console.log("     " + req.body.prodLineID + " 圖片上傳成功");
             }
         });
     }
@@ -385,7 +264,7 @@ app.post("/seedCount/api/updateRecord", upload.any(), function(req, res) {
             console.log("     " + moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料修改成功");
             res.status(200).send(req.body.recordDatetime + " " + req.body.prodLineID + " 氣泡數資料修改成功").end();
         });
-    });*/
+    });
 });
 
 // delete a record
@@ -412,29 +291,26 @@ app.post("/seedCount/api/deleteRecord", urlencodedParser, function(req, res) {
                 res.status(500).send("資料不存在").end();
             } else {
                 if (resultset[0].photoLocation !== null) { // if photoLocation is not empty, delete the file
-                    console.log("     發現資料存在附加檔案");
+                    console.log("     發現資料存在附加檔案，進行資料附加檔案刪除");
                     fs.unlink(resultset[0].photoLocation, function(error) {
                         if (error) {
-                            console.log("     資料附加檔案刪除發生錯誤：" + error);
-                            res.status(500).send("資料附加檔案刪除發生錯誤：" + error).end();
-                        } else {
-                            console.log("     資料附加檔案刪除成功");
-                            queryString = "DELETE FROM productionHistory.dbo.seedCount WHERE " +
-                                "recordDatetime='" + req.body.recordDatetime + "' AND " +
-                                "prodFacilityID='" + req.body.prodFacilityID + "' AND " +
-                                "prodLineID='" + req.body.prodLineID + "';";
-                            console.log("     SQL查詢：" + queryString);
-                            mssqlRequest.query(queryString, function(error) {
-                                if (error) {
-                                    mssql.close();
-                                    console.log("資料刪除發生錯誤：" + error);
-                                    res.status(500).send("資料刪除發生錯誤：" + error).end();
-                                }
-                                mssql.close();
-                                console.log("     資料刪除成功");
-                                res.status(200).send("資料刪除成功").end();
-                            });
+                            console.log("     資料附加檔案刪除發生錯誤，嘗試繼續執行程式：" + error);
                         }
+                        queryString = "DELETE FROM productionHistory.dbo.seedCount WHERE " +
+                            "recordDatetime='" + req.body.recordDatetime + "' AND " +
+                            "prodFacilityID='" + req.body.prodFacilityID + "' AND " +
+                            "prodLineID='" + req.body.prodLineID + "';";
+                        console.log("     SQL查詢：" + queryString);
+                        mssqlRequest.query(queryString, function(error) {
+                            if (error) {
+                                mssql.close();
+                                console.log("資料刪除發生錯誤：" + error);
+                                res.status(500).send("資料刪除發生錯誤：" + error).end();
+                            }
+                            mssql.close();
+                            console.log("     資料刪除成功");
+                            res.status(200).send("資料刪除成功").end();
+                        });
                     });
                 } else {
                     console.log("     發現資料且無附加檔案");
@@ -462,18 +338,33 @@ app.post("/seedCount/api/deleteRecord", urlencodedParser, function(req, res) {
 app.listen(BackendHostPort);
 console.log("氣泡數監測系統伺服器服務於運行中... (" + backendHost + ":" + BackendHostPort + ")");
 
-// serve photos
-var seedImageDirectory = "/seedImage";
-app.use(seedImageDirectory, express.static("." + seedImageDirectory));
-console.log("影像伺服器服務於運行中... (" + backendHost + ":" + BackendHostPort + seedImageDirectory + ")");
+// function to check new or updated seedCount entry that's dated within the past 8 hours, broadcast
 
+// settings for scheduled seedCount alert system
 var taskControl = {
     seedCountAlert: {
-        taskSchedule: "0 30 7,15,23 * * *", // everyday at 07:30, 15:30, and 23:30
-        //taskSchedule: "0 */2 * * * *", // for tesing
+        //taskSchedule: "0 30 7,15,23 * * *", // everyday at 07:30, 15:30, and 23:30
+        taskSchedule: "0 * * * * *", // for tesing
         broadcast: true,
         observePeriod: 8,
-        alertLevel: 10
+        alertLevel: 10,
+        scheduledAlertList: [{
+                recipientID: "05060001",
+                userGroup: "admin"
+            },
+            {
+                recipientID: "05060001",
+                userGroup: "Production"
+            },
+            {
+                recipientID: "05060001",
+                userGroup: "Sales"
+            },
+            {
+                recipientID: "05060001",
+                userGroup: "QC"
+            }
+        ]
     }
 };
 
@@ -497,7 +388,6 @@ var seedCountAlert = new CronJob(taskControl.seedCountAlert.taskSchedule, functi
             mssql.close();
             console.log("     查詢完畢：發現[" + resultset.length + "]筆數據異常");
             if (taskControl.seedCountAlert.broadcast === true) {
-                var topicString = currentDatetime.format("MM/DD HH:mm") + " 氣泡數異常通報";
                 if (resultset.length > 0) {
                     var contentString = "";
                     resultset.forEach(function(irregularity) {
@@ -506,17 +396,26 @@ var seedCountAlert = new CronJob(taskControl.seedCountAlert.taskSchedule, functi
                             irregularity.prodLineID + "[" + irregularity.prodReference + "] - " +
                             " 氣泡數：" + irregularity.unitSeedCount + "\n";
                     });
-                    console.log("     發佈行動裝置通知");
-                    httpRequest({
+                    console.log("     " + moment(moment(), "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss") + " 發佈行動裝置通知");
+                    /*scheduledBroadcastHttpRequest(
+                        5,
+                        5,
+                        "氣泡數狀況定期通報",
+                        contentString,
+                        taskControl.seedCountAlert.scheduledAlertList,
+                        frontendHost + ":" + frontendHostPort + "/seedCount",
+                        "warning.mp3" // available sounds: alert.mp3 beep.mp3 warning.mp3 alarm.mp3
+                    );*/
+                    /*httpRequest({
                         url: broadcastServer + "/broadcast",
                         method: "post",
                         headers: {
                             "Content-Type": "application/json"
                         },
                         json: {
-                            "messageCategoryID": "999",
-                            "systemCategoryID": "4",
-                            "manualTopic": topicString,
+                            "messageCategoryID": "5", // mobileMessagingSystem.messageCategory
+                            "systemCategoryID": "5", // upgiSystem.system seedCount
+                            "manualTopic": "氣泡數狀況定期通報",
                             "content": contentString,
                             "recipientID": "05060001",
                             "userGroup": "Admin",
@@ -530,33 +429,7 @@ var seedCountAlert = new CronJob(taskControl.seedCountAlert.taskSchedule, functi
                             console.log("     推播作業成功：" + response.statusCode);
                             console.log("     伺服器回覆：" + body);
                         }
-                    });
-                } else {
-                    console.log("     發佈行動裝置通知");
-                    httpRequest({
-                        url: broadcastServer + "/broadcast",
-                        method: "post",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        json: {
-                            "messageCategoryID": "999",
-                            "systemCategoryID": "4",
-                            "manualTopic": topicString,
-                            "content": "請點選檢視今日氣泡數狀況",
-                            "recipientID": "05060001",
-                            "userGroup": "Admin",
-                            "url": frontendHost + ":" + frontendHostPort + "/seedCount",
-                            "audioFile": "alert.mp3" // available sounds: alert.mp3 beep.mp3 warning.mp3 alarm.mp3
-                        }
-                    }, function(error, response, body) {
-                        if (error) {
-                            console.log("     推播作業發生錯誤：" + error);
-                        } else {
-                            console.log("     推播作業成功：" + response.statusCode);
-                            console.log("     伺服器回覆：" + body);
-                        }
-                    });
+                    });*/
                 }
             } else {
                 console.log("     推播設定目前處於關閉狀態");
@@ -565,3 +438,33 @@ var seedCountAlert = new CronJob(taskControl.seedCountAlert.taskSchedule, functi
     });
 }, null, true, workingTimezone);
 seedCountAlert.start();
+
+function scheduledBroadcastHttpRequest(messageCategoryID, systemCategoryID, topicString, contentString, recipientList, websiteUrl, audioFileName) {
+    console.log("          預計發佈人數: " + recipientList.length);
+    recipientList.forEach(function(recipient) {
+        httpRequest({
+            url: broadcastServer + broadcastServerAPIEndpoint,
+            method: "post",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            json: {
+                "messageCategoryID": messageCategoryID,
+                "systemCategoryID": systemCategoryID,
+                "manualTopic": topicString,
+                "content": contentString,
+                "recipientID": recipientList.recipientID,
+                "userGroup": recipientList.userGroup,
+                "url": websiteUrl,
+                "audioFile": audioFileName // available sounds: alert.mp3 beep.mp3 warning.mp3 alarm.mp3
+            }
+        }, function(error, response, body) {
+            if (error) {
+                console.log("     推播作業發生錯誤：" + error);
+            } else {
+                console.log("     推播作業成功：" + response.statusCode);
+                console.log("     伺服器回覆：" + body);
+            }
+        });
+    });
+}
