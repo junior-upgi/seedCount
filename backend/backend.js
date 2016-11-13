@@ -7,12 +7,8 @@ var fs = require("fs");
 var app = express();
 var moment = require("moment-timezone");
 var mssql = require("mssql");
-var mysql = require("mysql");
 var httpRequest = require("request");
-var utility = require("./uuidGenerator.js");
 var telegram = require("./telegram.js");
-
-console.log(telegram.botAPIurl);
 
 var backendHost = "http://localhost"; // development environment
 var BackendHostPort = 4949; // development environment
@@ -37,16 +33,6 @@ var mssqlConfig = {
     //server: "192.168.168.5", // access database from LAN (production)
     user: "productionHistory",
     password: "productionHistory"
-};
-
-// host for the mobile messaging system 
-var mysqlConfig = {
-    //host: "192.168.168.86",
-    host: "upgi.ddns.net",
-    port: "3306",
-    user: "overdueMonitor",
-    password: "overdueMonitor",
-    charset: "utf8_bin"
 };
 
 var workingTimezone = "Asia/Taipei";
@@ -343,35 +329,7 @@ console.log("氣泡數監測系統伺服器服務於運行中... (" + backendHos
 
 // function to check new or updated seedCount entry that's dated within the past 8 hours, broadcast
 
-// settings for scheduled seedCount alert system
-var taskControl = {
-    seedCountAlert: {
-        //taskSchedule: "0 30 7,15,23 * * *", // everyday at 07:30, 15:30, and 23:30
-        taskSchedule: "0 * * * * *", // for tesing
-        broadcast: true,
-        observePeriod: 8,
-        alertLevel: 10,
-        scheduledAlertList: [{
-                recipientID: "05060001",
-                userGroup: "admin"
-            },
-            {
-                recipientID: "05060001",
-                userGroup: "Production"
-            },
-            {
-                recipientID: "05060001",
-                userGroup: "Sales"
-            },
-            {
-                recipientID: "05060001",
-                userGroup: "QC"
-            }
-        ]
-    }
-};
-
-var seedCountAlert = new CronJob(taskControl.seedCountAlert.taskSchedule, function() {
+var scheduledUpdate = new CronJob(telegram.scheduledSeedCountUpdateJob.schedule, function() {
     var currentDatetime = moment(moment(), "YYYY-MM-DD HH:mm:ss");
     console.log("\n目前時間: " + currentDatetime.format("YYYY-MM-DD HH:mm:ss"));
     // server inspects system data
@@ -379,10 +337,10 @@ var seedCountAlert = new CronJob(taskControl.seedCountAlert.taskSchedule, functi
     mssql.connect(mssqlConfig, function(error) {
         if (error) throw error;
         var mssqlRequest = new mssql.Request();
-        var queryString = "SELECT * FROM productionHistory.dbo.seedCountResult WHERE unitSeedCount>=" + taskControl.seedCountAlert.alertLevel + " AND recordDatetime>'" +
-            moment(currentDatetime, "YYYY-MM-DD HH:mm:ss").subtract(taskControl.seedCountAlert.observePeriod, "hours").format("YYYY-MM-DD HH:mm:ss") + "' ORDER BY recordDatetime, prodLineID;";
+        var queryString = "SELECT * FROM productionHistory.dbo.seedCountResult WHERE unitSeedCount>=" + telegram.scheduledSeedCountUpdateJob.alertLevel + " AND recordDatetime>'" +
+            moment(currentDatetime, "YYYY-MM-DD HH:mm:ss").subtract(telegram.scheduledSeedCountUpdateJob.observePeriod, "hours").format("YYYY-MM-DD HH:mm:ss") + "' ORDER BY recordDatetime, prodLineID;";
         console.log("     SQL查詢：" + queryString);
-        console.log("     查詢範圍：" + moment(currentDatetime, "YYYY-MM-DD HH:mm:ss").subtract(taskControl.seedCountAlert.observePeriod, "hours").format("YYYY-MM-DD HH:mm:ss") + " 之後資料");
+        console.log("     查詢範圍：" + moment(currentDatetime, "YYYY-MM-DD HH:mm:ss").subtract(telegram.scheduledSeedCountUpdateJob.observePeriod, "hours").format("YYYY-MM-DD HH:mm:ss") + " 之後資料");
         mssqlRequest.query(queryString, function(error, resultset) {
             if (error) {
                 mssql.close();
@@ -390,7 +348,7 @@ var seedCountAlert = new CronJob(taskControl.seedCountAlert.taskSchedule, functi
             }
             mssql.close();
             console.log("     查詢完畢：發現[" + resultset.length + "]筆數據異常");
-            if (taskControl.seedCountAlert.broadcast === true) {
+            if (telegram.scheduledSeedCountUpdateJob.online === true) {
                 if (resultset.length > 0) {
                     var contentString = "";
                     resultset.forEach(function(irregularity) {
@@ -400,30 +358,14 @@ var seedCountAlert = new CronJob(taskControl.seedCountAlert.taskSchedule, functi
                             " 氣泡數：" + irregularity.unitSeedCount + "\n";
                     });
                     console.log("     " + moment(moment(), "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss") + " 發佈行動裝置通知");
-                    /*scheduledBroadcastHttpRequest(
-                        5,
-                        5,
-                        "氣泡數狀況定期通報",
-                        contentString,
-                        taskControl.seedCountAlert.scheduledAlertList,
-                        frontendHost + ":" + frontendHostPort + "/seedCount",
-                        "warning.mp3" // available sounds: alert.mp3 beep.mp3 warning.mp3 alarm.mp3
-                    );*/
-                    /*httpRequest({
-                        url: broadcastServer + "/broadcast",
+                    httpRequest({
+                        url: telegram.botAPIurl + telegram.seedCountBotToken + "/sendMessage",
+                        //url: "https://api.telegram.org/bot" + "251686312:AAG8_sczOJvJSwtese4kgzH95RLyX5ZJ114" + "/sendMessage",
                         method: "post",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
+                        headers: { "Content-Type": "application/json" },
                         json: {
-                            "messageCategoryID": "5", // mobileMessagingSystem.messageCategory
-                            "systemCategoryID": "5", // upgiSystem.system seedCount
-                            "manualTopic": "氣泡數狀況定期通報",
-                            "content": contentString,
-                            "recipientID": "05060001",
-                            "userGroup": "Admin",
-                            "url": frontendHost + ":" + frontendHostPort + "/seedCount",
-                            "audioFile": "warning.mp3" // available sounds: alert.mp3 beep.mp3 warning.mp3 alarm.mp3
+                            "chat_id": telegram.glass_manufacture_groupID,
+                            "text": contentString
                         }
                     }, function(error, response, body) {
                         if (error) {
@@ -432,7 +374,7 @@ var seedCountAlert = new CronJob(taskControl.seedCountAlert.taskSchedule, functi
                             console.log("     推播作業成功：" + response.statusCode);
                             console.log("     伺服器回覆：" + body);
                         }
-                    });*/
+                    });
                 }
             } else {
                 console.log("     推播設定目前處於關閉狀態");
@@ -440,34 +382,4 @@ var seedCountAlert = new CronJob(taskControl.seedCountAlert.taskSchedule, functi
         });
     });
 }, null, true, workingTimezone);
-seedCountAlert.start();
-
-function scheduledBroadcastHttpRequest(messageCategoryID, systemCategoryID, topicString, contentString, recipientList, websiteUrl, audioFileName) {
-    console.log("          預計發佈人數: " + recipientList.length);
-    recipientList.forEach(function(recipient) {
-        httpRequest({
-            url: broadcastServer + broadcastServerAPIEndpoint,
-            method: "post",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            json: {
-                "messageCategoryID": messageCategoryID,
-                "systemCategoryID": systemCategoryID,
-                "manualTopic": topicString,
-                "content": contentString,
-                "recipientID": recipientList.recipientID,
-                "userGroup": recipientList.userGroup,
-                "url": websiteUrl,
-                "audioFile": audioFileName // available sounds: alert.mp3 beep.mp3 warning.mp3 alarm.mp3
-            }
-        }, function(error, response, body) {
-            if (error) {
-                console.log("     推播作業發生錯誤：" + error);
-            } else {
-                console.log("     推播作業成功：" + response.statusCode);
-                console.log("     伺服器回覆：" + body);
-            }
-        });
-    });
-}
+scheduledUpdate.start();
