@@ -337,30 +337,49 @@ var scheduledUpdate = new CronJob(telegram.scheduledSeedCountUpdateJob.schedule,
     mssql.connect(mssqlConfig, function(error) {
         if (error) throw error;
         var mssqlRequest = new mssql.Request();
-        var queryString = "SELECT * FROM productionHistory.dbo.seedCountResult WHERE unitSeedCount>=" + telegram.scheduledSeedCountUpdateJob.alertLevel + " AND recordDatetime>'" +
-            moment(currentDatetime, "YYYY-MM-DD HH:mm:ss").subtract(telegram.scheduledSeedCountUpdateJob.observePeriod, "hours").format("YYYY-MM-DD HH:mm:ss") + "' ORDER BY recordDatetime, prodLineID;";
+        var queryString = "SELECT * FROM productionHistory.dbo.seedCountResult WHERE recordDatetime>'" +
+            moment(currentDatetime, "YYYY-MM-DD HH:mm:ss").subtract(telegram.scheduledSeedCountUpdateJob.observePeriod, "hours").format("YYYY-MM-DD HH:mm:ss") +
+            "' ORDER BY recordDatetime, prodLineID;";
+        console.log("     查詢範圍：" +
+            moment(currentDatetime, "YYYY-MM-DD HH:mm:ss").subtract(telegram.scheduledSeedCountUpdateJob.observePeriod, "hours").format("YYYY-MM-DD HH:mm:ss") +
+            " 之後資料");
         console.log("     SQL查詢：" + queryString);
-        console.log("     查詢範圍：" + moment(currentDatetime, "YYYY-MM-DD HH:mm:ss").subtract(telegram.scheduledSeedCountUpdateJob.observePeriod, "hours").format("YYYY-MM-DD HH:mm:ss") + " 之後資料");
         mssqlRequest.query(queryString, function(error, resultset) {
             if (error) {
                 mssql.close();
                 console.log("     查詢失敗：" + error);
             }
             mssql.close();
-            console.log("     查詢完畢：發現[" + resultset.length + "]筆數據異常");
             if (telegram.scheduledSeedCountUpdateJob.online === true) {
-                if (resultset.length > 0) {
-                    var contentString = "";
-                    resultset.forEach(function(irregularity) {
-                        contentString += moment(irregularity.recordDate, "YYYY-MM-DD").format("MM/DD") + " " +
-                            moment(irregularity.recordTime, "HH:mm:ss").format("HH:mm") + " " +
-                            irregularity.prodLineID + "[" + irregularity.prodReference + "] - " +
-                            " 氣泡數：" + irregularity.unitSeedCount + "\n";
+                if (resultset.length === 0) { // 尚無可推播資料
+                    console.log("     未發現作業資料");
+                    httpRequest({
+                        url: telegram.botAPIurl + telegram.seedCountBotToken + "/sendMessage",
+                        method: "post",
+                        headers: { "Content-Type": "application/json" },
+                        json: {
+                            "chat_id": telegram.glass_manufacture_groupID,
+                            "text": moment(currentDatetime, "YYYY-MM-DD HH:mm:ss").subtract(telegram.scheduledSeedCountUpdateJob.observePeriod, "hours").format("HH:mm") +
+                                " 至今未發現作業資料"
+                        }
+                    }, function(error, response, body) {
+                        if (error) {
+                            console.log("     推播作業發生錯誤：" + error);
+                        } else {
+                            console.log("     推播作業成功：" + response.statusCode);
+                            console.log("     伺服器回覆：" + body);
+                        }
+                    });
+                } else { // 推播資料確認存在
+                    console.log(resultset);
+                    var contentString = currentDatetime.format("HH:mm") + " 氣泡數報告：\n";
+                    resultset.forEach(function(seedCountDataPerLine) {
+                        contentString += seedCountDataPerLine.prodLineID + "[" + seedCountDataPerLine.prodReference + "] - " +
+                            " 氣泡數：" + seedCountDataPerLine.unitSeedCount + "\n";
                     });
                     console.log("     " + moment(moment(), "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss") + " 發佈行動裝置通知");
                     httpRequest({
                         url: telegram.botAPIurl + telegram.seedCountBotToken + "/sendMessage",
-                        //url: "https://api.telegram.org/bot" + "251686312:AAG8_sczOJvJSwtese4kgzH95RLyX5ZJ114" + "/sendMessage",
                         method: "post",
                         headers: { "Content-Type": "application/json" },
                         json: {

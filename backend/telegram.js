@@ -48,7 +48,7 @@ var systemList = [{
         online: true,
         broadcast: true,
         //schedule: "0 30 7,15,23 * * *", // everyday at 07:30, 15:30, and 23:30
-        schedule: "0 */5 * * * *", // testing
+        schedule: "0 */1 * * * *", // testing
         targetGroupList: [chatGroupList[1]],
         targetUserList: [userList[0]],
         observePeriod: 8,
@@ -77,4 +77,4 @@ module.exports = {
     glass_manufacture_groupID,
     seedCountBotToken,
     junior_upgi_ID
-}
+};
