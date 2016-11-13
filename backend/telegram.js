@@ -32,7 +32,8 @@ var userList = [{
     first_name: "佳佑",
     last_name: "蔡",
     status: ["admin", "user"],
-    joinedGroupList: [chatGroupList[0], chatGroupList[1]]
+    joinedGroupList: [chatGroupList[0], chatGroupList[1]],
+    upgEmployeeID: "05060001"
 }];
 
 var systemList = [{
