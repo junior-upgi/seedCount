@@ -11,12 +11,8 @@ function autoRefresh() {
         //enable/disable buttons depending on the value of buttonInaccessibleCounter variable
         if (buttonInaccessibleCounter > 0) {
             $(".subjectToAccessControl").prop("disabled", true);
-            //$("button:not(button#preventDisplayToggleButton)").prop("disabled", true);
-            //$("input#submitInlineEditForm,input#resetInlineEditForm").prop("disabled", true);
         } else {
             $(".subjectToAccessControl").prop("disabled", false);
-            //$("button:not(button#preventDisplayToggleButton)").prop("disabled", false);
-            //$("input#submitInlineEditForm,input#resetInlineEditForm").prop("disabled", false);
         }
         //at 58 second mark before each scheduled situation table update, increase the buttonInaccessibleCount by 5
         if ((now.format("m") % 10 === 0) && (now.format("s") === 58)) {
@@ -32,7 +28,7 @@ function autoRefresh() {
 };
 
 function switchToDate() {
-    increaseInaccessibleCounter(10, 10);
+    increaseInaccessibleCounter(10);
     if ($("#designatedDate").val() !== '') {
         removeTableComponent();
         editModeInProgress = false;
@@ -42,7 +38,7 @@ function switchToDate() {
 }
 
 function previous() {
-    increaseInaccessibleCounter(10, 10);
+    increaseInaccessibleCounter(10);
     removeTableComponent();
     editModeInProgress = false;
     workingDate = moment.tz(workingDate, "Asia/Taipei").add(-1, "days").format("YYYY-MM-DD");
@@ -50,14 +46,14 @@ function previous() {
 };
 
 function refresh() {
-    increaseInaccessibleCounter(10, 10);
+    increaseInaccessibleCounter(10);
     removeTableComponent();
     editModeInProgress = false;
     constructSituationTable(workingDate);
 };
 
 function today() {
-    increaseInaccessibleCounter(10, 10);
+    increaseInaccessibleCounter(10);
     removeTableComponent();
     editModeInProgress = false;
     workingDate = getWorkDateString(moment.tz(moment(), "Asia/Taipei"));
@@ -65,7 +61,7 @@ function today() {
 };
 
 function next() {
-    increaseInaccessibleCounter(10, 10);
+    increaseInaccessibleCounter(10);
     removeTableComponent();
     editModeInProgress = false;
     workingDate = moment.tz(workingDate, "Asia/Taipei").add(1, "days").format("YYYY-MM-DD");

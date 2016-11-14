@@ -94,6 +94,7 @@ function constructSituationTable(dateString) {
         }
     });
     /*
+    // call back version
     // proceed to getting actual table data, first get the record count
     $.getJSON(backendHost + ":" + backendHostPort + "/seedCount/api/getRecordCount?workingDate=" + dateString, function(result) {
         if (JSON.parse(result)[0].recordCount < 1) { // if not records are found
