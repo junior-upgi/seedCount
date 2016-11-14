@@ -338,7 +338,6 @@ console.log("氣泡數監測系統伺服器服務運行中... (" + backendHost +
 // seedCount system scheduled update
 var seedCountScheduledUpdate = upgSystem.list[2].jobList[0];
 var seedCountBot = telegramBot.list[1];
-var glass_manufacture_chatGroup = telegramChatGroup.list[1];
 var scheduledUpdate = new CronJob(seedCountScheduledUpdate.schedule, function() {
     var currentDatetime = moment(moment(), "YYYY-MM-DD HH:mm:ss");
     console.log("\n目前時間: " + currentDatetime.format("YYYY-MM-DD HH:mm:ss"));

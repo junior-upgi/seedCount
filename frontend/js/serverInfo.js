@@ -1,3 +1,5 @@
+"use strict";
+
 //var backendHost = "http://upgi.ddns.net"; //production node js server
 //var backendHostPort = 4949; //production node js server
 //var frontendHost = "http://upgi.ddns.net"; //production apache server

@@ -1,3 +1,5 @@
+"use strict";
+
 var seedCountLevelCap = [{
     situation: "良好",
     ceiling: 4

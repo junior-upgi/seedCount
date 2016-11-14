@@ -72,12 +72,18 @@ function constructSituationTable(dateString) {
         return $.getJSON(backendHost + ":" + backendHostPort + "/seedCount/api/getRecordCount?workingDate=" + dateString)
             .then(function(result) {
                 return JSON.parse(result)[0].recordCount;
+            }).fail(function() {
+                alert("資料筆數查詢發生錯誤，請聯繫IT人員");
+                return false;
             });
     };
     var getRecordset = function() { // promise of ajax function
         return $.getJSON(backendHost + ":" + backendHostPort + "/seedCount/api/getRecordset?workingDate=" + dateString)
             .then(function(recordset) {
                 return (JSON.parse(recordset));
+            }).fail(function() {
+                alert("資料內容查詢發生錯誤，請聯繫IT人員");
+                return false;
             });
     };
     getRecordCount().done(function(recordCount) {
@@ -93,23 +99,6 @@ function constructSituationTable(dateString) {
             });
         }
     });
-    /*
-    // call back version
-    // proceed to getting actual table data, first get the record count
-    $.getJSON(backendHost + ":" + backendHostPort + "/seedCount/api/getRecordCount?workingDate=" + dateString, function(result) {
-        if (JSON.parse(result)[0].recordCount < 1) { // if not records are found
-            $("#workingDateBanner").text(dateString + " 尚無"); //set the date label on the situation table caption
-            //skip the table data population step and go straight to table formatting
-            formatSituationTable();
-        } else { // if there are record(s) existed in the current date displayed 
-            $("#workingDateBanner").text(dateString); //set the date label on the situation table caption
-            //ajax POST for seed count data and pass on the data for processing
-            $.getJSON(backendHost + ":" + backendHostPort + "/seedCount/api/getRecordset?workingDate=" + dateString, function(result) {
-                populateSituationTable(JSON.parse(result));
-            });
-        }
-    });
-    */
 };
 
 // populate data into the situation table
