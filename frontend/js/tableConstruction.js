@@ -67,13 +67,40 @@ function constructSituationTable(dateString) {
     });
     // create daily overall summary
     $("#situationTableFooter").append('<th class="text-center dailyAverageField"></th>');
-    // proceed to getting actual table data
-    $.getJSON(backendHost + ":" + backendHostPort + "/seedCount/api/getRecordCount?workingDate=" + dateString, function(result) {
-        if (JSON.parse(result)[0].recordCount < 1) {
+    // proceed to getting actual table data, first get the record count
+    var getRecordCount = function() { // promise of ajax function
+        return $.getJSON(backendHost + ":" + backendHostPort + "/seedCount/api/getRecordCount?workingDate=" + dateString)
+            .then(function(result) {
+                return JSON.parse(result)[0].recordCount;
+            });
+    };
+    var getRecordset = function() { // promise of ajax function
+        return $.getJSON(backendHost + ":" + backendHostPort + "/seedCount/api/getRecordset?workingDate=" + dateString)
+            .then(function(recordset) {
+                return (JSON.parse(recordset));
+            });
+    };
+    getRecordCount().done(function(recordCount) {
+        if (recordCount < 1) { // if not records are found
             $("#workingDateBanner").text(dateString + " 尚無"); //set the date label on the situation table caption
             //skip the table data population step and go straight to table formatting
             formatSituationTable();
-        } else {
+        } else { // if there are record(s) existed in the current date displayed
+            $("#workingDateBanner").text(dateString); //set the date label on the situation table caption
+            //ajax POST for seed count data and pass on the data for processing
+            getRecordset().done(function(recordset) {
+                populateSituationTable(recordset);
+            });
+        }
+    });
+    /*
+    // proceed to getting actual table data, first get the record count
+    $.getJSON(backendHost + ":" + backendHostPort + "/seedCount/api/getRecordCount?workingDate=" + dateString, function(result) {
+        if (JSON.parse(result)[0].recordCount < 1) { // if not records are found
+            $("#workingDateBanner").text(dateString + " 尚無"); //set the date label on the situation table caption
+            //skip the table data population step and go straight to table formatting
+            formatSituationTable();
+        } else { // if there are record(s) existed in the current date displayed 
             $("#workingDateBanner").text(dateString); //set the date label on the situation table caption
             //ajax POST for seed count data and pass on the data for processing
             $.getJSON(backendHost + ":" + backendHostPort + "/seedCount/api/getRecordset?workingDate=" + dateString, function(result) {
@@ -81,6 +108,7 @@ function constructSituationTable(dateString) {
             });
         }
     });
+    */
 };
 
 // populate data into the situation table

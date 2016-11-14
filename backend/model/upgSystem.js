@@ -16,7 +16,7 @@ var list = [{
         online: true,
         broadcast: true,
         schedule: "10 30 7,15,23 * * *", // everyday at 07:30:10, 15:30:10, and 23:30:10
-        //schedule: "*/30 * * * * *", // testing
+        //schedule: "*/5 * * * * *", // testing
         targetGroupIDList: [telegramChatGroup.list[1].id], // 製造
         targetUserIDList: [telegramUser.list[0].id], // 蔡佳佑
         observePeriod: 8,
