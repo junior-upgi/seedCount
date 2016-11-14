@@ -10,14 +10,14 @@ var mssql = require("mssql");
 var httpRequest = require("request");
 var telegram = require("./telegram.js");
 
-var backendHost = "http://localhost"; // development environment
-var BackendHostPort = 4949; // development environment
-var frontendHost = "http://192.168.0.16"; // development environment
-var frontendHostPort = 80; // development environment port
-//var backendHost = "http://upgi.ddns.net"; // development environment
+//var backendHost = "http://localhost"; // development environment
 //var BackendHostPort = 4949; // development environment
-//var frontendHost = "http://upgi.ddns.net"; // production server
-//var frontendHostPort = 3355; // production server port
+//var frontendHost = "http://192.168.0.16"; // development environment
+//var frontendHostPort = 80; // development environment port
+var backendHost = "http://upgi.ddns.net"; // development environment
+var BackendHostPort = 4949; // development environment
+var frontendHost = "http://upgi.ddns.net"; // production server
+var frontendHostPort = 3355; // production server port
 var broadcastServer = "http://upgi.ddns.net:3939"; // broadcast server
 var broadcastServerAPIEndpoint = "/broadcast";
 
