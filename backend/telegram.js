@@ -46,11 +46,24 @@ var systemList = [{
     id: "seedCount",
     jobList: [{
         id: "scheduledUpdate",
+        reference: "例行氣泡數據通報",
+        type: "periodic",
         online: true,
         broadcast: true,
-        schedule: "0 30 7,15,23 * * *", // everyday at 07:30, 15:30, and 23:30
-        //schedule: "0 */1 * * * *", // testing
+        //schedule: "0 30 7,15,23 * * *", // everyday at 07:30, 15:30, and 23:30
+        schedule: "0 */1 * * * *", // testing
         targetGroupList: [chatGroupList[1]],
+        targetUserList: [userList[0]],
+        observePeriod: 8,
+        alertLevel: 10
+    }, {
+        id: "irregularityBroadcast",
+        reference: "氣泡數異常通報",
+        type: "onCallBasis",
+        online: false,
+        broadcast: false,
+        schedule: "",
+        targetGroupList: [chatGroupList[0]],
         targetUserList: [userList[0]],
         observePeriod: 8,
         alertLevel: 10

@@ -342,12 +342,11 @@ app.listen(BackendHostPort);
 console.log("氣泡數監測系統伺服器服務於運行中... (" + backendHost + ":" + BackendHostPort + ")");
 
 // function to check new or updated seedCount entry that's dated within the past 8 hours, broadcast
-
 var scheduledUpdate = new CronJob(telegram.scheduledSeedCountUpdateJob.schedule, function() {
     var currentDatetime = moment(moment(), "YYYY-MM-DD HH:mm:ss");
     console.log("\n目前時間: " + currentDatetime.format("YYYY-MM-DD HH:mm:ss"));
     // server inspects system data
-    console.log("     進行例行氣泡數據通報檢查");
+    console.log("     進行" + telegram.systemList[2].jobList[0].reference + "檢查");
     mssql.connect(mssqlConfig, function(error) {
         if (error) throw error;
         var mssqlRequest = new mssql.Request();
@@ -386,7 +385,7 @@ var scheduledUpdate = new CronJob(telegram.scheduledSeedCountUpdateJob.schedule,
                     });
                 } else { // 推播資料確認存在
                     console.log(resultset);
-                    var contentString = currentDatetime.format("HH:mm") + " 定期氣泡數報告：\n";
+                    var contentString = currentDatetime.format("HH:mm") + " " + telegram.systemList[2].jobList[0].reference + "：\n";
                     resultset.forEach(function(seedCountDataPerLine) {
                         contentString += seedCountDataPerLine.prodLineID + "[" + seedCountDataPerLine.prodReference + "] - " +
                             " 氣泡數：" + seedCountDataPerLine.unitSeedCount + "\n";
