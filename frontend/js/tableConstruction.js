@@ -38,7 +38,8 @@ function constructSituationTable(dateString) {
             $.each(prodLineList, function(index, prodLine) {
                 //create one field for each production line and add appropriate class attributes for identification
                 $("tr.processing").append('<td class="seedCountField processing empty ' + prodLine.reference + '"></td>');
-                $("td." + prodLine.reference + ".processing").addClass("text-center " + facilityList[0].cReference + " " + shift.reference + ' ' + inspectTimePoint.trimmedTimePoint)
+                $("td." + prodLine.reference + ".processing")
+                    .addClass("text-center " + facilityList[0].cReference + " " + shift.reference + ' ' + inspectTimePoint.trimmedTimePoint)
                     .data("workingDate", dateString)
                     .data("timePoint", inspectTimePoint.trimmedTimePoint)
                     .data("prodFacilityID", facilityList[0].cReference)

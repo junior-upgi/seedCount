@@ -2,14 +2,27 @@
 
 var editMode = false;
 var editModeInProgress = false;
-var formAction; // variable to hold the API path to submit the form data to 
+var formAction; // variable to hold the API path to submit the form data to
+
+// give cells extra class to determine whether it should be poss
+function managePermissionToInput() {
+    $("td.seedCountField:visible").each(function(index) {
+        //console.log(moment(getWorkDatetimeString($(this).data("workingDate"), $(this).data("timePoint").slice(0, 2) + ":" + $(this).data("timePoint").slice(2)).format("YYYY-MM-DD HH:mm:ss")));
+        $(this).removeClass("inputPermitted inputNotPermitted");
+        if (moment(getWorkDatetimeString($(this).data("workingDate"), $(this).data("timePoint").slice(0, 2) + ":" + $(this).data("timePoint").slice(2))).isBefore(moment())) {
+            $(this).addClass("inputPermitted");
+        } else {
+            $(this).addClass("inputNotPermitted");
+        }
+    });
+};
 
 //add click-n-edit/insert functionality to seedCountField cells
 $(document).on("click", "td.seedCountField", function() {
     if ((editMode === true) && (editModeInProgress === false)) {
-        editModeInProgress = true;
         var workingCell = $(this);
         var workingRow = $(this).parent();
+        editModeInProgress = true;
         // highlight element being edited
         workingCell
             .removeClass("success warning info")
@@ -23,7 +36,7 @@ $(document).on("click", "td.seedCountField", function() {
             if (status === "success") { // if template successfully loaded
                 if (workingCell.hasClass("filled")) { // if it's an edit and not a new record
                     loadExistingData(workingCell); // ajax for the existing record
-                    $("form#inlineEditForm").append('&nbsp;&nbsp;&nbsp;&nbsp;<button id="deleteRecord" class="subjectToAccessControl btn btn-danger btn-lg">資料刪除</button>');
+                    $("form#inlineEditForm").append('&nbsp;&nbsp;&nbsp;&nbsp;<button id="deleteRecord" type="button" class="subjectToAccessControl btn btn-danger btn-lg">資料刪除</button>');
                     formAction = backendHost + ":" + backendHostPort + "/seedCount/api/updateRecord"; // set the API endpoint to post to update record
                 } else {
                     //load data into common fields 時間、廠區、產線
@@ -38,10 +51,10 @@ $(document).on("click", "td.seedCountField", function() {
                 processDataInput(); // when cell data changes, calcuate the result on-the-fly
                 $("form#inlineEditForm").submit(function() { // when user clicks on the submit button on the inline edit form
                     $(".subjectToAccessControl").prop("disabled", true);
-                    if (workingCell.hasClass("empty")) {
+                    if (workingCell.hasClass("empty")) { // new record requires system to generate both 'created' and 'modified' data
                         $("input#created").val(moment(moment(), "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss"));
                         $("input#modified").val(moment(moment(), "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss"));
-                    } else {
+                    } else { // modification of existing record only requires overwrite of the modified data
                         $("input#modified").val(moment(moment(), "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss"));
                     }
                     var formData = new FormData($(this)[0]);
@@ -118,7 +131,7 @@ function loadExistingData(cellObject) {
                 $("div#photoControlGroup").prepend('&nbsp;&nbsp;&nbsp;&nbsp;<button id="deletePhoto" type="button" class="inlineEditControl subjectToAccessControl btn btn-danger" onclick="deletePhotoAction()">刪圖</button>');
                 $("div#photoControlGroup").prepend('<img id="existingPhoto" height="120" width="120"><br>');
                 $("img#existingPhoto").prop("src", backendHost + ":" + backendHostPort + "/" + seedCountDataEntry.photoLocation + "?timestamp=" + new Date().getTime());
-                $("div#photoControlGroup").prepend('<input id="existingPhotoPath" name="existingPhotoPath" type="text" class="text-center" size="30" readonly><br>');
+                $("div#photoControlGroup").prepend('<input id="existingPhotoPath" name="existingPhotoPath" type="text" class="text-center" size="30" readonly hidden><br>');
                 $("input#existingPhotoPath").val(seedCountDataEntry.photoLocation);
                 $("input#photo").hide();
             }

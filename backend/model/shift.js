@@ -24,7 +24,7 @@ var shiftList = [{
             hidden: false
         }
     ],
-    length: 480
+    duration: 480
 }, {
     reference: "night",
     cReference: "中班",
@@ -51,7 +51,7 @@ var shiftList = [{
             hidden: false
         }
     ],
-    length: 480
+    duration: 480
 }, {
     reference: "graveYard",
     cReference: "夜班",
@@ -78,9 +78,7 @@ var shiftList = [{
             hidden: false
         }
     ],
-    length: 480
+    duration: 480
 }];
 
-module.exports = {
-    shiftList
-};
+module.exports = { shiftList };

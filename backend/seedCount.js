@@ -9,6 +9,7 @@ var moment = require("moment-timezone");
 var mssql = require("mssql");
 var httpRequest = require("request");
 var telegram = require("./telegram.js");
+var prodLineList = require("./model/prodLine.js");
 
 //var backendHost = "http://localhost"; // development environment
 //var BackendHostPort = 4949; // development environment
@@ -34,6 +35,17 @@ var mssqlConfig = {
     user: "productionHistory",
     password: "productionHistory"
 };
+
+//make sure that file structure to hold seed image exists
+var fileStructureValidated = false;
+if (fileStructureValidated !== true) {
+    prodLineList.prodLineList.forEach(function(prodLine, index) {
+        if (!fs.existsSync(seedImageDirectory + "/" + prodLine.reference)) {
+            fs.mkdirSync(seedImageDirectory + "/" + prodLine.reference);
+        }
+    });
+    fileStructureValidated = true;
+}
 
 var workingTimezone = "Asia/Taipei";
 
@@ -179,6 +191,8 @@ app.post("/seedCount/api/insertRecord", upload.any(), function(req, res) {
             if (error) {
                 console.log("     資料讀取發生錯誤：" + error);
                 res.status(500).send("資料讀取發生錯誤： " + error).end();
+            } else { // after is successfully inserted, make broadcast if it's over tolerance
+                //req.body.count_0+req.body.count_1+req.body.count_2+req.body.count_3+req.body.count_4+req.body.count_5
             }
             mssql.close();
             console.log("     " + moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料新增成功");
@@ -372,7 +386,7 @@ var scheduledUpdate = new CronJob(telegram.scheduledSeedCountUpdateJob.schedule,
                     });
                 } else { // 推播資料確認存在
                     console.log(resultset);
-                    var contentString = currentDatetime.format("HH:mm") + " 氣泡數報告：\n";
+                    var contentString = currentDatetime.format("HH:mm") + " 定期氣泡數報告：\n";
                     resultset.forEach(function(seedCountDataPerLine) {
                         contentString += seedCountDataPerLine.prodLineID + "[" + seedCountDataPerLine.prodReference + "] - " +
                             " 氣泡數：" + seedCountDataPerLine.unitSeedCount + "\n";
