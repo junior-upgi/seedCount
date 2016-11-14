@@ -1,4 +1,8 @@
-var shiftList = [{
+var moment = require("moment-timezone");
+
+var workingTimezone = "Asia/Taipei";
+
+var list = [{
     reference: "day",
     cReference: "早班",
     start: "07:30",
@@ -81,4 +85,40 @@ var shiftList = [{
     duration: 480
 }];
 
-module.exports = { shiftList };
+function getWorkDateString(datetimeObject) {
+    if (datetimeObject.isSameOrAfter(datetimeObject.format("YYYY-MM-DD") + ' 07:30:00')) {
+        return (datetimeObject.tz(workingTimezone).format("YYYY-MM-DD"));
+    } else {
+        var tempMoment = moment(datetimeObject.format("YYYY-MM-DD HH:mm:ss"));
+        return (tempMoment.add(-1, "days").tz(workingTimezone).format("YYYY-MM-DD"));
+    }
+};
+
+function getWorkDatetimeString(workingDateString, workingTime) {
+    switch (true) {
+        case (workingTime === list[0].inspectTimePointList[0].timePoint):
+        case (workingTime === list[0].inspectTimePointList[1].timePoint):
+        case (workingTime === list[0].inspectTimePointList[2].timePoint):
+        case (workingTime === list[0].inspectTimePointList[3].timePoint):
+        case (workingTime === list[1].inspectTimePointList[0].timePoint):
+        case (workingTime === list[1].inspectTimePointList[1].timePoint):
+        case (workingTime === list[1].inspectTimePointList[2].timePoint):
+        case (workingTime === list[1].inspectTimePointList[3].timePoint):
+            return (moment(workingDateString).format("YYYY-MM-DD") + " " + workingTime + ":00");
+        case (workingTime === list[2].inspectTimePointList[0].timePoint):
+        case (workingTime === list[2].inspectTimePointList[1].timePoint):
+        case (workingTime === list[2].inspectTimePointList[2].timePoint):
+        case (workingTime === list[2].inspectTimePointList[3].timePoint):
+            return (moment(workingDateString).add(1, "days").format("YYYY-MM-DD") + " " + workingTime + ":00");
+        default:
+            alert("時間資料錯誤，無法建置正確工作時間。請通知 IT 重新啟動系統後台服務...");
+            return false;
+    }
+};
+
+module.exports = {
+    workingTimezone,
+    list,
+    getWorkDateString,
+    getWorkDatetimeString
+};

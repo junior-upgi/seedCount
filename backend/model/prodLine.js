@@ -1,4 +1,4 @@
-var prodLineList = [{
+var list = [{
     reference: 'L1-1',
     sequence: 0,
     side: 'west',
@@ -40,4 +40,4 @@ var prodLineList = [{
     hidden: false
 }];
 
-module.exports = { prodLineList };
+module.exports = { list };
