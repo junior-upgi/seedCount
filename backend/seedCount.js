@@ -16,14 +16,14 @@ var upgSystem = require("./model/upgSystem.js");
 var prodLine = require("./model/prodLine.js");
 var shift = require("./model/shift.js")
 
-var backendHost = "http://localhost"; // development environment
-var BackendHostPort = 4949; // development environment
-var frontendHost = "http://192.168.0.16"; // development environment
-var frontendHostPort = 80; // development environment port
-//var backendHost = "http://upgi.ddns.net"; // development environment
+//var backendHost = "http://localhost"; // development environment
 //var BackendHostPort = 4949; // development environment
-//var frontendHost = "http://upgi.ddns.net"; // production server
-//var frontendHostPort = 3355; // production server port
+//var frontendHost = "http://192.168.0.16"; // development environment
+//var frontendHostPort = 80; // development environment port
+var backendHost = "http://upgi.ddns.net"; // development environment
+var BackendHostPort = 4949; // development environment
+var frontendHost = "http://upgi.ddns.net"; // production server
+var frontendHostPort = 3355; // production server port
 
 var mssqlConfig = {
     server: "upgi.ddns.net", // access database from the Internet (development)
@@ -47,7 +47,7 @@ if (fileStructureValidated !== true) {
     });
     fileStructureValidated = true;
     app.use("/" + seedImageDirectory, express.static("./" + seedImageDirectory));
-    console.log("影像伺服器服務於運行中... (" + backendHost + ":" + BackendHostPort + "/" + seedImageDirectory + ")");
+    console.log("影像伺服器服務運行中... (" + backendHost + ":" + BackendHostPort + "/" + seedImageDirectory + ")");
 }
 
 app.get("/seedCount/api/getRecord", function(req, res) { // get one single record
