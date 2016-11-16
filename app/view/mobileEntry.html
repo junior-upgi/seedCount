@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
+    <title>氣泡數登錄</title>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/1.4.5/numeral.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.15.2/moment.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="./serverInfo.js"></script>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="row jumbotron text-center">
+            <h1>氣泡數登錄</h1>
+            <h3>行動裝置版本</h3>
+        </div>
+
+        <div class="row text-center">
+            <div class="btn-group-vertical col-xs-6 col-lg-2" role="group">
+                <a class="btn btn-default btn-lg" href="./perLineEntry.html?prodLineID=L1-1">輸入 L1-1 資料</a>
+                <a class="btn btn-default btn-lg" href="./perLineEntry.html?prodLineID=L1">輸入 L1 資料</a>
+                <a class="btn btn-default btn-lg" href="./perLineEntry.html?prodLineID=L2">輸入 L2 資料</a>
+                <a class="btn btn-default btn-lg" href="./perLineEntry.html?prodLineID=L3">輸入 L3 資料</a>
+            </div>
+            <div class="btn-group-vertical col-xs-6 col-lg-2" role="group">
+                <a class="btn btn-default btn-lg" href="./perLineEntry.html?prodLineID=L5">輸入 L5 資料</a>
+                <a class="btn btn-default btn-lg" href="./perLineEntry.html?prodLineID=L6">輸入 L6 資料</a>
+                <a class="btn btn-default btn-lg" href="./perLineEntry.html?prodLineID=L7">輸入 L7 資料</a>
+                <a class="btn btn-default btn-lg" href="./perLineEntry.html?prodLineID=L8">輸入 L8 資料</a>
+            </div>
+        </div>
+        <br>
+        <br>
+
+        <div class="row text-center">
+            <a id="homeLink" class="btn btn-default btn-lg" href="#">返回氣泡監控程式主頁</a>
+        </div>
+    </div>
+</body>
+
+</html>
+
+<script>
+    $("document").ready(function() {
+        $("#homeLink").attr("href", frontendHost + ":" + frontendHostPort + "/seedCount/index.html");
+    });
+</script>
