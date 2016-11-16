@@ -16,6 +16,8 @@ var upgSystem = require("./model/upgSystem.js");
 var prodLine = require("./model/prodLine.js");
 var shift = require("./model/shift.js")
 
+app.use(cors());
+
 //var backendHost = "http://localhost"; // development environment
 //var BackendHostPort = 4949; // development environment
 //var frontendHost = "http://192.168.0.16"; // development environment
@@ -31,8 +33,6 @@ var mssqlConfig = {
     user: "productionHistory",
     password: "productionHistory"
 };
-
-app.use(cors());
 
 // at system start up, make sure that file structure to hold seed image exists and start static image server
 var fileStructureValidated = false;

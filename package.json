@@ -21,13 +21,17 @@
         "cors": "*",
         "cron": "*",
         "express": "*",
+        "jsonwebtoken": "*",
         "jquery": "*",
         "moment": "*",
         "moment-timezone": "*",
+        "morgan": "*",
         "mssql": "*",
         "multer": "*",
         "mysql": "*",
         "numeral": "*",
+        "passport": "*",
+        "passport-local": "*",
         "request": "*"
     },
     "devDependencies": {
