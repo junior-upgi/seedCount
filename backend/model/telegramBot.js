@@ -20,6 +20,13 @@ var list = [{
         username: "upgiRegisterBot",
         token: "296411532:AAF9U92K7LLKB7g-jvvG4remdHGi90ph2fI",
         joinedGroupIDList: []
+    },
+    {
+        id: "278943684",
+        first_name: "產品開發機器人",
+        username: "productDevelopmentBot",
+        token: "278943684:AAHQDQMZrI2_3jPKnrY8tdrhn-2mKN9CwpI",
+        joinedGroupIDList: [telegramChatGroup.list[3].id]
     }
 ];
 

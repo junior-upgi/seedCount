@@ -21,7 +21,7 @@ var list = [{
     upgEmployeeID: "16080003"
 }, {
     id: "240006091",
-    user_name: null,
+    user_name: "Ray0626",
     first_name: "治儒",
     last_name: "陳",
     status: ["user"],
@@ -29,7 +29,7 @@ var list = [{
     upgEmployeeID: "15050003"
 }, {
     id: "261033177",
-    user_name: null,
+    user_name: "Samhuang",
     first_name: "顯鈞",
     last_name: "黃",
     status: ["user"],
@@ -83,6 +83,118 @@ var list = [{
     status: ["user"],
     joinedGroupList: [],
     upgEmployeeID: "06070004"
+}, {
+    id: "299863805",
+    username: "Srthhgdy",
+    first_name: "慶瑞",
+    last_name: "王",
+    status: ["user"],
+    joinedGroupList: [],
+    upgEmployeeID: "91050006"
+}, {
+    id: "275846005",
+    username: "Shuhualee",
+    first_name: "淑華",
+    last_name: "李",
+    status: ["user"],
+    joinedGroupList: [],
+    upgEmployeeID: "95090001"
+}, {
+    id: "",
+    username: "Janice2232",
+    first_name: "芳伊",
+    last_name: "郭",
+    status: ["user"],
+    joinedGroupList: [],
+    upgEmployeeID: "13070002"
+}, {
+    id: "",
+    username: "Phoebe0830",
+    first_name: "珈慧",
+    last_name: "廖",
+    status: ["user"],
+    joinedGroupList: [],
+    upgEmployeeID: "12090006"
+}, {
+    id: "225829917",
+    username: "UPGI_ChungChou",
+    first_name: "Lin",
+    last_name: "Chung Chou",
+    status: ["user"],
+    joinedGroupList: [],
+    upgEmployeeID: "11020002"
+}, {
+    id: "277098776",
+    username: "David0937614299",
+    first_name: "David",
+    last_name: "Lin",
+    status: ["user"],
+    joinedGroupList: [],
+    upgEmployeeID: "03090001"
+}, {
+    id: "281948128",
+    username: "EvitaUPG",
+    first_name: "Evita",
+    last_name: "Chuang",
+    status: ["user"],
+    joinedGroupList: [],
+    upgEmployeeID: "12020012"
+}, {
+    id: "281458056",
+    username: "Jeffrey_upgi",
+    first_name: "Jeffrey",
+    last_name: "Tsai",
+    status: ["user"],
+    joinedGroupList: [],
+    upgEmployeeID: "11080005"
+}, {
+    id: "290457488",
+    username: "upgi_shen0445",
+    first_name: "Shen",
+    last_name: "Sam",
+    status: ["user"],
+    joinedGroupList: [],
+    upgEmployeeID: "03070001"
+}, {
+    id: "288942651",
+    username: "hugo0831",
+    first_name: "雨利",
+    last_name: "陳",
+    status: ["user"],
+    joinedGroupList: [],
+    upgEmployeeID: "93120001"
+}, {
+    id: "236207790",
+    username: "jack5447",
+    first_name: "游",
+    last_name: "小楠",
+    status: ["user"],
+    joinedGroupList: [],
+    upgEmployeeID: "07120002"
+}, {
+    id: "254848482",
+    username: "yuraHou",
+    first_name: "孟均",
+    last_name: "侯",
+    status: ["user"],
+    joinedGroupList: [],
+    upgEmployeeID: "16030003"
+}, {
+    id: "282526890",
+    username: "upgelma",
+    first_name: "Chen",
+    last_name: "Elma",
+    status: ["user"],
+    joinedGroupList: [],
+    upgEmployeeID: "07080001"
+}, {
+    id: "267702707",
+    username: "HouseChen",
+    first_name: "Wayne",
+    last_name: "Chen",
+    status: ["user"],
+    joinedGroupList: [],
+    upgEmployeeID: "07040001"
 }];
 
 module.exports = { list };
