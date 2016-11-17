@@ -1,15 +1,12 @@
 var bodyParser = require("body-parser");
+var urlencodedParser = bodyParser.urlencoded({ extended: false });
 var CronJob = require("cron").CronJob;
 var cors = require("cors");
 var express = require("express");
 var fs = require("fs");
 var app = express();
 var moment = require("moment-timezone");
-var morgan = require("morgan");
-var jwt = require("jsonwebtoken");
-var ldap = require("ldapjs");
 var mssql = require("mssql");
-var mysql = require("mysql");
 var httpRequest = require("request");
 var telegram = require("./model/telegram.js");
 var telegramUser = require("./model/telegramUser.js");
@@ -17,24 +14,16 @@ var telegramChatGroup = require("./model/telegramChatGroup.js");
 var telegramBot = require("./model/telegramBot.js");
 var upgSystem = require("./model/upgSystem.js");
 var prodLine = require("./model/prodLine.js");
-var shift = require("./model/shift.js");
-var configuration = require("./configuration/serverInfo.js");
+var shift = require("./model/shift.js")
 
 app.use(cors());
 
-var BackendHostPort = process.env.PORT || 4949;
-app.set("passphrase", configuration.passphrase);
-
-var urlencodedParser = bodyParser.urlencoded({ extended: true });
-app.use(bodyParser.urlencoded({ extended: true })) // parse application/x-www-form-urlencoded
-app.use(bodyParser.json()); // parse application/json
-
-app.use(morgan("dev"));
-
 //var backendHost = "http://localhost"; // development environment
+//var BackendHostPort = 4949; // development environment
 //var frontendHost = "http://192.168.0.16"; // development environment
 //var frontendHostPort = 80; // development environment port
-var backendHost = "http://upgi.ddns.net"; // production environment
+var backendHost = "http://upgi.ddns.net"; // development environment
+var BackendHostPort = 4949; // development environment
 var frontendHost = "http://upgi.ddns.net"; // production server
 var frontendHostPort = 3355; // production server port
 
@@ -44,73 +33,6 @@ var mssqlConfig = {
     user: "productionHistory",
     password: "productionHistory"
 };
-
-app.get("/", function(req, res) { // basic route
-    res.status(200).send("生產部伺服器服務運行中... (" + backendHost + ":" + BackendHostPort + ")...");
-});
-
-app.get("/seedCount/login", function(req, res) { // serve login form
-    res.status(200).sendFile(__dirname + "/view/login.html");
-});
-
-app.post("/api/authenticate", urlencodedParser, function(req, res) {
-    console.log(req.body);
-    console.log(req.query);
-    var baseDN = "dc=upgi,dc=ddns,dc=net";
-    var ldapServerHost = "ldap://upgi.ddns.net:389";
-    var ldapClient = ldap.createClient({ url: ldapServerHost });
-    ldapClient.bind("uid=" + req.query.loginID + ",ou=user," + baseDN, req.query.password, function(error) {
-        if (error) {
-            console.log("     帳號驗證失敗：" + error);
-            res.status(403).json({ "authenticated": false, "message": "帳號驗證失敗：" + error });
-            return false;
-        }
-        ldapClient.unbind(function(error) {
-            if (error) {
-                console.log("     LDAP 伺服器分離失敗：" + error);
-                res.status(500).json({ "authenticated": false, "message": "LDAP 伺服器分離失敗：" + error });
-                return false;
-            }
-            var user = { loginID: req.query.loginID };
-            var token = jwt.sign(user, app.get("passphrase"), {
-                expiresIn: "1h"
-            });
-            console.log("     帳號驗證成功");
-            res.status(200).json({
-                authenticated: true,
-                message: "帳號驗證成功",
-                token: token
-            });
-            return true;
-        });
-    });
-});
-
-// route middleware to verify a token
-app.use(function(req, res, next) {
-    // check header or url parameters or post parameters for token
-    var token = req.body.token || req.query.token || req.headers['x-access-token'];
-    // decode token
-    if (token) {
-        // verifies secret and checks exp
-        jwt.verify(token, app.get("passphrase"), function(error, decoded) {
-            if (error) {
-                return res.json({ success: false, message: 'Failed to authenticate token.' });
-            } else {
-                // if everything is good, save to request for use in other routes
-                req.decoded = decoded;
-                next();
-            }
-        });
-    } else {
-        // if there is no token
-        // return an error
-        return res.status(403).send({
-            success: false,
-            message: 'No token provided.'
-        });
-    }
-});
 
 // at system start up, make sure that file structure to hold seed image exists and start static image server
 var fileStructureValidated = false;
@@ -127,10 +49,6 @@ if (fileStructureValidated !== true) {
     app.use("/" + seedImageDirectory, express.static("./" + seedImageDirectory));
     console.log("影像伺服器服務運行中... (" + backendHost + ":" + BackendHostPort + "/" + seedImageDirectory + ")");
 }
-
-app.get("/seedCount", function(req, res) { // server main page
-    res.status(200).sendFile("./view/index.html");
-});
 
 app.get("/seedCount/api/getRecord", function(req, res) { // get one single record
     console.log("\n/seedCount/api/getRecord");

@@ -1,8 +1,7 @@
 {
     "name": "seed-count",
-    "description": "production project",
     "version": "1.0.0",
-    "main": "app.js",
+    "description": "seed count project",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
     },
@@ -22,9 +21,8 @@
         "cors": "*",
         "cron": "*",
         "express": "*",
-        "jquery": "*",
         "jsonwebtoken": "*",
-        "ldapjs": "*",
+        "jquery": "*",
         "moment": "*",
         "moment-timezone": "*",
         "morgan": "*",
@@ -32,6 +30,8 @@
         "multer": "*",
         "mysql": "*",
         "numeral": "*",
+        "passport": "*",
+        "passport-local": "*",
         "request": "*"
     },
     "devDependencies": {
