@@ -394,7 +394,7 @@ var scheduledUpdate = new CronJob(seedCountScheduledUpdate.schedule, function() 
                             var contentString = currentDatetime.format("HH:mm") + " " + seedCountScheduledUpdate.reference + "：\n";
                             resultset.forEach(function(seedCountDataPerLine) {
                                 contentString += seedCountDataPerLine.prodLineID + "[" + seedCountDataPerLine.prodReference + "] - " +
-                                    " 氣泡數：" + seedCountDataPerLine.unitSeedCount + "\n";
+                                    " 氣泡數：" + (Math.round(seedCountDataPerLine.unitSeedCount * 100) / 100) + "\n";
                             });
                             console.log("     " + moment(moment(), "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss") + " 發佈行動裝置通知");
                             // loop through each designed target group and user and broadcast
