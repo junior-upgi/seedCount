@@ -64,7 +64,7 @@ app.get("/seedCount/api/getRecord", function(req, res) { // get one single recor
         console.log("     SQL查詢：" + queryString);
         mssqlRequest.query(queryString, function(error, resultset) {
             if (error) {
-                console.log("     單筆資料查詢失敗：" + error)
+                console.log("     單筆資料查詢失敗：" + error);
                 res.status(500).send("單筆資料查詢失敗：" + error).end();
             }
             mssql.close();
