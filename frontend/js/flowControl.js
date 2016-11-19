@@ -24,6 +24,7 @@ function autoRefresh() {
         }
         //update the clock banner
         $("#clockBanner").text(now.format("YYYY-MM-DD HH:mm:ss"));
+        $("button#preventDisplayToggleButton").prop("disabled", true);
     }, 1000);
 };
 
