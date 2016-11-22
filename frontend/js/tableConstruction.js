@@ -1,9 +1,5 @@
 "use strict";
 
-var hideProdReferenceColumn = true;
-var hideTimePointColumn = true;
-var preventDisplay = true;
-
 function constructSituationTable(dateString) {
     // construct the table heading
     $("#situationTableHeading").append('<th class="text-center">班次</th><th id="timePointFieldLabel" class="text-center">時間</th><th id="prodReferenceFieldLabel" class="text-center">產品</th>');
@@ -69,7 +65,7 @@ function constructSituationTable(dateString) {
     $("#situationTableFooter").append('<th class="text-center dailyAverageField"></th>');
     // proceed to getting actual table data, first get the record count
     var getRecordCount = function() { // promise of ajax function
-        return $.getJSON(backendHost + ":" + backendHostPort + "/seedCount/api/getRecordCount?workingDate=" + dateString)
+        return $.getJSON("./seedCount/api/getRecordCount?workingDate=" + dateString)
             .then(function(result) {
                 return JSON.parse(result)[0].recordCount;
             }).fail(function() {
@@ -78,7 +74,7 @@ function constructSituationTable(dateString) {
             });
     };
     var getRecordset = function() { // promise of ajax function
-        return $.getJSON(backendHost + ":" + backendHostPort + "/seedCount/api/getRecordset?workingDate=" + dateString)
+        return $.getJSON("./seedCount/api/getRecordset?workingDate=" + dateString)
             .then(function(recordset) {
                 return (JSON.parse(recordset));
             }).fail(function() {
@@ -166,11 +162,11 @@ function formatSituationTable() {
     $("td.night.seedCountField").addClass("warning");
     $("td.graveYard.seedCountField").addClass("info");
     $("td,th").css("border", "1px solid gray");
-    if (hideTimePointColumn === true) {
+    if (seedCountSituationTableSetting.hideTimePointColumn === true) {
         $("th#timePointFieldLabel,td.timePointField").css("display", "none");
         $("th#situationTableFooterLabel").attr("colspan", $("th#situationTableFooterLabel").attr("colspan") - 1);
     }
-    if (hideProdReferenceColumn === true) {
+    if (seedCountSituationTableSetting.hideProdReferenceColumn === true) {
         $("th#prodReferenceFieldLabel,td.prodReferenceField").css("display", "none");
         $("th#situationTableFooterLabel").attr("colspan", $("th#situationTableFooterLabel").attr("colspan") - 1);
     }
@@ -190,7 +186,7 @@ function formatSituationTable() {
                 break;
         }
     });
-    if (preventDisplay === true) {
+    if (seedCountSituationTableSetting.preventDisplay === true) {
         $(".preventDisplay").hide();
         $("button#preventDisplayToggleButton").text("顯示");
     } else {
@@ -204,12 +200,12 @@ function togglePreventDisplay() {
     // 1. to prevent unexpected behavior
     // 2. so that only visible cells should be possible to edit
     if (editMode === false) {
-        if (preventDisplay === true) {
-            preventDisplay = false;
+        if (seedCountSituationTableSetting.preventDisplay === true) {
+            seedCountSituationTableSetting.preventDisplay = false;
             $(".preventDisplay").show();
             $("button#preventDisplayToggleButton").text("隱藏");
         } else {
-            preventDisplay = true;
+            seedCountSituationTableSetting.preventDisplay = true;
             $(".preventDisplay").hide();
             $("button#preventDisplayToggleButton").text("顯示");
         }

@@ -5,7 +5,7 @@ var buttonInaccessibleCounterUpperLimit = 5; //控制計數器的停用時間長
 function autoRefresh() {
     var now;
     setInterval(function() {
-        now = moment.tz(moment(), workingTimezone);
+        now = moment(moment(), "YYYY-MM-DD HH:mm:ss");
         //every second decrease the buttonInaccessibleCount by 1
         decreaseInaccessibleCounter(1);
         //enable/disable buttons depending on the value of buttonInaccessibleCounter variable
@@ -24,17 +24,17 @@ function autoRefresh() {
         }
         //update the clock banner
         $("#clockBanner").text(now.format("YYYY-MM-DD HH:mm:ss"));
-        $("button#preventDisplayToggleButton").prop("disabled", true);
+        //$("button#preventDisplayToggleButton").prop("disabled", true);
     }, 1000);
 };
 
 function switchToDate() {
     increaseInaccessibleCounter(10);
-    if ($("#designatedDate").val() !== '') {
+    if ($("input#designatedDate").val() !== '') {
         removeTableComponent();
         editModeInProgress = false;
-        workingDate = $("#designatedDate").val();
-        constructSituationTable(workingDate);
+        workingDate = $("input#designatedDate").val();
+        reinitialize();
     }
 }
 
@@ -42,31 +42,35 @@ function previous() {
     increaseInaccessibleCounter(10);
     removeTableComponent();
     editModeInProgress = false;
-    workingDate = moment.tz(workingDate, "Asia/Taipei").add(-1, "days").format("YYYY-MM-DD");
-    constructSituationTable(workingDate);
+    workingDate = moment(workingDate, "YYYY-MM-DD").add(-1, "days").format("YYYY-MM-DD");
+    reinitialize();
 };
 
 function refresh() {
     increaseInaccessibleCounter(10);
     removeTableComponent();
     editModeInProgress = false;
-    constructSituationTable(workingDate);
+    reinitialize();
 };
 
 function today() {
     increaseInaccessibleCounter(10);
     removeTableComponent();
     editModeInProgress = false;
-    workingDate = getWorkDateString(moment.tz(moment(), "Asia/Taipei"));
-    constructSituationTable(workingDate);
+    $.get("./seedCount/api/getWorkingDateString", {
+        datetimeString: moment(moment(), "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss")
+    }, function(workingDateString) {
+        workingDate = workingDateString;
+    });
+    reinitialize();
 };
 
 function next() {
     increaseInaccessibleCounter(10);
     removeTableComponent();
     editModeInProgress = false;
-    workingDate = moment.tz(workingDate, "Asia/Taipei").add(1, "days").format("YYYY-MM-DD");
-    constructSituationTable(workingDate);
+    workingDate = moment(workingDate, "YYYY-MM-DD").add(1, "days").format("YYYY-MM-DD");
+    reinitialize();
 };
 
 function decreaseInaccessibleCounter(numberOfSecond) {

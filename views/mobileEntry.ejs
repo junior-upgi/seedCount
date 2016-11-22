@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
+    <title>氣泡數登錄 (手機版)</title>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/1.4.5/numeral.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.16.0/moment-with-locales.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.9/moment-timezone-with-data.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <h3 class="col-xs-12 text-center" id="title">氣泡數登錄 (手機版)</h3>
+        </div>
+        <form class="form-horizontal" id="seedCountForm" name="seedCountFrom" action="./api/insertRecord" method="post" enctype="multipart/form-data" onreset="runOnFormReset()">
+            <div class="form-group">
+                <label for="prodFacilityID" class="control-label col-xs-3 col-lg-1">廠區</label>
+                <div class="input-group col-xs-9">
+                    <input type="text" class="form-control input-sm" name="prodFacilityID" id="prodFacilityID" value="新工總廠" readonly required />
+                    <span class="input-group-addon">預設值</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="prodLineID" class="control-label col-xs-3 col-lg-1">生產線</label>
+                <div class="input-group col-xs-9">
+                    <input type="text" class="form-control input-sm" name="prodLineID" id="prodLineID" readonly required />
+                    <span class="input-group-addon">預設值</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="recordDate" class="control-label col-xs-3 col-lg-1">工作日期</label>
+                <div class="input-group col-xs-9">
+                    <input type="date" class="form-control input-sm" name="mockRecordDate" id="mockRecordDate" required />
+                    <span class="input-group-addon">*必填</span>
+                    <input type="date" class="form-control input-sm" name="recordDate" id="recordDate" disabled required />
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="recordTime" class="control-label col-xs-3 col-lg-1">記錄時段</label>
+                <div class="input-group col-xs-9">
+                    <input type="time" class="form-control input-sm" name="recordTime" id="recordTime" disabled required />
+                    <span class="input-group-addon">請點選時段按鈕</span>
+                </div>
+            </div>
+            <div class="form-group text-center">
+                <label class="control-label btn btn-default timeSelector" data-shift="早班" data-time="08:00" style="display:none;"></label>
+                <label class="control-label btn btn-default timeSelector" data-shift="中班" data-time="16:00" style="display:none;"></label>
+                <label class="control-label btn btn-default timeSelector crossOver" data-shift="夜班" data-time="00:00" style="display:none;"></label>
+                <label class="control-label btn btn-default timeSelector" data-shift="早班" data-time="10:00" style="display:none;"></label>
+                <label class="control-label btn btn-default timeSelector" data-shift="中班" data-time="18:00" style="display:none;"></label>
+                <label class="control-label btn btn-default timeSelector crossOver" data-shift="夜班" data-time="02:00" style="display:none;"></label>
+                <label class="control-label btn btn-default timeSelector" data-shift="早班" data-time="12:00" style="display:none;"></label>
+                <label class="control-label btn btn-default timeSelector" data-shift="中班" data-time="20:00" style="display:none;"></label>
+                <label class="control-label btn btn-default timeSelector crossOver" data-shift="夜班" data-time="04:00" style="display:none;"></label>
+                <label class="control-label btn btn-default timeSelector" data-shift="早班" data-time="14:00"></label>
+                <label class="control-label btn btn-default timeSelector" data-shift="中班" data-time="22:00"></label>
+                <label class="control-label btn btn-default timeSelector crossOver" data-shift="夜班" data-time="06:00"></label>
+            </div>
+            <div class="form-group">
+                <label for="prodReference" class="control-label col-xs-3 col-lg-1">瓶號</label>
+                <div class="input-group col-xs-9">
+                    <input type="text" class="form-control input-sm" name="prodReference" id="prodReference" size="10" maxlength="10" required />
+                    <span class="input-group-addon">*必填</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="thickness" class="control-label col-xs-3 col-lg-1">玻璃厚度</label>
+                <div class="input-group col-xs-9">
+                    <input type="number" class="form-control input-sm" name="thickness" id="thickness" min="0" max="30" step="0.05" required />
+                    <span class="input-group-addon">*必填</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="input-group">
+                    <label class="control-label">氣泡記數 (*必填)</label>
+                </div>
+                <div class="input-group">
+                    <span class="input-group-addon">取樣1</span>
+                    <input type="number" class="form-control input-sm text-center" name="count_0" min="0" max="30" step="1" required />
+                    <span class="input-group-addon">取樣2</span>
+                    <input type="number" class="form-control input-sm text-center" name="count_1" min="0" max="30" step="1" required />
+                    <span class="input-group-addon">取樣3</span>
+                    <input type="number" class="form-control input-sm text-center" name="count_2" min="0" max="30" step="1" required />
+                </div>
+                <div class="input-group">
+                    <span class="input-group-addon">取樣4</span>
+                    <input type="number" class="form-control input-sm text-center" name="count_3" min="0" max="30" step="1" required />
+                    <span class="input-group-addon">取樣5</span>
+                    <input type="number" class="form-control input-sm text-center" name="count_4" min="0" max="30" step="1" required />
+                    <span class="input-group-addon">取樣6</span>
+                    <input type="number" class="form-control input-sm text-center" name="count_5" min="0" max="30" step="1" required />
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="note" class="control-label col-xs-3 col-lg-1">備註</label>
+                <div class="col-xs-9">
+                    <textarea class="form-control input-sm" name="note" id="note" rows="4" cols="50" placeholder="備註資訊"></textarea>
+                </div>
+            </div>
+            <div class="form-group text-center">
+                <label class="control-label btn btn-default btn-file">
+                    <span id="photoID">上傳相片</span>
+                    <input type="file" name="photo" id="photo" style="display:none;" accept="image/*" />
+                </label>
+                <input type="text" id="recordDatetime" name="recordDatetime" hidden />
+                <input type="text" id="created" name="created" hidden />
+                <input type="text" id="modified" name="modified" hidden />
+                <button id="submitButton" type="button" class="control-label btn btn-primary col-xs-offset-1">送出資料</button>
+                <button type="reset" class="control-label btn btn-primary">重置內容</button>
+            </div>
+        </form>
+    </div>
+</body>
+
+</html>
+
+<script>
+    $("document").ready(function() {
+        $("#title").text(getUrlParameter("prodLineID") + " " + $("#title").text());
+        $("#mockRecordDate").val(moment(moment(),"YYYY-MM-DD").format("YYYY-MM-DD"));
+        $("#recordDate").val(moment(moment(),"YYYY-MM-DD").format("YYYY-MM-DD")).css("display", "none");
+        $("#recordTime").css("pointer-events", "none")
+        $(".timeSelector").each(function() {
+            $(this).data("date", $("#mockRecordDate").val())
+                .text($(this).data("shift") + " " + $(this).data("time"));
+            if ($(this).hasClass("crossOver")) {
+                $(this).data("date", moment($("#mockRecordDate").val(),"YYYY-MM-DD").add(1, "days").format("YYYY-MM-DD"));
+            }
+        });
+        $("#prodLineID").val(getUrlParameter("prodLineID")).css("pointer-events", "none");
+
+        $(".timeSelector").on("click", function() {
+            $("#recordTime").val($(this).data("time"));
+            if ($(this).hasClass("crossOver")) {
+                $("#recordDate").val(moment($("#mockRecordDate").val()).add(1, 'd').format("YYYY-MM-DD"));
+            } else {
+                $("#recordDate").val(moment($("#mockRecordDate").val()).format("YYYY-MM-DD"));
+            }
+            $(".timeSelector").removeClass("btn-primary");
+            $(this).addClass("btn-primary");
+        });
+
+        $("#mockRecordDate").change(function() {
+            $("#recordTime").val("");
+            $("#recordDate").val($(this).val());
+            $(".timeSelector").each(function() {
+                $(this).data("date", $("#mockRecordDate").val())
+                    .text($(this).data("shift") + " " + $(this).data("time"));
+                if ($(this).hasClass("crossOver")) {
+                    $(this).data("date", moment($("#mockRecordDate").val()).add(1, "d").format("YYYY-MM-DD"));
+                }
+            });
+            $(".timeSelector").removeClass("btn-primary");
+        });
+
+        $("#photo").change(function() {
+            $("#photoID").text($(this).val());
+            if ($("#photoID").text() === "") {
+                $("#photoID").text("上傳相片");
+            }
+        });
+    });
+
+    $("button#submitButton").click(function() {
+        $.get("./api/getWorkDatetimeString",{
+            workingDateString: $("input#recordDate").val(),
+            workingTime: $("input#recordTime").val()
+        },function(datetimeString){
+            $("input#recordDatetime").val(datetimeString);
+            $("input#created").val(moment(moment(),"YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss"));
+            $("input#modified").val(moment(moment(),"YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss"));
+            $("form#seedCountForm").submit();
+        });
+    });
+
+    function runOnFormReset() {
+        $(".timeSelector").removeClass("btn-primary");
+    }
+
+    //javascript function to parse parameters from url
+    var getUrlParameter = function getUrlParameter(sParam) {
+        var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+            sURLVariables = sPageURL.split('&'),
+            sParameterName,
+            i;
+        for (i = 0; i < sURLVariables.length; i++) {
+            sParameterName = sURLVariables[i].split('=');
+            if (sParameterName[0] === sParam) {
+                return sParameterName[1] === undefined ? true : sParameterName[1];
+            }
+        }
+    };
+</script>

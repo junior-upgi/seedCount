@@ -1,18 +1,18 @@
-var telegramChatGroup = require("./telegramChatGroup.js");
+var telegramChat = require("./telegramChat.js");
 
 var list = [{
         id: "267738010",
         first_name: "逾期款機器人",
         username: "overdueMonitorBot",
         token: "267738010:AAGT17aLumIfVPNeFWht8eUEPuC2HfAouGk",
-        joinedGroupIDList: [telegramChatGroup.list[0].id]
+        joinedGroupIDList: []
     },
     {
         id: "251686312",
         first_name: "氣泡數機器人",
         username: "seedCountBot",
         token: "251686312:AAG8_sczOJvJSwtese4kgzH95RLyX5ZJ114",
-        joinedGroupIDList: [telegramChatGroup.list[1].id]
+        joinedGroupIDList: []
     },
     {
         id: "296411532",
@@ -26,7 +26,21 @@ var list = [{
         first_name: "產品開發機器人",
         username: "productDevelopmentBot",
         token: "278943684:AAHQDQMZrI2_3jPKnrY8tdrhn-2mKN9CwpI",
-        joinedGroupIDList: [telegramChatGroup.list[3].id]
+        joinedGroupIDList: []
+    },
+    {
+        id: "260542039",
+        first_name: "測試機器人",
+        username: "testBot",
+        token: "260542039:AAEOxo0MbczouifWwQKDyIyJKBN6Iy43htk",
+        joinedGroupIDList: []
+    },
+    {
+        id: "287236637",
+        first_name: "UPGI IT 機器人",
+        username: "upgiITBot",
+        token: "287236637:AAHSuMHmaZJ2Vm9gXf3NeSlInrgr-XXzoRo",
+        joinedGroupIDList: []
     }
 ];
 

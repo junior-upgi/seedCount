@@ -1,7 +1,5 @@
 var moment = require("moment-timezone");
 
-var workingTimezone = "Asia/Taipei";
-
 var list = [{
     reference: "day",
     cReference: "早班",
@@ -85,40 +83,51 @@ var list = [{
     duration: 480
 }];
 
-function getWorkDateString(datetimeObject) {
+function getShiftObject(datetimeString) {
+    var datetimeObject = moment(datetimeString, "YYYY-MM-DD HH:mm:ss");
+    var workingDate = getWorkingDateString(datetimeObject.format("YYYY-MM-DD HH:mm:ss"));
+    var shiftTimePointList = [
+        moment(getWorkDatetimeString(workingDate, list[0].start), "YYYY-MM-DD HH:mm:ss"),
+        moment(getWorkDatetimeString(workingDate, list[1].start), "YYYY-MM-DD HH:mm:ss"),
+        moment(getWorkDatetimeString(workingDate, list[2].start), "YYYY-MM-DD HH:mm:ss"),
+        moment(getWorkDatetimeString(workingDate, list[0].start), "YYYY-MM-DD HH:mm:ss").add(1, "days")
+    ];
+    switch (true) {
+        case (datetimeObject.isBefore(shiftTimePointList[3]) &&
+            datetimeObject.isSameOrAfter(shiftTimePointList[2])):
+            return list[2];
+        case (datetimeObject.isBefore(shiftTimePointList[2]) &&
+            datetimeObject.isSameOrAfter(shiftTimePointList[1])):
+            return list[1];
+        case (datetimeObject.isBefore(shiftTimePointList[1]) &&
+            datetimeObject.isSameOrAfter(shiftTimePointList[0])):
+            return list[0];
+        default:
+            throw "cannot get the correct shift data";
+    }
+}
+
+function getWorkingDateString(datetimeString) {
+    var datetimeObject = moment(datetimeString, "YYYY-MM-DD HH:mm:ss");
     if (datetimeObject.isSameOrAfter(datetimeObject.format("YYYY-MM-DD") + ' 07:30:00')) {
-        return (datetimeObject.tz(workingTimezone).format("YYYY-MM-DD"));
+        return (datetimeObject.format("YYYY-MM-DD"));
     } else {
-        var tempMoment = moment(datetimeObject.format("YYYY-MM-DD HH:mm:ss"));
-        return (tempMoment.add(-1, "days").tz(workingTimezone).format("YYYY-MM-DD"));
+        return (datetimeObject.add(-1, "days").format("YYYY-MM-DD"));
     }
 };
 
 function getWorkDatetimeString(workingDateString, workingTime) {
-    switch (true) {
-        case (workingTime === list[0].inspectTimePointList[0].timePoint):
-        case (workingTime === list[0].inspectTimePointList[1].timePoint):
-        case (workingTime === list[0].inspectTimePointList[2].timePoint):
-        case (workingTime === list[0].inspectTimePointList[3].timePoint):
-        case (workingTime === list[1].inspectTimePointList[0].timePoint):
-        case (workingTime === list[1].inspectTimePointList[1].timePoint):
-        case (workingTime === list[1].inspectTimePointList[2].timePoint):
-        case (workingTime === list[1].inspectTimePointList[3].timePoint):
-            return (moment(workingDateString).format("YYYY-MM-DD") + " " + workingTime + ":00");
-        case (workingTime === list[2].inspectTimePointList[0].timePoint):
-        case (workingTime === list[2].inspectTimePointList[1].timePoint):
-        case (workingTime === list[2].inspectTimePointList[2].timePoint):
-        case (workingTime === list[2].inspectTimePointList[3].timePoint):
-            return (moment(workingDateString).add(1, "days").format("YYYY-MM-DD") + " " + workingTime + ":00");
-        default:
-            alert("時間資料錯誤，無法建置正確工作時間。請通知 IT 重新啟動系統後台服務...");
-            return false;
+    if (((workingTime.slice(0, 2) >= 0) && (workingTime.slice(0, 2) <= 7)) &&
+        ((workingTime.slice(3, 5) >= 0) && (workingTime.slice(3, 5) < 30))) {
+        return moment(workingDateString + " " + workingTime + ":00", "YYYY-MM-DD HH:mm:ss").add(1, "days").format("YYYY-MM-DD HH:mm:ss");
+    } else {
+        return moment(workingDateString + " " + workingTime + ":00", "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss");
     }
 };
 
 module.exports = {
-    workingTimezone,
     list,
-    getWorkDateString,
+    getShiftObject,
+    getWorkingDateString,
     getWorkDatetimeString
 };

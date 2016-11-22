@@ -17,7 +17,7 @@ var list = [{
     reference: 'L3',
     sequence: 3,
     side: 'center',
-    hidden: true
+    hidden: false
 }, {
     reference: 'L5',
     sequence: 4,

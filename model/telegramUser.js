@@ -1,4 +1,4 @@
-var telegramChatGroup = require("./telegramChatGroup.js");
+var telegramChat = require("./telegramChat.js");
 
 var list = [{
     id: "241630569",
@@ -7,8 +7,8 @@ var list = [{
     last_name: "蔡",
     status: ["admin", "user"],
     joinedGroupIDList: [
-        telegramChatGroup.list[0].id,
-        telegramChatGroup.list[1].id
+        telegramChat.list[0].id,
+        telegramChat.list[1].id
     ],
     upgEmployeeID: "05060001"
 }, {
@@ -195,6 +195,14 @@ var list = [{
     status: ["user"],
     joinedGroupList: [],
     upgEmployeeID: "07040001"
+}, {
+    id: "277535543",
+    username: "maviscwling",
+    first_name: "Mavid",
+    last_name: "Chao",
+    status: ["user"],
+    joinedGroupList: [],
+    upgEmployeeID: "08030005"
 }];
 
 module.exports = { list };
