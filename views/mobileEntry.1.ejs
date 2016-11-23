@@ -110,9 +110,9 @@
                     <span id="photoID">上傳相片</span>
                     <input type="file" name="photo" id="photo" style="display:none;" accept="image/*" />
                 </label>
-                <input type="text" id="recordDatetime" name="recordDatetime" hidden />
-                <input type="text" id="created" name="created" hidden />
-                <input type="text" id="modified" name="modified" hidden />
+                <input type="text" id="recordDatetime" name="recordDatetime" />
+                <input type="text" id="created" name="created" />
+                <input type="text" id="modified" name="modified" />
                 <button id="submitButton" type="button" class="control-label btn btn-primary col-xs-offset-1">送出資料</button>
                 <button type="reset" class="control-label btn btn-primary">重置內容</button>
             </div>
@@ -128,7 +128,7 @@
     $("document").ready(function() {
         $("#title").text(getUrlParameter("prodLineID") + " " + $("#title").text());
         $("#mockRecordDate").val(moment(moment(),"YYYY-MM-DD").format("YYYY-MM-DD"));
-        $("#recordDate").val(moment(moment(),"YYYY-MM-DD").format("YYYY-MM-DD")).css("display", "none");
+        $("#recordDate").val(moment(moment(),"YYYY-MM-DD").format("YYYY-MM-DD"));//.css("display", "none");
         $("#recordTime").css("pointer-events", "none")
         $(".timeSelector").each(function() {
             $(this).data("date", $("#mockRecordDate").val())

@@ -1,3 +1,5 @@
+"use strict";
+
 var bodyParser = require("body-parser");
 var CronJob = require("cron").CronJob;
 var fs = require("fs");
@@ -17,7 +19,7 @@ var seedCountLevelCap = require("./model/seedCountLevelCap.js");
 var telegram = require("./model/telegram");
 var telegramBot = require("./model/telegramBot");
 //var telegramChat = require("./model/telegramChat");
-var telegramUser = require("./model/telegramUser");
+//var telegramUser = require("./model/telegramUser");
 var queryString = require("./model/queryString");
 
 var app = express();
@@ -28,24 +30,27 @@ var urlencodedParser = bodyParser.urlencoded({ extended: true });
 app.use(bodyParser.json()); // parse application/json
 //var jsonParser = bodyParser.json();
 
-app.use("/seedCount/frontend/js", express.static("./frontend/js"));
-app.use("/seedCount/frontend/template", express.static("./frontend/template"));
+app.use("/seedCount/frontend/js", express.static("./frontend/js")); // serve javascript files for frontend website
+app.use("/seedCount/frontend/template", express.static("./frontend/template")); // serve front end website
 
 // at system start up, make sure that file structure to hold seed image exists and start static image server
 var fileStructureValidated = false;
 var seedImageDirectory = "seedImage";
 var upload = multer({ dest: seedImageDirectory + "/" });
 if (fileStructureValidated !== true) {
-    prodLine.list.forEach(function(indexedProdLine) {
+    prodLine.list.forEach(function(indexedProdLine) { // generate image storage file structure according to prodLine list
         if (!fs.existsSync(seedImageDirectory + "/" + indexedProdLine.reference)) {
             fs.mkdirSync(seedImageDirectory + "/" + indexedProdLine.reference);
         }
     });
     fileStructureValidated = true;
-    app.use("/seedCount/" + seedImageDirectory, express.static("./" + seedImageDirectory));
-    console.log("影像伺服器服務運行中... (" + config.serverHost + ":" + config.serverPort + "/" + seedImageDirectory + ")");
+    app.use("/seedCount/" + seedImageDirectory, express.static("./" + seedImageDirectory)); // serve static image files
+    console.log("glass image being served... (" + config.serverHost + ":" + config.serverPort + "/" + seedImageDirectory + ")");
 }
 
+app.listen(config.serverPort); // start server
+console.log("seedCount monitor server in operation... (" + config.serverHost + ":" + config.serverPort + ")");
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get("/seedCount/index", function(request, response) { // serve front page
     return response.status(200).sendFile(__dirname + "/frontend/index.html");
 });
@@ -361,8 +366,8 @@ app.post("/seedCount/api/insertRecord", upload.any(), function(req, res) { // in
     // connect to data server to insert data entry
     mssql.connect(config.mssqlConfig, function(error) {
         if (error) {
-            console.log("     資料庫連結發生錯誤：" + error);
-            return res.status(500).send("資料庫連結發生錯誤：" + error);
+            console.log("database connection failure: " + error);
+            return res.status(500).send("database connection failure: " + error);
         }
         var mssqlRequest = new mssql.Request();
         var queryString = "INSERT INTO productionHistory.dbo.seedCount VALUES ('" +
@@ -381,18 +386,18 @@ app.post("/seedCount/api/insertRecord", upload.any(), function(req, res) { // in
             (photoLocation === "NULL" ? "NULL" : "'" + photoLocation + "'") + ",'" +
             req.body.created + "','" +
             req.body.modified + "');";
-        console.log("     SQL查詢：" + queryString);
+        console.log("SQL query:\n" + queryString);
         // insert data
         mssqlRequest.query(queryString, function(error) {
             if (error) {
-                console.log("     資料新增發生錯誤：" + error);
-                return res.status(500).send("資料新增發生錯誤： " + error);
+                console.log("error inserting new record: " + error);
+                return res.status(500).send("error inserting new record: " + error);
             } else {
                 // actions to take after a new entry is made //////////////////////////////
             }
             mssql.close();
-            console.log("     " + moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料新增成功");
-            return res.status(200).sendFile(__dirname + "/frontend/mobile.html");
+            console.log(moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " new data entry inserted successfully");
+            return res.status(200).redirect("../mobile");
         });
     });
 });
@@ -626,9 +631,6 @@ var scheduledUpdate = new CronJob(seedCountScheduledUpdate.schedule, function() 
     });
 }, null, true, shift.workingTimezone);
 //scheduledUpdate.start();
-
-app.listen(config.serverPort); // start server
-console.log("氣泡數監測系統伺服器服務運行中... (" + config.serverHost + ":" + config.serverPort + ")");
 
 /*
 // used to check shift and time relationship values can be produced correctly

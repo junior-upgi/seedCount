@@ -1,6 +1,7 @@
 "use strict";
 
-const broadcastUrl = "http://192.168.168.25:9001/broadcast";
+const broadcastUrl = "http://upgi.ddns.net:9001/broadcast";
+//const broadcastUrl = "http://192.168.168.25:9001/broadcast";
 
 var telegramChat = require("./telegramChat.js");
 var telegramUser = require("./telegramUser.js");
