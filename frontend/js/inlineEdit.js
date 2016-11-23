@@ -122,7 +122,7 @@ function loadExistingData(cellObject) {
                 if (seedCountDataEntry.photoLocation !== null) {
                     $("div#photoControlGroup").prepend('&nbsp;&nbsp;&nbsp;&nbsp;<button id="deletePhoto" type="button" class="inlineEditControl subjectToAccessControl btn btn-danger" onclick="deletePhotoAction()">刪圖</button>');
                     $("div#photoControlGroup").prepend('<img id="existingPhoto" height="120" width="120"><br>');
-                    $("img#existingPhoto").prop("src", "./seedCount/" + seedCountDataEntry.photoLocation + "?timestamp=" + new Date().getTime());
+                    $("img#existingPhoto").prop("src", "./" + seedCountDataEntry.photoLocation + "?timestamp=" + new Date().getTime());
                     $("div#photoControlGroup").prepend('<input id="existingPhotoPath" name="existingPhotoPath" type="text" class="text-center" size="30" readonly hidden><br>');
                     $("input#existingPhotoPath").val(seedCountDataEntry.photoLocation);
                     $("input#photo").hide();

@@ -1,7 +1,6 @@
 "use strict";
 
 var bodyParser = require("body-parser");
-var CronJob = require("cron").CronJob;
 var fs = require("fs");
 var express = require("express");
 var morgan = require("morgan");
@@ -18,7 +17,7 @@ var upgiSystem = require("./model/upgiSystem.js");
 var seedCountLevelCap = require("./model/seedCountLevelCap.js");
 var telegram = require("./model/telegram");
 var telegramBot = require("./model/telegramBot");
-//var telegramChat = require("./model/telegramChat");
+var telegramChat = require("./model/telegramChat");
 //var telegramUser = require("./model/telegramUser");
 var queryString = require("./model/queryString");
 
@@ -137,7 +136,7 @@ app.get("/seedCount/api/broadcast/shiftData", function(request, response) {
                         method: "post",
                         headers: { "Content-Type": "application/json" },
                         json: {
-                            "chat_id": 241630569,
+                            "chat_id": telegramChat.getChatID("玻璃製造群組"),
                             "text": messageText,
                             "token": telegramBot.getToken("seedCountBot")
                         }
@@ -248,7 +247,7 @@ app.get("/seedCount/api/broadcast/24HourData", function(request, response) {
                         method: "post",
                         headers: { "Content-Type": "application/json" },
                         json: {
-                            "chat_id": 241630569,
+                            "chat_id": telegramChat.getChatID("玻璃製造群組"),
                             "text": messageText.title +
                                 messageText.shiftMessage[0] +
                                 messageText.shiftMessage[1] +
@@ -492,62 +491,50 @@ app.post("/seedCount/api/deleteRecord", urlencodedParser, function(req, res) { /
     console.log("\n/seedCount/api/deleteRecord");
     mssql.connect(config.mssqlConfig, function(error) {
         if (error) {
-            console.log("     資料庫連結發生錯誤：" + error);
-            res.status(500).send("資料庫連結發生錯誤：" + error).end();
+            console.log("failure connecting to database: " + error);
+            return res.status(500).send("failure connecting to database: " + error);
         }
         var mssqlRequest = new mssql.Request();
-        var queryString = "SELECT photoLocation FROM productionHistory.dbo.seedCount WHERE " +
-            "recordDatetime='" + req.body.recordDatetime + "' AND " +
-            "prodFacilityID='" + req.body.prodFacilityID + "' AND " +
-            "prodLineID='" + req.body.prodLineID + "';";
-        console.log("     SQL查詢：" + queryString);
-        mssqlRequest.query(queryString, function(error, resultset) { // query the database and get the matching file's photoLocation data
+        var getRecordQuery = queryString.getRecord(req.body.recordDatetime, req.body.prodFacilityID, req.body.prodLineID);
+        var deleteRecordQuery = queryString.deleteRecord(req.body.recordDatetime, req.body.prodFacilityID, req.body.prodLineID);
+        console.log("SQL query: " + getRecordQuery);
+        mssqlRequest.query(getRecordQuery, function(error, resultset) { // query the database and get the matching file's photoLocation data
             if (error) {
-                console.log("     資料讀取發生錯誤：" + error);
-                res.status(500).send("資料讀取發生錯誤：" + error).end();
+                console.log("failure while querying database: " + error);
+                return res.status(500).send("failure while querying database: " + error).end();
             }
             if (resultset.length === 0) {
-                console.log("     資料不存在");
-                res.status(500).send("資料不存在").end();
+                console.log("record does not exist");
+                return res.status(500).send("record does not exist");
             } else {
                 if (resultset[0].photoLocation !== null) { // if photoLocation is not empty, delete the file
-                    console.log("     發現資料存在附加檔案，進行資料附加檔案刪除");
                     fs.unlink(resultset[0].photoLocation, function(error) {
                         if (error) {
-                            console.log("     資料附加檔案刪除發生錯誤，嘗試繼續執行程式：" + error);
+                            console.log("failure while removing record with photo attached (attempting to continue): " + error);
                         }
-                        queryString = "DELETE FROM productionHistory.dbo.seedCount WHERE " +
-                            "recordDatetime='" + req.body.recordDatetime + "' AND " +
-                            "prodFacilityID='" + req.body.prodFacilityID + "' AND " +
-                            "prodLineID='" + req.body.prodLineID + "';";
-                        console.log("     SQL查詢：" + queryString);
-                        mssqlRequest.query(queryString, function(error) {
+                        console.log("SQL query" + deleteRecordQuery);
+                        mssqlRequest.query(deleteRecordQuery, function(error) {
                             if (error) {
                                 mssql.close();
-                                console.log("資料刪除發生錯誤：" + error);
-                                res.status(500).send("資料刪除發生錯誤：" + error).end();
+                                console.log("error encountered while deleting record: " + error);
+                                res.status(500).send("error encountered while deleting record: " + error).end();
                             }
                             mssql.close();
-                            console.log("     資料刪除成功");
-                            res.status(200).send("資料刪除成功").end();
+                            console.log("record deleted");
+                            return res.status(200).send("record deleted");
                         });
                     });
                 } else {
-                    console.log("     發現資料且無附加檔案");
-                    queryString = "DELETE FROM productionHistory.dbo.seedCount WHERE " +
-                        "recordDatetime='" + req.body.recordDatetime + "' AND " +
-                        "prodFacilityID='" + req.body.prodFacilityID + "' AND " +
-                        "prodLineID='" + req.body.prodLineID + "';";
-                    console.log("     SQL查詢：" + queryString);
-                    mssqlRequest.query(queryString, function(error) {
+                    console.log("SQL query: " + deleteRecordQuery);
+                    mssqlRequest.query(deleteRecordQuery, function(error) {
                         if (error) {
                             mssql.close();
-                            console.log("     資料刪除發生錯誤：" + error);
-                            res.status(500).send("資料刪除發生錯誤：" + error).end();
+                            console.log("record delete failure: " + error);
+                            return res.status(500).send("record delete failure: " + error);
                         }
                         mssql.close();
-                        console.log("     資料刪除成功");
-                        res.status(200).send("資料刪除成功").end();
+                        console.log("record deleted");
+                        return res.status(200).send("record deleted");
                     });
                 }
             }
