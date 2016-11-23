@@ -16,9 +16,19 @@ function getSeedCountRecordsBetweenDate(startDatetimeString, endDatetimeString) 
     return "SELECT * FROM productionHistory.dbo.seedCountResult WHERE recordDatetime BETWEEN '" + startDatetimeString + "' AND '" + endDatetimeString + "' ORDER BY recordDatetime,prodLineID;";
 };
 
+function insertRecord(recordDatetime, prodFacilityID, prodLineID, prodReference, thickness, count_0, count_1, count_2, count_3, count_4, count_5, note, photoLocation, created, modified) {
+    return "INSERT INTO productionHistory.dbo.seedCount VALUES ('" + recordDatetime + "','" + prodFacilityID + "','" + prodLineID + "','" + prodReference + "','" + thickness + "'," + count_0 + "," + count_1 + "," + count_2 + "," + count_3 + "," + count_4 + "," + count_5 + "," + (note === "" ? "NULL" : "'" + note + "'") + "," + (photoLocation === "NULL" ? "NULL" : "'" + photoLocation + "'") + ",'" + created + "','" + modified + "');";
+};
+
+function updateRecord(recordDatetime, prodFacilityID, prodLineID, prodReference, thickness, count_0, count_1, count_2, count_3, count_4, count_5, note, photoLocation, modified) {
+    return "UPDATE productionHistory.dbo.seedCount SET " + "prodReference='" + prodReference + "',thickness=" + thickness + ",count_0=" + count_0 + ",count_1=" + count_1 + ",count_2=" + count_2 + ",count_3=" + count_3 + ",count_4=" + count_4 + ",count_5=" + count_5 + ",note=" + (note === "" ? "NULL" : "'" + note + "'") + ",photoLocation=" + (photoLocation === "NULL" ? "NULL" : "'" + photoLocation + "'") + ",modified='" + modified + "' WHERE " + "recordDatetime='" + recordDatetime + "' AND prodFacilityID='" + prodFacilityID + "' AND prodLineID='" + prodLineID + "';";
+};
+
 module.exports = {
     deleteRecord,
     getRecord,
     getRecordCount,
-    getSeedCountRecordsBetweenDate
+    getSeedCountRecordsBetweenDate,
+    insertRecord,
+    updateRecord
 };

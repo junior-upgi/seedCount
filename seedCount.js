@@ -281,14 +281,14 @@ app.get("/seedCount/api/getRecordCount", function(req, res) { // get the count o
     var dateToCheck = "";
     if (req.query.workingDate === undefined) {
         console.log("workingDate parameter not set, return empty recordset");
-        return res.status(400).send("[{}]");
+        return res.status(400).send('[{"recordCount":0}]');
     } else {
         dateToCheck = moment(req.query.workingDate, "YYYY-MM-DD");
-        var workDateStartTime = moment(dateToCheck, "YYYY-MM-DD").add(450, "minutes").format("YYYY-MM-DD HH:mm:ss:SSS");
-        var workDateEndTime = moment(workDateStartTime, "YYYY-MM-DD").add(1, "days").subtract(1, "milliseconds").format("YYYY-MM-DD HH:mm:ss:SSS");
+        var workDateStartTime = moment(shift.getWorkDatetimeString(req.query.workingDate, "07:30"), "YYYY-MM-DD HH:mm:ss");
+        var workDateEndTime = moment(workDateStartTime, "YYYY-MM-DD HH:mm:ss").add(1, "days").subtract(1, "milliseconds");
         if ((!dateToCheck.isValid()) || (req.query.workingDate.length !== 10)) {
             console.log("workingDate parameter irregularity detected, returning empty recordset");
-            return res.status(400).send("[{}]");
+            return res.status(400).send('[{"recordCount":0}]');
         } else {
             mssql.connect(config.mssqlConfig, function(error) {
                 if (error) {
@@ -296,21 +296,26 @@ app.get("/seedCount/api/getRecordCount", function(req, res) { // get the count o
                     return res.status(500).send("database connection error: " + error);
                 }
                 var mssqlRequest = new mssql.Request();
-                console.log("SQL query: " + queryString.getRecordCount(workDateStartTime, workDateEndTime));
-                mssqlRequest.query(queryString.getRecordCount(workDateStartTime, workDateEndTime), function(error, resultset) {
-                    if (error) {
-                        console.log("unable to query record count data, returning empty recordset" + error);
-                        return res.status(500).send("[{}]");
-                    }
-                    mssql.close();
-                    return res.status(200).json(JSON.stringify(resultset));
-                });
+                console.log("SQL query: " + queryString.getRecordCount(
+                    workDateStartTime.format("YYYY-MM-DD HH:mm:ss:SSS"),
+                    workDateEndTime.format("YYYY-MM-DD HH:mm:ss:SSS")));
+                mssqlRequest.query(queryString.getRecordCount(
+                        workDateStartTime.format("YYYY-MM-DD HH:mm:ss:SSS"),
+                        workDateEndTime.format("YYYY-MM-DD HH:mm:ss:SSS")),
+                    function(error, resultset) {
+                        if (error) {
+                            console.log("unable to query record count data, returning empty recordset" + error);
+                            return res.status(500).send('[{"recordCount":0}]');
+                        }
+                        mssql.close();
+                        return res.status(200).json(JSON.stringify(resultset));
+                    });
             });
         }
     }
 });
 
-app.get("/seedCount/api/getRecordset", function(req, response) { // get a set of records
+app.get("/seedCount/api/getRecordset", function(req, response) { // get a set of records [FIXED]
     console.log("\n/seedCount/api/getRecordset");
     mssql.connect(config.mssqlConfig, function(error) {
         if (error) {
@@ -334,47 +339,46 @@ app.get("/seedCount/api/getRecordset", function(req, response) { // get a set of
     });
 });
 
-app.get("/seedCount/api/getRecord", function(req, res) { // get one single record
+app.get("/seedCount/api/getRecord", function(req, res) { // get one single record [FIXED]
     console.log("\n/seedCount/api/getRecord");
     mssql.connect(config.mssqlConfig, function(error) {
         if (error) {
-            console.log("     資料庫連結發生錯誤：" + error);
-            res.status(500).send("資料庫連結發生錯誤：" + error).end();
+            console.log("database connection error: " + error);
+            return res.status(500).send("database connection error: " + error);
         }
         var mssqlRequest = new mssql.Request();
         var queryString = "SELECT * FROM productionHistory.dbo.seedCount " +
             "WHERE recordDatetime='" + req.query.recordDatetime +
             "' AND prodFacilityID='" + req.query.prodFacilityID +
             "' AND prodLineID='" + req.query.prodLineID + "';";
-        console.log("     SQL查詢：" + queryString);
+        console.log("SQL query: " + queryString);
         mssqlRequest.query(queryString, function(error, resultset) {
             if (error) {
-                console.log("     單筆資料查詢失敗：" + error);
-                res.status(500).send("單筆資料查詢失敗：" + error).end();
+                console.log("record query failed: " + error);
+                return res.status(500).send("record query failed: " + error);
             }
             mssql.close();
-            console.log("     單筆資料查詢成功");
-            res.status(200).json(JSON.stringify(resultset)).end();
+            console.log("record query successful");
+            return res.status(200).json(JSON.stringify(resultset));
         });
     });
 });
 
-app.post("/seedCount/api/insertRecord", upload.any(), function(req, res) { // insert a new record
+app.post("/seedCount/api/insertRecord", upload.any(), function(req, res) { // insert a new record [FIXED]
     console.log("\n/seedCount/api/insertRecord");
     //deal with NULL array in the case that photo isn't uploaded
     var photoLocation;
     if (req.files.length === 0) {
-        console.log("     未發現上傳圖片");
         photoLocation = "NULL";
     } else {
         photoLocation = req.files[0].destination + req.body.prodLineID + '/' +
             moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYYMMDDHHmmss") + '.JPG';
         fs.rename(req.files[0].path, photoLocation, function(error) {
             if (error) {
-                console.log("     " + req.body.prodLineID + " 圖片上傳錯誤： " + error);
-                return res.status(500).send(req.body.prodLineID + " 圖片上傳錯誤： " + error);
+                console.log(req.body.prodLineID + " photo upload failed: " + error);
+                return res.status(500).send(req.body.prodLineID + " photo upload failed: " + error);
             } else {
-                console.log("     " + req.body.prodLineID + " 圖片上傳成功");
+                console.log(req.body.prodLineID + "photo uploaded");
             }
         });
     }
@@ -385,25 +389,14 @@ app.post("/seedCount/api/insertRecord", upload.any(), function(req, res) { // in
             return res.status(500).send("database connection failure: " + error);
         }
         var mssqlRequest = new mssql.Request();
-        var queryString = "INSERT INTO productionHistory.dbo.seedCount VALUES ('" +
-            req.body.recordDatetime + "','" +
-            req.body.prodFacilityID + "','" +
-            req.body.prodLineID + "','" +
-            req.body.prodReference + "','" +
-            req.body.thickness + "'," +
-            (req.body.count_0 === "" ? "NULL" : req.body.count_0) + "," +
-            (req.body.count_1 === "" ? "NULL" : req.body.count_1) + "," +
-            (req.body.count_2 === "" ? "NULL" : req.body.count_2) + "," +
-            (req.body.count_3 === "" ? "NULL" : req.body.count_3) + "," +
-            (req.body.count_4 === "" ? "NULL" : req.body.count_4) + "," +
-            (req.body.count_5 === "" ? "NULL" : req.body.count_5) + "," +
-            (req.body.note === "" ? "NULL" : "'" + req.body.note + "'") + "," +
-            (photoLocation === "NULL" ? "NULL" : "'" + photoLocation + "'") + ",'" +
-            req.body.created + "','" +
-            req.body.modified + "');";
-        console.log("SQL query:\n" + queryString);
+        var insertQueryString = queryString.insertRecord(req.body.recordDatetime, req.body.prodFacilityID, req.body.prodLineID,
+            req.body.prodReference, req.body.thickness,
+            req.body.count_0, req.body.count_1, req.body.count_2,
+            req.body.count_3, req.body.count_4, req.body.count_5,
+            req.body.note, photoLocation, req.body.created, req.body.modified);
+        console.log("SQL query:\n" + insertQueryString);
         // insert data
-        mssqlRequest.query(queryString, function(error) {
+        mssqlRequest.query(insertQueryString, function(error) {
             if (error) {
                 console.log("error inserting new record: " + error);
                 return res.status(500).send("error inserting new record: " + error);
@@ -419,75 +412,60 @@ app.post("/seedCount/api/insertRecord", upload.any(), function(req, res) { // in
     });
 });
 
-app.post("/seedCount/api/updateRecord", upload.any(), function(req, res) { // update existing record
+app.post("/seedCount/api/updateRecord", upload.any(), function(req, res) { // update existing record [FIXED]
     console.log("\n/seedCount/api/updateRecord");
     // deal with image add, change or deletion
     var photoLocation = "";
     if (req.files.length === 0) { // no new file is uploaded
-        console.log("     未發現新上傳圖片");
         if (req.body.existingPhotoPath === "") {
-            console.log("     移除原始圖片資料");
             photoLocation = seedImageDirectory + "/" + req.body.prodLineID + "/" +
                 moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYYMMDDHHmmss") + '.JPG';
             fs.unlink(photoLocation, function(error) {
                 if (error) {
-                    console.log("     原始圖片資料檔案刪除發生錯誤，嘗試繼續執行程式：" + error);
+                    console.log("error removing original photo (attempting to continue):" + error);
                 }
             });
         }
         photoLocation = "NULL";
     } else { // a new uploaded file is found
-        console.log("     發現新上傳圖片");
         photoLocation = req.files[0].destination + req.body.prodLineID + '/' +
             moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYYMMDDHHmmss") + '.JPG';
         fs.rename(req.files[0].path, photoLocation, function(error) {
             if (error) {
-                console.log("     " + req.body.prodLineID + " 圖片上傳錯誤： " + error);
-                res.status(500).send(req.body.prodLineID + " 圖片上傳錯誤： " + error).end();
+                console.log(req.body.prodLineID + "error uploading photo: " + error);
+                return res.status(500).send(req.body.prodLineID + "error uploading photo: " + error);
             } else {
-                console.log("     " + req.body.prodLineID + " 圖片上傳成功");
+                console.log(req.body.prodLineID + " photo uploaded");
             }
         });
     }
     // connect to data server to update existing record
     mssql.connect(config.mssqlConfig, function(error) {
         if (error) {
-            console.log("     資料庫連結發生錯誤： " + error);
-            res.status(500).send("資料庫連結發生錯誤： " + error).end();
+            console.log("database connection error: " + error);
+            return res.status(500).send("database connection error: " + error);
         }
         var mssqlRequest = new mssql.Request();
-        var queryString =
-            "UPDATE productionHistory.dbo.seedCount SET " +
-            "prodReference='" + req.body.prodReference +
-            "',thickness=" + req.body.thickness +
-            ",count_0=" + (req.body.count_0 === "" ? "NULL" : req.body.count_0) +
-            ",count_1=" + (req.body.count_1 === "" ? "NULL" : req.body.count_1) +
-            ",count_2=" + (req.body.count_2 === "" ? "NULL" : req.body.count_2) +
-            ",count_3=" + (req.body.count_3 === "" ? "NULL" : req.body.count_3) +
-            ",count_4=" + (req.body.count_4 === "" ? "NULL" : req.body.count_4) +
-            ",count_5=" + (req.body.count_5 === "" ? "NULL" : req.body.count_5) +
-            ",note=" + (req.body.note === "" ? "NULL" : "'" + req.body.note + "'") +
-            ",photoLocation=" + (photoLocation === "NULL" ? "NULL" : "'" + photoLocation + "'") +
-            ",modified='" + req.body.modified +
-            "' WHERE " +
-            "recordDatetime='" + req.body.recordDatetime +
-            "' AND prodFacilityID='" + req.body.prodFacilityID +
-            "' AND prodLineID='" + req.body.prodLineID + "';";
-        console.log("     SQL查詢：" + queryString);
+        var updateQueryString = queryString.updateRecord(req.body.recordDatetime, req.body.prodFacilityID, req.body.prodLineID,
+            req.body.prodReference, req.body.thickness,
+            req.body.count_0, req.body.count_1, req.body.count_2,
+            req.body.count_3, req.body.count_4, req.body.count_5,
+            req.body.note, photoLocation, req.body.modified);
+        console.log("SQL query: " + updateQueryString);
         // update data
-        mssqlRequest.query(queryString, function(error) {
+        mssqlRequest.query(updateQueryString, function(error) {
             if (error) {
-                console.log("     資料更新錯誤： " + error);
-                res.status(500).send("資料更新錯誤： " + error).end();
+                console.log("record update failure:" + error);
+                return res.status(500).send("record update failure:" + error);
             }
             mssql.close();
-            console.log("     " + moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料修改成功");
-            res.status(200).send(req.body.recordDatetime + " " + req.body.prodLineID + " 氣泡數資料修改成功").end();
+            console.log(moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " record updated");
+            return res.status(200).send(req.body.recordDatetime + " " + req.body.prodLineID + " record updated");
         });
     });
 });
 
-app.post("/seedCount/api/deleteRecord", urlencodedParser, function(req, res) { // delete a record
+app.post("/seedCount/api/deleteRecord", urlencodedParser, function(req, res) { // delete a record [FIXED]
     console.log("\n/seedCount/api/deleteRecord");
     mssql.connect(config.mssqlConfig, function(error) {
         if (error) {

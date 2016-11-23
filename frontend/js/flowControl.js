@@ -20,7 +20,7 @@ function autoRefresh() {
             increaseInaccessibleCounter(5);
         }
         //set situation table to refresh every 30 minutes
-        if ((now.format("m") % 30 === 0) && (now.format("s") % 60 == 0)) {
+        if ((now.format("m") % 10 === 0) && (now.format("s") % 60 === 0)) {
             refresh();
         }
         //update the clock banner
