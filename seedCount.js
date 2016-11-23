@@ -113,7 +113,10 @@ app.get("/seedCount/api/broadcast/shiftData", function(request, response) {
     } else {
         var shiftEndDatetime = shift.getWorkDatetimeString(workingDateString, shiftObject.end);
     }
-    var messageText = "【" + workingDateString.slice(5, 7) + "/" + workingDateString.slice(8, 10) + " " + shiftObject.cReference + "氣泡數通報】\n";
+    var messageText = "【" +
+        workingDateString.slice(5, 7) + "/" +
+        workingDateString.slice(8, 10) + " " +
+        shiftObject.cReference + "氣泡數通報】\n";
     mssql.connect(config.mssqlConfig)
         .then(function() {
             var mssqlRequest = new mssql.Request();
@@ -122,7 +125,9 @@ app.get("/seedCount/api/broadcast/shiftData", function(request, response) {
                 .then(function(recordset) {
                     if (recordset.length !== 0) {
                         recordset.forEach(function(record) {
-                            messageText += "   " + record.prodLineID + "[" + record.prodReference + "] - 氣泡數：" + Math.round(record.unitSeedCount * 100) / 100 + "\n";
+                            messageText += "   " + record.prodLineID + "[" +
+                                record.prodReference + "] - 氣泡數：" +
+                                seedCountLevelCap.applyHtmlColor(Math.round(record.unitSeedCount * 100) / 100) + "\n";
                         });
                     } else {
                         messageText += "未建立資料";
@@ -158,10 +163,7 @@ app.get("/seedCount/api/broadcast/shiftData", function(request, response) {
 });
 
 app.get("/seedCount/api/broadcast/24HourData", function(request, response) {
-    //var currentDatetimeObject = moment("2016-11-23 09:40:00", "YYYY-MM-DD HH:mm:ss");
-    //var currentDatetimeObject = moment("2016-11-23 17:40:00", "YYYY-MM-DD HH:mm:ss");
-    var currentDatetimeObject = moment("2016-11-23 02:40:00", "YYYY-MM-DD HH:mm:ss");
-    //var currentDatetimeObject = moment(moment(), "YYYY-MM-DD HH:mm:ss");
+    var currentDatetimeObject = moment(moment(), "YYYY-MM-DD HH:mm:ss");
     var datetimeObject;
     var workingDateString;
     var shiftObject;
@@ -192,14 +194,21 @@ app.get("/seedCount/api/broadcast/24HourData", function(request, response) {
                     shiftEndDatetime = shift.getWorkDatetimeString(workingDateString, shiftObject.end);
                 }
                 messageText.shiftMessage[loopIndex] = "";
-                messageText.shiftMessage[loopIndex] += workingDateString.slice(5, 7) + "/" + workingDateString.slice(8, 10) + " " + shiftObject.cReference + "\n";
-                shiftDataQueryPromiseList[loopIndex] = queryShiftData(shiftStartDatetime, shiftEndDatetime);
+                messageText.shiftMessage[loopIndex] +=
+                    workingDateString.slice(5, 7) + "/" +
+                    workingDateString.slice(8, 10) + " " +
+                    shiftObject.cReference + "\n";
+                shiftDataQueryPromiseList[loopIndex] =
+                    queryShiftData(shiftStartDatetime, shiftEndDatetime);
             }
             shiftDataQueryPromiseList[0]
                 .then(function(recordset) {
                     if (recordset.length !== 0) {
                         recordset.forEach(function(record) {
-                            messageText.shiftMessage[0] += "   " + record.prodLineID + "[" + record.prodReference + "] - 氣泡數：" + Math.round(record.unitSeedCount * 100) / 100 + "\n";
+                            messageText.shiftMessage[0] += "   " +
+                                record.prodLineID + "[" +
+                                record.prodReference + "] - 氣泡數：" +
+                                seedCountLevelCap.applyHtmlColor(Math.round(record.unitSeedCount * 100) / 100) + "\n";
                         });
                     } else {
                         messageText.shiftMessage[0] += "未建立資料\n";
@@ -209,7 +218,10 @@ app.get("/seedCount/api/broadcast/24HourData", function(request, response) {
                 .then(function(recordset) {
                     if (recordset.length !== 0) {
                         recordset.forEach(function(record) {
-                            messageText.shiftMessage[1] += "   " + record.prodLineID + "[" + record.prodReference + "] - 氣泡數：" + Math.round(record.unitSeedCount * 100) / 100 + "\n";
+                            messageText.shiftMessage[1] += "   " +
+                                record.prodLineID + "[" +
+                                record.prodReference + "] - 氣泡數：" +
+                                seedCountLevelCap.applyHtmlColor(Math.round(record.unitSeedCount * 100) / 100) + "\n";
                         });
                     } else {
                         messageText.shiftMessage[1] += "未建立資料\n";
@@ -219,18 +231,28 @@ app.get("/seedCount/api/broadcast/24HourData", function(request, response) {
                 .then(function(recordset) {
                     if (recordset.length !== 0) {
                         recordset.forEach(function(record) {
-                            messageText.shiftMessage[2] += "   " + record.prodLineID + "[" + record.prodReference + "] - 氣泡數：" + Math.round(record.unitSeedCount * 100) / 100 + "\n";
+                            messageText.shiftMessage[2] += "   " +
+                                record.prodLineID + "[" +
+                                record.prodReference + "] - 氣泡數：" +
+                                seedCountLevelCap.applyHtmlColor(Math.round(record.unitSeedCount * 100) / 100) + "\n";
                         });
                     } else {
                         messageText.shiftMessage[2] += "未建立資料";
                     }
+                    console.log(messageText.title +
+                        messageText.shiftMessage[0] +
+                        messageText.shiftMessage[1] +
+                        messageText.shiftMessage[2]);
                     httpRequest({
                         url: upgiSystem.broadcastUrl,
                         method: "post",
                         headers: { "Content-Type": "application/json" },
                         json: {
                             "chat_id": 241630569,
-                            "text": messageText.title + messageText.shiftMessage[0] + messageText.shiftMessage[1] + messageText.shiftMessage[2],
+                            "text": messageText.title +
+                                messageText.shiftMessage[0] +
+                                messageText.shiftMessage[1] +
+                                messageText.shiftMessage[2],
                             "token": telegramBot.getToken("seedCountBot")
                         }
                     }, function(error, httpResponse, body) {
@@ -295,26 +317,26 @@ app.get("/seedCount/api/getRecordCount", function(req, res) { // get the count o
     }
 });
 
-app.get("/seedCount/api/getRecordset", function(req, res) { // get a set of records
+app.get("/seedCount/api/getRecordset", function(req, response) { // get a set of records
     console.log("\n/seedCount/api/getRecordset");
     mssql.connect(config.mssqlConfig, function(error) {
         if (error) {
-            console.log("     資料庫連結發生錯誤：" + error);
-            res.status(500).send("資料庫連結發生錯誤：" + error).end();
+            console.log("database connection error: " + error);
+            return response.status(500).send("database connection error: " + error);
         }
         var mssqlRequest = new mssql.Request();
         var queryString = "SELECT * FROM productionHistory.dbo.seedCountResult " +
             "WHERE recordDate='" + req.query.workingDate +
             "' ORDER BY prodLineID,recordDatetime;";
-        console.log("     SQL查詢：" + queryString);
+        console.log("SQL query: " + queryString);
         mssqlRequest.query(queryString, function(error, resultset) {
             if (error) {
-                console.log("     氣泡數資料讀取錯誤：" + error)
-                res.status(500).send("氣泡數資料讀取錯誤：" + error).end();
+                console.log("seed count data query failure: " + error)
+                return response.status(500).send("seed count data query failure: " + error);
             }
             mssql.close();
-            console.log("     氣泡數計算結果讀取成功");
-            res.status(200).json(JSON.stringify(resultset)).end();
+            console.log("seed count data result query successfully");
+            return response.status(200).json(JSON.stringify(resultset));
         });
     });
 });

@@ -2,16 +2,36 @@
 
 var setting = [{
     situation: "良好",
-    ceiling: 4
+    ceiling: 4,
+    color: "green"
 }, {
     situation: "正常",
-    ceiling: 8
+    ceiling: 8,
+    color: "black"
 }, {
     situation: "偏高",
-    ceiling: 10
+    ceiling: 10,
+    color: "blue"
 }, {
     situation: "嚴重",
-    ceiling: 9999
+    ceiling: 9999,
+    color: "red"
 }];
 
-module.exports = { setting };
+function applyHtmlColor(value) {
+    switch (true) {
+        case (value < setting[0].ceiling):
+            return value;
+        case (value < setting[1].ceiling):
+            return value;
+        case (value < setting[2].ceiling):
+            return '<b>' + value + '</b>';
+        default:
+            return '<b>' + value + '</b>';
+    }
+}
+
+module.exports = {
+    setting,
+    applyHtmlColor
+};

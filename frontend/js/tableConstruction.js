@@ -173,16 +173,16 @@ function formatSituationTable() {
     $("td.filled,th.hourlyAverageField,th.prodLineAverageField,th.dailyAverageField").each(function(index, filledSeedCountField) {
         switch (true) {
             case ($(this).text() < seedCountLevelCap[0].ceiling):
-                $(this).css("color", "green");
+                $(this).css("color", seedCountLevelCap[0].color);
                 break;
             case ($(this).text() < seedCountLevelCap[1].ceiling):
-                $(this).css("color", "black");
+                $(this).css("color", seedCountLevelCap[1].color);
                 break;
             case ($(this).text() < seedCountLevelCap[2].ceiling):
-                $(this).css("font-weight", "bold").css("color", "blue");
+                $(this).css("font-weight", "bold").css("color", seedCountLevelCap[2].color);
                 break;
             default:
-                $(this).css("font-weight", "bold").css("color", "red");
+                $(this).css("font-weight", "bold").css("color", seedCountLevelCap[3].color);
                 break;
         }
     });
