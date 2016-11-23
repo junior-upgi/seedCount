@@ -1,4 +1,5 @@
 "use strict";
+
 var buttonInaccessibleCounter = 5; // 計數器 - 控制按鈕是否可使用 (預防使用者過度點選更新頁面造成錯誤)
 var buttonInaccessibleCounterUpperLimit = 5; //控制計數器的停用時間長度上限
 

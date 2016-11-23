@@ -1,3 +1,5 @@
+"use strict";
+
 var setting = [{
     situation: "良好",
     ceiling: 4

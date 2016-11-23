@@ -1,3 +1,5 @@
+"use strict";
+
 var list = [{
     reference: 'L1-1',
     sequence: 0,

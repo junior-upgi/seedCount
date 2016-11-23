@@ -1,3 +1,5 @@
+"use strict";
+
 var list = [{
     id: -150874076,
     title: "業務群組"

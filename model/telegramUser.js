@@ -1,3 +1,5 @@
+"use strict";
+
 var telegramChat = require("./telegramChat.js");
 
 var list = [{
