@@ -281,36 +281,30 @@ app.get("/seedCount/api/getRecordCount", function(req, res) { // get the count o
     console.log("\n/seedCount/api/getRecordCount");
     var dateToCheck = "";
     if (req.query.workingDate === undefined) {
-        console.log("     條件值未定義，發生錯誤，回傳空值");
-        res.status(400).send("[{}]").end();
+        console.log("workingDate parameter not set, return empty recordset");
+        return res.status(400).send("[{}]");
     } else {
-        console.log("     條件接收");
         dateToCheck = moment(req.query.workingDate, "YYYY-MM-DD");
-        var workDateStartTime = moment(dateToCheck).add(450, "minutes");
-        var workDateEndTime = moment(workDateStartTime).add(1, "days").subtract(1, "milliseconds");
+        var workDateStartTime = moment(dateToCheck, "YYYY-MM-DD").add(450, "minutes").format("YYYY-MM-DD HH:mm:ss:SSS");
+        var workDateEndTime = moment(workDateStartTime, "YYYY-MM-DD").add(1, "days").subtract(1, "milliseconds").format("YYYY-MM-DD HH:mm:ss:SSS");
         if ((!dateToCheck.isValid()) || (req.query.workingDate.length !== 10)) {
-            console.log("     條件設定異常，發生錯誤，回傳空值");
-            res.status(400).send("[{}]").end();
+            console.log("workingDate parameter irregularity detected, returning empty recordset");
+            return res.status(400).send("[{}]");
         } else {
-            console.log("     以正常條件進行查詢");
             mssql.connect(config.mssqlConfig, function(error) {
                 if (error) {
-                    console.log("     資料庫連結發生錯誤：" + error);
-                    res.status(500).send("資料庫連結發生錯誤：" + error).end();
+                    console.log("database connection error: " + error);
+                    return res.status(500).send("database connection error: " + error);
                 }
                 var mssqlRequest = new mssql.Request();
-                var queryString = "SELECT COUNT(*) AS recordCount FROM productionHistory.dbo.seedCount WHERE recordDatetime BETWEEN '" +
-                    workDateStartTime.format("YYYY-MM-DD HH:mm:ss:SSS") + "' AND '" +
-                    workDateEndTime.format("YYYY-MM-DD HH:mm:ss:SSS") + "';";
-                console.log("     SQL查詢：" + queryString);
-                mssqlRequest.query(queryString, function(error, resultset) {
+                console.log("SQL query: " + queryString.getRecordCount(workDateStartTime, workDateEndTime));
+                mssqlRequest.query(queryString.getRecordCount(workDateStartTime, workDateEndTime), function(error, resultset) {
                     if (error) {
-                        console.log("     存在資料筆數查詢發生錯誤：" + error);
-                        res.status(500).send("[{}]").end();
+                        console.log("unable to query record count data, returning empty recordset" + error);
+                        return res.status(500).send("[{}]");
                     }
-                    console.log("     存在資料筆數查詢成功");
                     mssql.close();
-                    res.status(200).json(JSON.stringify(resultset)).end();
+                    return res.status(200).json(JSON.stringify(resultset));
                 });
             });
         }
@@ -416,6 +410,8 @@ app.post("/seedCount/api/insertRecord", upload.any(), function(req, res) { // in
                 return res.status(500).send("error inserting new record: " + error);
             } else {
                 // actions to take after a new entry is made //////////////////////////////
+                // check if this record entry is within 1 shift of current time
+                //var currentDatetimeObject=moment(moment(),"YYYY-MM-DD HH:mm:ss")
             }
             mssql.close();
             console.log(moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " new data entry inserted successfully");
@@ -558,101 +554,6 @@ app.post("/seedCount/api/deleteRecord", urlencodedParser, function(req, res) { /
         });
     });
 });
-
-// seedCount system scheduled update
-var seedCountScheduledUpdate = upgiSystem.list[2].jobList[0];
-var seedCountBot = telegramBot.list[1];
-var scheduledUpdate = new CronJob(seedCountScheduledUpdate.schedule, function() {
-    var currentDatetime = moment(moment(), "YYYY-MM-DD HH:mm:ss");
-    console.log("\n目前時間: " + currentDatetime.format("YYYY-MM-DD HH:mm:ss"));
-    // server inspects system data
-    console.log("     進行" + seedCountScheduledUpdate.reference + "檢查");
-    mssql.connect(config.mssqlConfig, function(error) {
-        if (error) {
-            console.log("     資料庫連結發生錯誤：" + error);
-            return false;
-        } else {
-            var mssqlRequest = new mssql.Request();
-            var queryString = "SELECT * FROM productionHistory.dbo.seedCountResult WHERE recordDatetime>'" +
-                moment(currentDatetime, "YYYY-MM-DD HH:mm:ss").subtract(seedCountScheduledUpdate.observePeriod, "hours").format("YYYY-MM-DD HH:mm:ss") +
-                "' ORDER BY recordDatetime, prodLineID;";
-            console.log("     查詢範圍：" +
-                moment(currentDatetime, "YYYY-MM-DD HH:mm:ss").subtract(seedCountScheduledUpdate.observePeriod, "hours").format("YYYY-MM-DD HH:mm:ss") +
-                " 之後資料");
-            console.log("     SQL查詢：" + queryString);
-            mssqlRequest.query(queryString, function(error, resultset) {
-                if (error) {
-                    mssql.close();
-                    console.log("     資料庫查詢失敗：" + error);
-                    return false;
-                }
-                mssql.close();
-                if (seedCountScheduledUpdate.online === true) {
-                    if (seedCountScheduledUpdate.broadcast === true) {
-                        if (resultset.length === 0) { // 尚無可推播資料
-                            console.log("     未發現作業資料");
-                            var contentString = currentDatetime.format("HH:mm") + " " + seedCountScheduledUpdate.reference + "：\n";
-                            contentString += moment(currentDatetime, "YYYY-MM-DD HH:mm:ss").subtract(seedCountScheduledUpdate.observePeriod, "hours").format("HH:mm") +
-                                " 至今未發現作業資料";
-                            // loop through each designed target group and user and broadcast
-                            seedCountScheduledUpdate.targetGroupIDList.concat(
-                                seedCountScheduledUpdate.targetUserIDList).forEach(function(TargetGroupID) {
-                                httpRequest({
-                                    url: telegram.botAPIUrl + seedCountBot.token + "/sendMessage",
-                                    method: "post",
-                                    headers: { "Content-Type": "application/json" },
-                                    json: {
-                                        "chat_id": TargetGroupID,
-                                        "text": contentString
-                                    }
-                                }, function(error, response, body) {
-                                    if (error) {
-                                        console.log("     推播作業發生錯誤：" + error);
-                                    } else {
-                                        console.log("     推播作業成功：" + response.statusCode);
-                                        console.log("     伺服器回覆：" + JSON.stringify(body));
-                                    }
-                                });
-                            });
-                        } else { // 推播資料確認存在
-                            var contentString = currentDatetime.format("HH:mm") + " " + seedCountScheduledUpdate.reference + "：\n";
-                            resultset.forEach(function(seedCountDataPerLine) {
-                                contentString += seedCountDataPerLine.prodLineID + "[" + seedCountDataPerLine.prodReference + "] - " +
-                                    " 氣泡數：" + (Math.round(seedCountDataPerLine.unitSeedCount * 100) / 100) + "\n";
-                            });
-                            console.log("     " + moment(moment(), "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss") + " 發佈行動裝置通知");
-                            // loop through each designed target group and user and broadcast
-                            seedCountScheduledUpdate.targetGroupIDList.concat(
-                                seedCountScheduledUpdate.targetUserIDList).forEach(function(TargetGroupID) {
-                                httpRequest({
-                                    url: telegram.botAPIUrl + seedCountBot.token + "/sendMessage",
-                                    method: "post",
-                                    headers: { "Content-Type": "application/json" },
-                                    json: {
-                                        "chat_id": TargetGroupID,
-                                        "text": contentString
-                                    }
-                                }, function(error, response, body) {
-                                    if (error) {
-                                        console.log("     推播作業發生錯誤：" + error);
-                                    } else {
-                                        console.log("     推播作業成功：" + response.statusCode);
-                                        console.log("     伺服器回覆：" + JSON.stringify(body));
-                                    }
-                                });
-                            });
-                        }
-                    } else {
-                        console.log("     推播程序目前處於關閉狀態");
-                    }
-                } else {
-                    console.log("     " + seedCountScheduledUpdate.reference + "程序目前處於關閉狀態");
-                }
-            });
-        }
-    });
-}, null, true, shift.workingTimezone);
-//scheduledUpdate.start();
 
 /*
 // used to check shift and time relationship values can be produced correctly
