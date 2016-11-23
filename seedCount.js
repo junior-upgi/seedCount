@@ -276,7 +276,7 @@ app.get("/seedCount/api/broadcast/24HourData", function(request, response) {
         });
 });
 
-app.get("/seedCount/api/getRecordCount", function(req, res) { // get the count of how many records is within the queried condition
+app.get("/seedCount/api/getRecordCount", function(req, res) { // get the count of how many records is within the queried condition [FIXED]
     console.log("\n/seedCount/api/getRecordCount");
     var dateToCheck = "";
     if (req.query.workingDate === undefined) {
