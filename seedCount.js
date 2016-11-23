@@ -109,16 +109,20 @@ app.get("/seedCount/api/broadcast/shiftData", function(request, response) {
             var mssqlRequest = new mssql.Request();
             mssqlRequest.query(queryString.getSeedCountRecordsBetweenDate(shiftStartDatetime, shiftEndDatetime))
                 .then(function(recordset) {
-                    recordset.forEach(function(record) {
-                        messageText += "   " + record.prodLineID + "[" + record.prodReference + "] - 氣泡數：" + record.unitSeedCount + "\n";
-                    });
+                    if (recordset.length !== 0) {
+                        recordset.forEach(function(record) {
+                            messageText += "   " + record.prodLineID + "[" + record.prodReference + "] - 氣泡數：" + record.unitSeedCount + "\n";
+                        });
+                    } else {
+                        messageText += "未建立資料";
+                    }
                     httpRequest({
                         url: upgiSystem.broadcastUrl,
                         method: "post",
                         headers: { "Content-Type": "application/json" },
                         json: {
                             "chat_id": 241630569,
-                            "text": messageText.title + messageText.shiftMessage[0] + messageText.shiftMessage[1] + messageText.shiftMessage[2],
+                            "text": messageText,
                             "token": telegramBot.getToken("seedCountBot")
                         }
                     }, function(error, httpResponse, body) {
@@ -174,21 +178,33 @@ app.get("/seedCount/api/broadcast/24HourData", function(request, response) {
             }
             shiftDataQueryPromiseList[0]
                 .then(function(recordset) {
-                    recordset.forEach(function(record) {
-                        messageText.shiftMessage[0] += "   " + record.prodLineID + "[" + record.prodReference + "] - 氣泡數：" + record.unitSeedCount + "\n";
-                    });
+                    if (recordset.length !== 0) {
+                        recordset.forEach(function(record) {
+                            messageText.shiftMessage[0] += "   " + record.prodLineID + "[" + record.prodReference + "] - 氣泡數：" + record.unitSeedCount + "\n";
+                        });
+                    } else {
+                        messageText.shiftMessage[0] += "未建立資料\n";
+                    }
                     return shiftDataQueryPromiseList[1];
                 })
                 .then(function(recordset) {
-                    recordset.forEach(function(record) {
-                        messageText.shiftMessage[1] += "   " + record.prodLineID + "[" + record.prodReference + "] - 氣泡數：" + record.unitSeedCount + "\n";
-                    });
+                    if (recordset.length !== 0) {
+                        recordset.forEach(function(record) {
+                            messageText.shiftMessage[1] += "   " + record.prodLineID + "[" + record.prodReference + "] - 氣泡數：" + record.unitSeedCount + "\n";
+                        });
+                    } else {
+                        messageText.shiftMessage[1] += "未建立資料\n";
+                    }
                     return shiftDataQueryPromiseList[2];
                 })
                 .then(function(recordset) {
-                    recordset.forEach(function(record) {
-                        messageText.shiftMessage[2] += "   " + record.prodLineID + "[" + record.prodReference + "] - 氣泡數：" + record.unitSeedCount + "\n";
-                    });
+                    if (recordset.length !== 0) {
+                        recordset.forEach(function(record) {
+                            messageText.shiftMessage[2] += "   " + record.prodLineID + "[" + record.prodReference + "] - 氣泡數：" + record.unitSeedCount + "\n";
+                        });
+                    } else {
+                        messageText.shiftMessage[2] += "未建立資料";
+                    }
                     httpRequest({
                         url: upgiSystem.broadcastUrl,
                         method: "post",

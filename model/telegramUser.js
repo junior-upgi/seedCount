@@ -203,6 +203,14 @@ var list = [{
     status: ["user"],
     joinedGroupList: [],
     upgEmployeeID: "08030005"
+}, {
+    id: 288913691,
+    username: "Gehhxhsg",
+    first_name: "志如",
+    last_name: "陳",
+    status: ["user"],
+    joinedGroupList: [],
+    upgEmployeeID: "99040008"
 }];
 
 module.exports = { list };

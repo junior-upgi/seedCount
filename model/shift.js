@@ -90,7 +90,7 @@ function getShiftObject(datetimeString) {
         moment(getWorkDatetimeString(workingDate, list[0].start), "YYYY-MM-DD HH:mm:ss").subtract(1, "days"),
         moment(getWorkDatetimeString(workingDate, list[1].start), "YYYY-MM-DD HH:mm:ss"),
         moment(getWorkDatetimeString(workingDate, list[2].start), "YYYY-MM-DD HH:mm:ss"),
-        moment(getWorkDatetimeString(workingDate, list[0].start), "YYYY-MM-DD HH:mm:ss")
+        moment(getWorkDatetimeString(workingDate, list[0].start), "YYYY-MM-DD HH:mm:ss").add(1, "days")
     ];
     switch (true) {
         case (datetimeObject.isBefore(shiftTimePointList[3]) &&

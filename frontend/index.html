@@ -31,15 +31,18 @@
             </div>
             <table id="situationTable" class="table table-bordered table-condensed table-hover">
                 <caption>
-                    <button id="preventDisplayToggleButton" type="button" class="btn btn-default btn-lg" onclick="togglePreventDisplay()">顯示</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                    <button id="editModeToggleButton" type="button" class="subjectToAccessControl btn btn-default btn-lg" onclick="toggleEditMode()" disabled>修改模式</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                    <button id="previousButton" type="button" class="subjectToAccessControl btn btn-default btn-lg navigation" onclick="previous()" disabled>前一日</button>
-                    <button id="refreshButton" type="button" class="subjectToAccessControl btn btn-default btn-lg navigation" onclick="refresh()" disabled>資料重整</button>
-                    <button id="nextButton" type="button" class="subjectToAccessControl btn btn-default btn-lg navigation" onclick="next()" disabled>下一日</button>
-                    <button id="todayButton" type="button" class="subjectToAccessControl btn btn-default btn-lg navigation" onclick="today()" disabled>返回今日</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                    <input id="designatedDate" type="date" class="input-lg" />
-                    <button id="switchDateButton" type="button" class="subjectToAccessControl btn btn-default btn-lg navigation" onclick="switchToDate()" disabled>指定日期檢視</button>
-                    <button id="broadcastCurrentShiftButton" type="button" class="subjectToAccessControl btn btn-default btn-lg" onclick="manualBroadcast()">推播24HR狀況</button>
+                    <!--
+                    <button id="preventDisplayToggleButton" type="button" class="btn btn-default btn-lg" onclick="togglePreventDisplay()" disabled>顯示</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    -->
+                    <button id="editModeToggleButton" type="button" class="subjectToAccessControl btn btn-default btn-xs" onclick="toggleEditMode()" disabled>修改模式</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <button id="previousButton" type="button" class="subjectToAccessControl btn btn-default btn-xs navigation" onclick="previous()" disabled>前一日</button>
+                    <button id="refreshButton" type="button" class="subjectToAccessControl btn btn-default btn-xs navigation" onclick="refresh()" disabled>資料重整</button>
+                    <button id="nextButton" type="button" class="subjectToAccessControl btn btn-default btn-xs navigation" onclick="next()" disabled>下一日</button>
+                    <button id="todayButton" type="button" class="subjectToAccessControl btn btn-default btn-xs navigation" onclick="today()" disabled>返回今日</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <input id="designatedDate" type="date" class="input-xs" />
+                    <button id="switchDateButton" type="button" class="subjectToAccessControl btn btn-default btn-xs navigation" onclick="switchToDate()" disabled>指定日期檢視</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <button type="button" class="subjectToAccessControl btn btn-default btn-xs" onclick="manualBroadcast24HourData()">發佈24小時內狀況</button>
+                    <button type="button" class="subjectToAccessControl btn btn-default btn-xs" onclick="manualBroadcastShiftData()">發佈目前班次狀況</button>
                     <h3><span id="workingDateBanner"></span>&nbsp;氣泡數統計資料</h3>
                 </caption>
                 <thead>
@@ -115,8 +118,13 @@
         });
     };
 
-    var manualBroadcast = function() {
+    var manualBroadcast24HourData = function() {
         increaseInaccessibleCounter(10);
         $.get("../seedCount/api/broadcast/24HourData");
+    };
+
+    var manualBroadcastShiftData = function() {
+        increaseInaccessibleCounter(10);
+        $.get("../seedCount/api/broadcast/shiftData");
     };
 </script>
