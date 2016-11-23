@@ -102,16 +102,22 @@ app.get("/seedCount/api/broadcast/shiftData", function(request, response) {
     var workingDateString = shift.getWorkingDateString(datetimeObject.format("YYYY-MM-DD HH:mm:ss"));
     var shiftObject = shift.getShiftObject(datetimeObject.format("YYYY-MM-DD HH:mm:ss"));
     var shiftStartDatetime = shift.getWorkDatetimeString(workingDateString, shiftObject.start);
-    var shiftEndDatetime = shift.getWorkDatetimeString(workingDateString, shiftObject.end);
+    if (shiftObject.reference === "graveYard") {
+        // prevent the date part of the end of night shift being improperly produced, due to the 07:30 overlap
+        var shiftEndDatetime = shift.getWorkDatetimeString(datetimeObject.format("YYYY-MM-DD"), shiftObject.end);
+    } else {
+        var shiftEndDatetime = shift.getWorkDatetimeString(workingDateString, shiftObject.end);
+    }
     var messageText = "【" + workingDateString.slice(5, 7) + "/" + workingDateString.slice(8, 10) + " " + shiftObject.cReference + "氣泡數通報】\n";
     mssql.connect(config.mssqlConfig)
         .then(function() {
             var mssqlRequest = new mssql.Request();
+            console.log(queryString.getSeedCountRecordsBetweenDate(shiftStartDatetime, shiftEndDatetime));
             mssqlRequest.query(queryString.getSeedCountRecordsBetweenDate(shiftStartDatetime, shiftEndDatetime))
                 .then(function(recordset) {
                     if (recordset.length !== 0) {
                         recordset.forEach(function(record) {
-                            messageText += "   " + record.prodLineID + "[" + record.prodReference + "] - 氣泡數：" + record.unitSeedCount + "\n";
+                            messageText += "   " + record.prodLineID + "[" + record.prodReference + "] - 氣泡數：" + Math.round(record.unitSeedCount * 100) / 100 + "\n";
                         });
                     } else {
                         messageText += "未建立資料";
@@ -147,7 +153,10 @@ app.get("/seedCount/api/broadcast/shiftData", function(request, response) {
 });
 
 app.get("/seedCount/api/broadcast/24HourData", function(request, response) {
-    var currentDatetimeObject = moment(moment(), "YYYY-MM-DD HH:mm:ss");
+    //var currentDatetimeObject = moment("2016-11-23 09:40:00", "YYYY-MM-DD HH:mm:ss");
+    //var currentDatetimeObject = moment("2016-11-23 17:40:00", "YYYY-MM-DD HH:mm:ss");
+    var currentDatetimeObject = moment("2016-11-23 02:40:00", "YYYY-MM-DD HH:mm:ss");
+    //var currentDatetimeObject = moment(moment(), "YYYY-MM-DD HH:mm:ss");
     var datetimeObject;
     var workingDateString;
     var shiftObject;
@@ -171,7 +180,12 @@ app.get("/seedCount/api/broadcast/24HourData", function(request, response) {
                 workingDateString = shift.getWorkingDateString(datetimeObject.format("YYYY-MM-DD HH:mm:ss"));
                 shiftObject = shift.getShiftObject(datetimeObject.format("YYYY-MM-DD HH:mm:ss"));
                 shiftStartDatetime = shift.getWorkDatetimeString(workingDateString, shiftObject.start);
-                shiftEndDatetime = shift.getWorkDatetimeString(workingDateString, shiftObject.end);
+                if (shiftObject.reference === "graveYard") {
+                    // prevent the date part of the end of night shift being improperly produced, due to the 07:30 overlap
+                    shiftEndDatetime = shift.getWorkDatetimeString(datetimeObject.format("YYYY-MM-DD"), shiftObject.end);
+                } else {
+                    shiftEndDatetime = shift.getWorkDatetimeString(workingDateString, shiftObject.end);
+                }
                 messageText.shiftMessage[loopIndex] = "";
                 messageText.shiftMessage[loopIndex] += workingDateString.slice(5, 7) + "/" + workingDateString.slice(8, 10) + " " + shiftObject.cReference + "\n";
                 shiftDataQueryPromiseList[loopIndex] = queryShiftData(shiftStartDatetime, shiftEndDatetime);
@@ -180,7 +194,7 @@ app.get("/seedCount/api/broadcast/24HourData", function(request, response) {
                 .then(function(recordset) {
                     if (recordset.length !== 0) {
                         recordset.forEach(function(record) {
-                            messageText.shiftMessage[0] += "   " + record.prodLineID + "[" + record.prodReference + "] - 氣泡數：" + record.unitSeedCount + "\n";
+                            messageText.shiftMessage[0] += "   " + record.prodLineID + "[" + record.prodReference + "] - 氣泡數：" + Math.round(record.unitSeedCount * 100) / 100 + "\n";
                         });
                     } else {
                         messageText.shiftMessage[0] += "未建立資料\n";
@@ -190,7 +204,7 @@ app.get("/seedCount/api/broadcast/24HourData", function(request, response) {
                 .then(function(recordset) {
                     if (recordset.length !== 0) {
                         recordset.forEach(function(record) {
-                            messageText.shiftMessage[1] += "   " + record.prodLineID + "[" + record.prodReference + "] - 氣泡數：" + record.unitSeedCount + "\n";
+                            messageText.shiftMessage[1] += "   " + record.prodLineID + "[" + record.prodReference + "] - 氣泡數：" + Math.round(record.unitSeedCount * 100) / 100 + "\n";
                         });
                     } else {
                         messageText.shiftMessage[1] += "未建立資料\n";
@@ -200,7 +214,7 @@ app.get("/seedCount/api/broadcast/24HourData", function(request, response) {
                 .then(function(recordset) {
                     if (recordset.length !== 0) {
                         recordset.forEach(function(record) {
-                            messageText.shiftMessage[2] += "   " + record.prodLineID + "[" + record.prodReference + "] - 氣泡數：" + record.unitSeedCount + "\n";
+                            messageText.shiftMessage[2] += "   " + record.prodLineID + "[" + record.prodReference + "] - 氣泡數：" + Math.round(record.unitSeedCount * 100) / 100 + "\n";
                         });
                     } else {
                         messageText.shiftMessage[2] += "未建立資料";
@@ -652,4 +666,34 @@ var scheduledUpdate = new CronJob(seedCountScheduledUpdate.schedule, function() 
 
 app.listen(config.serverPort); // start server
 console.log("氣泡數監測系統伺服器服務運行中... (" + config.serverHost + ":" + config.serverPort + ")");
-scheduledUpdate.start();
+//scheduledUpdate.start();
+
+console.log(shift.getWorkDatetimeString("2016-11-23", "07:30"));
+console.log(shift.getWorkDatetimeString("2016-11-23", "07:40"));
+console.log(shift.getWorkDatetimeString("2016-11-23", "15:30"));
+console.log(shift.getWorkDatetimeString("2016-11-23", "15:40"));
+console.log(shift.getWorkDatetimeString("2016-11-23", "23:30"));
+console.log(shift.getWorkDatetimeString("2016-11-23", "23:40"));
+console.log(shift.getWorkDatetimeString("2016-11-23", "00:00"));
+console.log(shift.getWorkDatetimeString("2016-11-23", "00:30"));
+console.log(shift.getWorkDatetimeString("2016-11-24", "07:30"));
+console.log("==============================================================");
+console.log(shift.getWorkingDateString("2016-11-23 07:30"));
+console.log(shift.getWorkingDateString("2016-11-23 07:40"));
+console.log(shift.getWorkingDateString("2016-11-23 15:30"));
+console.log(shift.getWorkingDateString("2016-11-23 15:40"));
+console.log(shift.getWorkingDateString("2016-11-23 23:30"));
+console.log(shift.getWorkingDateString("2016-11-23 23:40"));
+console.log(shift.getWorkingDateString("2016-11-24 00:00"));
+console.log(shift.getWorkingDateString("2016-11-24 00:30"));
+console.log(shift.getWorkingDateString("2016-11-24 07:30"));
+console.log("==============================================================");
+console.log(shift.getShiftObject("2016-11-23 07:30").cReference);
+console.log(shift.getShiftObject("2016-11-23 07:40").cReference);
+console.log(shift.getShiftObject("2016-11-23 15:30").cReference);
+console.log(shift.getShiftObject("2016-11-23 15:40").cReference);
+console.log(shift.getShiftObject("2016-11-23 23:30").cReference);
+console.log(shift.getShiftObject("2016-11-23 23:40").cReference);
+console.log(shift.getShiftObject("2016-11-24 00:00").cReference);
+console.log(shift.getShiftObject("2016-11-24 00:30").cReference);
+console.log(shift.getShiftObject("2016-11-24 07:30").cReference);

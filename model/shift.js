@@ -84,26 +84,18 @@ var list = [{
 }];
 
 function getShiftObject(datetimeString) {
-    var datetimeObject = moment(datetimeString, "YYYY-MM-DD HH:mm:ss");
-    var workingDate = getWorkingDateString(datetimeObject.format("YYYY-MM-DD HH:mm:ss"));
-    var shiftTimePointList = [
-        moment(getWorkDatetimeString(workingDate, list[0].start), "YYYY-MM-DD HH:mm:ss").subtract(1, "days"),
-        moment(getWorkDatetimeString(workingDate, list[1].start), "YYYY-MM-DD HH:mm:ss"),
-        moment(getWorkDatetimeString(workingDate, list[2].start), "YYYY-MM-DD HH:mm:ss"),
-        moment(getWorkDatetimeString(workingDate, list[0].start), "YYYY-MM-DD HH:mm:ss").add(1, "days")
-    ];
+    var hour = datetimeString.slice(11, 13);
+    var minute = datetimeString.slice(14, 16);
     switch (true) {
-        case (datetimeObject.isBefore(shiftTimePointList[3]) &&
-            datetimeObject.isSameOrAfter(shiftTimePointList[2])):
-            return list[2];
-        case (datetimeObject.isBefore(shiftTimePointList[2]) &&
-            datetimeObject.isSameOrAfter(shiftTimePointList[1])):
-            return list[1];
-        case (datetimeObject.isBefore(shiftTimePointList[1]) &&
-            datetimeObject.isSameOrAfter(shiftTimePointList[0])):
+        case (((hour == 7) && (minute >= 30)) || ((hour >= 8) && (hour <= 14)) || ((hour == 15) && (minute < 30))):
             return list[0];
+        case (((hour == 15) && (minute >= 30)) || ((hour >= 16) && (hour <= 22)) || ((hour == 23) && (minute < 30))):
+            return list[1];
+        case ((hour == 23) && (minute >= 30)):
+        case (((hour >= 0) && (hour <= 6)) || ((hour == 7) && (minute < 30))):
+            return list[2];
         default:
-            throw "cannot get the correct shift data";
+            throw "unable to retrieve correct shift data";
     }
 }
 
@@ -117,8 +109,7 @@ function getWorkingDateString(datetimeString) {
 };
 
 function getWorkDatetimeString(workingDateString, workingTime) {
-    if (((workingTime.slice(0, 2) >= 0) && (workingTime.slice(0, 2) <= 7)) &&
-        ((workingTime.slice(3, 5) >= 0) && (workingTime.slice(3, 5) <= 30))) {
+    if (((workingTime.slice(0, 2) >= 0) && (workingTime.slice(0, 2) <= 6)) || ((workingTime.slice(0, 2) == 7) && (workingTime.slice(3, 5) >= 0) && (workingTime.slice(3, 5) < 30))) {
         return moment(workingDateString + " " + workingTime + ":00", "YYYY-MM-DD HH:mm:ss").add(1, "days").format("YYYY-MM-DD HH:mm:ss");
     } else {
         return moment(workingDateString + " " + workingTime + ":00", "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss");
