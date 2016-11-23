@@ -44,4 +44,17 @@ var list = [{
     }
 ];
 
-module.exports = { list };
+function getToken(username) {
+    var token;
+    list.forEach(function(botObject) {
+        if (botObject.username === username) {
+            token = botObject.token;
+        }
+    });
+    return token;
+};
+
+module.exports = {
+    list,
+    getToken
+};

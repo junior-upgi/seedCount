@@ -17,9 +17,9 @@
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
     <!-- <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootswatch/3.3.7/spacelab/bootstrap.min.css"> -->
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <script src="./seedCount/frontend/js/tableConstruction.js"></script>
-    <script src="./seedCount/frontend/js/flowControl.js"></script>
-    <script src="./seedCount/frontend/js/inlineEdit.js"></script>
+    <script src="../seedCount/frontend/js/tableConstruction.js"></script>
+    <script src="../seedCount/frontend/js/flowControl.js"></script>
+    <script src="../seedCount/frontend/js/inlineEdit.js"></script>
 </head>
 
 <body>
@@ -31,7 +31,7 @@
             </div>
             <table id="situationTable" class="table table-bordered table-condensed table-hover">
                 <caption>
-                    <button id="preventDisplayToggleButton" type="button" class="btn btn-default btn-lg" onclick="togglePreventDisplay()" disabled>顯示</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <button id="preventDisplayToggleButton" type="button" class="btn btn-default btn-lg" onclick="togglePreventDisplay()">顯示</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                     <button id="editModeToggleButton" type="button" class="subjectToAccessControl btn btn-default btn-lg" onclick="toggleEditMode()" disabled>修改模式</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                     <button id="previousButton" type="button" class="subjectToAccessControl btn btn-default btn-lg navigation" onclick="previous()" disabled>前一日</button>
                     <button id="refreshButton" type="button" class="subjectToAccessControl btn btn-default btn-lg navigation" onclick="refresh()" disabled>資料重整</button>
@@ -39,7 +39,7 @@
                     <button id="todayButton" type="button" class="subjectToAccessControl btn btn-default btn-lg navigation" onclick="today()" disabled>返回今日</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                     <input id="designatedDate" type="date" class="input-lg" />
                     <button id="switchDateButton" type="button" class="subjectToAccessControl btn btn-default btn-lg navigation" onclick="switchToDate()" disabled>指定日期檢視</button>
-                    <button id="broadcastCurrentShiftButton" type="button" class="btn btn-default btn-lg" onclick="broadcastCurrentShiftData()">推播現況</button>
+                    <button id="broadcastCurrentShiftButton" type="button" class="subjectToAccessControl btn btn-default btn-lg" onclick="manualBroadcast()">推播24HR狀況</button>
                     <h3><span id="workingDateBanner"></span>&nbsp;氣泡數統計資料</h3>
                 </caption>
                 <thead>
@@ -72,14 +72,14 @@
     var seedCountLevelCap;
 
     $.when(
-        $.get("./seedCount/api/getConfigData"),
-        $.get("./seedCount/api/getWorkingDateString", {
+        $.get("../seedCount/api/getConfigData"),
+        $.get("../seedCount/api/getWorkingDateString", {
             datetimeString: initializeDatetime.format("YYYY-MM-DD HH:mm:ss")
         }),
-        $.get("./seedCount/api/getProdLineData"),
-        $.get("./seedCount/api/getShiftData"),
-        $.get("./seedCount/api/getFacilityData"),
-        $.get("./seedCount/api/getSeedCountLevelCapData")
+        $.get("../seedCount/api/getProdLineData"),
+        $.get("../seedCount/api/getShiftData"),
+        $.get("../seedCount/api/getFacilityData"),
+        $.get("../seedCount/api/getSeedCountLevelCapData")
     ).done(function(configData, workingDateString, prodLineData, shiftData, facilityData, seedCountLevelCapSetting) {
         workingTimezone = configData[0].workingTimezone;
         seedCountSituationTableSetting = configData[0].seedCountSituationTableSetting;
@@ -98,11 +98,11 @@
 
     var reinitialize = function() {
         $.when(
-            $.get("./seedCount/api/getConfigData"),
-            $.get("./seedCount/api/getProdLineData"),
-            $.get("./seedCount/api/getShiftData"),
-            $.get("./seedCount/api/getFacilityData"),
-            $.get("./seedCount/api/getSeedCountLevelCapData")
+            $.get("../seedCount/api/getConfigData"),
+            $.get("../seedCount/api/getProdLineData"),
+            $.get("../seedCount/api/getShiftData"),
+            $.get("../seedCount/api/getFacilityData"),
+            $.get("../seedCount/api/getSeedCountLevelCapData")
         ).done(function(configData, prodLineData, shiftData, facilityData, seedCountLevelCapSetting) {
             workingTimezone = configData[0].workingTimezone;
             seedCountSituationTableSetting = configData[0].seedCountSituationTableSetting;
@@ -115,7 +115,8 @@
         });
     };
 
-    var broadcastCurrentShiftData = function() {
-        $.get("./seedCount/api/broadcastCurrentShiftData");
+    var manualBroadcast = function() {
+        increaseInaccessibleCounter(10);
+        $.get("../seedCount/api/broadcast/24HourData");
     };
 </script>

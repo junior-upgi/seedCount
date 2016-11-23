@@ -24,7 +24,6 @@ function autoRefresh() {
         }
         //update the clock banner
         $("#clockBanner").text(now.format("YYYY-MM-DD HH:mm:ss"));
-        //$("button#preventDisplayToggleButton").prop("disabled", true);
     }, 1000);
 };
 
@@ -57,7 +56,7 @@ function today() {
     increaseInaccessibleCounter(10);
     removeTableComponent();
     editModeInProgress = false;
-    $.get("./seedCount/api/getWorkingDateString", {
+    $.get("../seedCount/api/getWorkingDateString", {
         datetimeString: moment(moment(), "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss")
     }, function(workingDateString) {
         workingDate = workingDateString;

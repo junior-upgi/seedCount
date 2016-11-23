@@ -1,7 +1,7 @@
 var telegramChat = require("./telegramChat.js");
 
 var list = [{
-    id: "241630569",
+    id: 241630569,
     user_name: "junior_upgi",
     first_name: "佳佑",
     last_name: "蔡",
@@ -12,7 +12,7 @@ var list = [{
     ],
     upgEmployeeID: "05060001"
 }, {
-    id: "252069370",
+    id: 252069370,
     user_name: "upgi_spark",
     first_name: "于斌",
     last_name: "林",
@@ -20,7 +20,7 @@ var list = [{
     joinedGroupList: [],
     upgEmployeeID: "16080003"
 }, {
-    id: "240006091",
+    id: 240006091,
     user_name: "Ray0626",
     first_name: "治儒",
     last_name: "陳",
@@ -28,7 +28,7 @@ var list = [{
     joinedGroupList: [],
     upgEmployeeID: "15050003"
 }, {
-    id: "261033177",
+    id: 261033177,
     user_name: "Samhuang",
     first_name: "顯鈞",
     last_name: "黃",
@@ -36,7 +36,7 @@ var list = [{
     joinedGroupList: [],
     upgEmployeeID: "16010002"
 }, {
-    id: "270251655",
+    id: 270251655,
     username: "Wenghungta",
     first_name: "宏達",
     last_name: "翁",
@@ -44,7 +44,7 @@ var list = [{
     joinedGroupList: [],
     upgEmployeeID: "99030003"
 }, {
-    id: "243538978",
+    id: 243538978,
     username: "upgfurnace",
     first_name: "高榮",
     last_name: "張",
@@ -52,7 +52,7 @@ var list = [{
     joinedGroupList: [],
     upgEmployeeID: "10120001"
 }, {
-    id: "260499091",
+    id: 260499091,
     username: "Jacobchuang",
     first_name: "再興",
     last_name: "莊",
@@ -60,7 +60,7 @@ var list = [{
     joinedGroupList: [],
     upgEmployeeID: "88080073"
 }, {
-    id: "297313252",
+    id: 297313252,
     username: "UPGElle",
     first_name: "世玲",
     last_name: "翁",
@@ -68,7 +68,7 @@ var list = [{
     joinedGroupList: [],
     upgEmployeeID: "07100003"
 }, {
-    id: "280941957",
+    id: 280941957,
     username: "upgijacklin",
     first_name: "建睿",
     last_name: "林",
@@ -76,7 +76,7 @@ var list = [{
     joinedGroupList: [],
     upgEmployeeID: "94030001"
 }, {
-    id: "269370139",
+    id: 269370139,
     username: "Oliviachen0227",
     first_name: "逸樺",
     last_name: "陳",
@@ -84,7 +84,7 @@ var list = [{
     joinedGroupList: [],
     upgEmployeeID: "06070004"
 }, {
-    id: "299863805",
+    id: 299863805,
     username: "Srthhgdy",
     first_name: "慶瑞",
     last_name: "王",
@@ -92,7 +92,7 @@ var list = [{
     joinedGroupList: [],
     upgEmployeeID: "91050006"
 }, {
-    id: "275846005",
+    id: 275846005,
     username: "Shuhualee",
     first_name: "淑華",
     last_name: "李",
@@ -100,7 +100,7 @@ var list = [{
     joinedGroupList: [],
     upgEmployeeID: "95090001"
 }, {
-    id: "",
+    id: 289590897,
     username: "Janice2232",
     first_name: "芳伊",
     last_name: "郭",
@@ -108,7 +108,7 @@ var list = [{
     joinedGroupList: [],
     upgEmployeeID: "13070002"
 }, {
-    id: "",
+    id: 285600420,
     username: "Phoebe0830",
     first_name: "珈慧",
     last_name: "廖",
@@ -116,7 +116,7 @@ var list = [{
     joinedGroupList: [],
     upgEmployeeID: "12090006"
 }, {
-    id: "225829917",
+    id: 225829917,
     username: "UPGI_ChungChou",
     first_name: "Lin",
     last_name: "Chung Chou",
@@ -124,7 +124,7 @@ var list = [{
     joinedGroupList: [],
     upgEmployeeID: "11020002"
 }, {
-    id: "277098776",
+    id: 277098776,
     username: "David0937614299",
     first_name: "David",
     last_name: "Lin",
@@ -132,7 +132,7 @@ var list = [{
     joinedGroupList: [],
     upgEmployeeID: "03090001"
 }, {
-    id: "281948128",
+    id: 281948128,
     username: "EvitaUPG",
     first_name: "Evita",
     last_name: "Chuang",
@@ -140,7 +140,7 @@ var list = [{
     joinedGroupList: [],
     upgEmployeeID: "12020012"
 }, {
-    id: "281458056",
+    id: 281458056,
     username: "Jeffrey_upgi",
     first_name: "Jeffrey",
     last_name: "Tsai",
@@ -148,7 +148,7 @@ var list = [{
     joinedGroupList: [],
     upgEmployeeID: "11080005"
 }, {
-    id: "290457488",
+    id: 290457488,
     username: "upgi_shen0445",
     first_name: "Shen",
     last_name: "Sam",
@@ -156,7 +156,7 @@ var list = [{
     joinedGroupList: [],
     upgEmployeeID: "03070001"
 }, {
-    id: "288942651",
+    id: 288942651,
     username: "hugo0831",
     first_name: "雨利",
     last_name: "陳",
@@ -164,7 +164,7 @@ var list = [{
     joinedGroupList: [],
     upgEmployeeID: "93120001"
 }, {
-    id: "236207790",
+    id: 236207790,
     username: "jack5447",
     first_name: "游",
     last_name: "小楠",
@@ -172,7 +172,7 @@ var list = [{
     joinedGroupList: [],
     upgEmployeeID: "07120002"
 }, {
-    id: "254848482",
+    id: 254848482,
     username: "yuraHou",
     first_name: "孟均",
     last_name: "侯",
@@ -180,7 +180,7 @@ var list = [{
     joinedGroupList: [],
     upgEmployeeID: "16030003"
 }, {
-    id: "282526890",
+    id: 282526890,
     username: "upgelma",
     first_name: "Chen",
     last_name: "Elma",
@@ -188,7 +188,7 @@ var list = [{
     joinedGroupList: [],
     upgEmployeeID: "07080001"
 }, {
-    id: "267702707",
+    id: 267702707,
     username: "HouseChen",
     first_name: "Wayne",
     last_name: "Chen",
@@ -196,7 +196,7 @@ var list = [{
     joinedGroupList: [],
     upgEmployeeID: "07040001"
 }, {
-    id: "277535543",
+    id: 277535543,
     username: "maviscwling",
     first_name: "Mavid",
     last_name: "Chao",

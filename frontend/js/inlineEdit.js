@@ -19,14 +19,14 @@ $(document).on("click", "td.seedCountField", function() {
             .css("font-weight", "bold");
         workingRow.after('<tr class="dataEntryRow"></tr>'); // insert one row under the current <tr>
         // load the inline edit template
-        $("tr.dataEntryRow").load("./seedCount/frontend/template/inlineEdit.html", function(response, status) {
+        $("tr.dataEntryRow").load("../seedCount/frontend/template/inlineEdit.html", function(response, status) {
             if (status === "success") { // if template successfully loaded
                 if (workingCell.hasClass("filled")) { // if it's an edit and not a new record
                     loadExistingData(workingCell); // ajax for the existing record
                     $("form#inlineEditForm").append('&nbsp;&nbsp;&nbsp;&nbsp;<button id="deleteRecord" type="button" class="subjectToAccessControl btn btn-danger btn-lg">資料刪除</button>');
-                    formAction = "./seedCount/api/updateRecord"; // set the API endpoint to post to update record
+                    formAction = "../seedCount/api/updateRecord"; // set the API endpoint to post to update record
                 } else {
-                    $.get("./seedCount/api/getWorkDatetimeString", {
+                    $.get("../seedCount/api/getWorkDatetimeString", {
                         workingDateString: workingCell.data("workingDate"),
                         workingTime: workingCell.data("timePoint").slice(0, 2) + ":" + workingCell.data("timePoint").slice(2)
                     }, function(workDatetimeString) {
@@ -34,7 +34,7 @@ $(document).on("click", "td.seedCountField", function() {
                         $("input#recordDatetime").val(workDatetimeString);
                         $("input#prodFacilityID").val(workingCell.data("prodFacilityID"));
                         $("input#prodLineID").val(workingCell.data("prodLineID"));
-                        formAction = "./seedCount/api/insertRecord"; // set the API endpoint to post to insert record
+                        formAction = "../seedCount/api/insertRecord"; // set the API endpoint to post to insert record
                     });
                 }
                 $("#prodReference").focus(); // set keyboard focus on the first input field
@@ -72,7 +72,7 @@ $(document).on("click", "td.seedCountField", function() {
                     return false;
                 });
                 $("button#deleteRecord").on("click", function() { // when user clicks on the delete record button
-                    formAction = "./seedCount/api/deleteRecord";
+                    formAction = "../seedCount/api/deleteRecord";
                     $.post(
                         formAction,
                         $("form#inlineEditForm").serialize(),
@@ -92,7 +92,7 @@ $(document).on("click", "td.seedCountField", function() {
 
 function loadExistingData(cellObject) {
     var workDatetimeString;
-    $.get("./seedCount/api/getWorkDatetimeString", {
+    $.get("../seedCount/api/getWorkDatetimeString", {
         workingDateString: cellObject.data("workingDate"),
         workingTime: cellObject.data("timePoint").slice(0, 2) + ":" + cellObject.data("timePoint").slice(2)
     }, function(data) {
@@ -102,7 +102,7 @@ function loadExistingData(cellObject) {
         $("input#prodFacilityID").val(cellObject.data("prodFacilityID"));
         $("input#prodLineID").val(cellObject.data("prodLineID"));
         if (cellObject.hasClass("filled")) {
-            $.getJSON("./seedCount/api/getRecord", {
+            $.getJSON("../seedCount/api/getRecord", {
                 recordDatetime: workDatetimeString,
                 prodFacilityID: cellObject.data("prodFacilityID"),
                 prodLineID: cellObject.data("prodLineID")
@@ -168,12 +168,12 @@ function toggleEditMode() {
         editMode = false;
         editModeInProgress = false;
         $("td.seedCountField").attr("onclick", "");
-        $("button#editModeToggleButton").removeClass("btn-primary").addClass("btn-default").text("修改模式");
+        $("button#editModeToggleButton").removeClass("btn-primary").addClass("btn-default").text("輸入模式");
         refresh();
     } else {
         editMode = true;
         $("td.seedCountField").attr("onclick", "inlineEdit()");
-        $("button#editModeToggleButton").removeClass("btn-default").addClass("btn-primary").text("取消修改模式");
+        $("button#editModeToggleButton").removeClass("btn-default").addClass("btn-primary").text("取消輸入");
         refresh();
     }
 };

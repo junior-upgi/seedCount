@@ -7,7 +7,6 @@ var moment = require("moment-timezone");
 var mssql = require("mssql");
 var multer = require("multer");
 var httpRequest = require("request");
-var testHttpRequest = require("request-promise");
 
 var config = require("./config.js");
 var shift = require("./model/shift.js");
@@ -47,7 +46,7 @@ if (fileStructureValidated !== true) {
     console.log("影像伺服器服務運行中... (" + config.serverHost + ":" + config.serverPort + "/" + seedImageDirectory + ")");
 }
 
-app.get("/seedCount", function(request, response) { // serve front page
+app.get("/seedCount/index", function(request, response) { // serve front page
     return response.status(200).sendFile(__dirname + "/frontend/index.html");
 });
 
@@ -98,48 +97,127 @@ app.get("/seedCount/api/getSeedCountLevelCapData", function(request, response) {
     return response.status(200).json(seedCountLevelCap.setting);
 });
 
-app.get("/seedCount/api/broadcastCurrentShiftData", function(request, response) {
+app.get("/seedCount/api/broadcast/shiftData", function(request, response) {
+    var datetimeObject = moment(moment(), "YYYY-MM-DD HH:mm:ss");
+    var workingDateString = shift.getWorkingDateString(datetimeObject.format("YYYY-MM-DD HH:mm:ss"));
+    var shiftObject = shift.getShiftObject(datetimeObject.format("YYYY-MM-DD HH:mm:ss"));
+    var shiftStartDatetime = shift.getWorkDatetimeString(workingDateString, shiftObject.start);
+    var shiftEndDatetime = shift.getWorkDatetimeString(workingDateString, shiftObject.end);
+    var messageText = "【" + workingDateString.slice(5, 7) + "/" + workingDateString.slice(8, 10) + " " + shiftObject.cReference + "氣泡數通報】\n";
+    mssql.connect(config.mssqlConfig)
+        .then(function() {
+            var mssqlRequest = new mssql.Request();
+            mssqlRequest.query(queryString.getSeedCountRecordsBetweenDate(shiftStartDatetime, shiftEndDatetime))
+                .then(function(recordset) {
+                    recordset.forEach(function(record) {
+                        messageText += "   " + record.prodLineID + "[" + record.prodReference + "] - 氣泡數：" + record.unitSeedCount + "\n";
+                    });
+                    httpRequest({
+                        url: upgiSystem.broadcastUrl,
+                        method: "post",
+                        headers: { "Content-Type": "application/json" },
+                        json: {
+                            "chat_id": 241630569,
+                            "text": messageText.title + messageText.shiftMessage[0] + messageText.shiftMessage[1] + messageText.shiftMessage[2],
+                            "token": telegramBot.getToken("seedCountBot")
+                        }
+                    }, function(error, httpResponse, body) {
+                        if (error || (httpResponse.statusCode !== 200)) {
+                            mssql.close();
+                            console.log("error sending broadcast message: " + error + "\n" + JSON.stringify(body));
+                            return response.status(httpResponse.statusCode).send(error);
+                        } else {
+                            mssql.close();
+                            return response.status(httpResponse.statusCode).end();
+                        }
+                    });
+                })
+                .catch(function(error) {
+                    console.log("query error encountered: " + error);
+                    return response.status(500).send(error);
+                });
+        }).catch(function(error) {
+            console.log("error connecting to database: " + error);
+            return response.status(500).send("error connecting to database: " + error);
+        });
+});
+
+app.get("/seedCount/api/broadcast/24HourData", function(request, response) {
     var currentDatetimeObject = moment(moment(), "YYYY-MM-DD HH:mm:ss");
-    var currentWorkingDateString = shift.getWorkingDateString(currentDatetimeObject.format("YYYY-MM-DD HH:mm:ss"));
-    var currentShiftObject = shift.getShiftObject(currentDatetimeObject.format("YYYY-MM-DD HH:mm:ss"));
-    var currentShiftStartTime = shift.getWorkDatetimeString(currentWorkingDateString, currentShiftObject.start);
-    var currentShiftEndTime = shift.getWorkDatetimeString(currentWorkingDateString, currentShiftObject.end);
-    mssql.connect(config.mssqlConfig, function(error) {
-        if (error) {
-            console.log("資料庫連結發生錯誤：" + error);
-            return response.status(500).send("資料庫連結發生錯誤：" + error);
-        }
-        var mssqlRequest = new mssql.Request();
-        mssqlRequest.query(queryString.getSeedCountRecordsBetweenDate(currentShiftStartTime, currentShiftEndTime))
-            .then(function(recordset) {
-                var text = currentWorkingDateString + " " + currentShiftObject.cReference + "氣泡數通報\n";
-                recordset.forEach(function(record) {
-                    text += record.prodLineID + "[" + record.prodReference + "] - 氣泡數：" + record.unitSeedCount + "\n";
+    var datetimeObject;
+    var workingDateString;
+    var shiftObject;
+    var shiftStartDatetime;
+    var shiftEndDatetime;
+    var messageText = {
+        title: "【24小時內氣泡數通報】\n",
+        shiftMessage: []
+    };
+    mssql.connect(config.mssqlConfig)
+        .then(function() {
+            var mssqlRequest = new mssql.Request();
+            var shiftDataQueryPromiseList = [];
+
+            function queryShiftData(startDatetimeString, endDatetimeString) {
+                return mssqlRequest.query(queryString.getSeedCountRecordsBetweenDate(startDatetimeString, endDatetimeString));
+            };
+            for (var loopIndex = 0; loopIndex <= 2; loopIndex++) {
+                datetimeObject = moment(currentDatetimeObject, "YYYY-MM-DD HH:mm:ss");
+                datetimeObject = datetimeObject.subtract((2 - loopIndex) * 8, "hours");
+                workingDateString = shift.getWorkingDateString(datetimeObject.format("YYYY-MM-DD HH:mm:ss"));
+                shiftObject = shift.getShiftObject(datetimeObject.format("YYYY-MM-DD HH:mm:ss"));
+                shiftStartDatetime = shift.getWorkDatetimeString(workingDateString, shiftObject.start);
+                shiftEndDatetime = shift.getWorkDatetimeString(workingDateString, shiftObject.end);
+                messageText.shiftMessage[loopIndex] = "";
+                messageText.shiftMessage[loopIndex] += workingDateString.slice(5, 7) + "/" + workingDateString.slice(8, 10) + " " + shiftObject.cReference + "\n";
+                shiftDataQueryPromiseList[loopIndex] = queryShiftData(shiftStartDatetime, shiftEndDatetime);
+            }
+            shiftDataQueryPromiseList[0]
+                .then(function(recordset) {
+                    recordset.forEach(function(record) {
+                        messageText.shiftMessage[0] += "   " + record.prodLineID + "[" + record.prodReference + "] - 氣泡數：" + record.unitSeedCount + "\n";
+                    });
+                    return shiftDataQueryPromiseList[1];
+                })
+                .then(function(recordset) {
+                    recordset.forEach(function(record) {
+                        messageText.shiftMessage[1] += "   " + record.prodLineID + "[" + record.prodReference + "] - 氣泡數：" + record.unitSeedCount + "\n";
+                    });
+                    return shiftDataQueryPromiseList[2];
+                })
+                .then(function(recordset) {
+                    recordset.forEach(function(record) {
+                        messageText.shiftMessage[2] += "   " + record.prodLineID + "[" + record.prodReference + "] - 氣泡數：" + record.unitSeedCount + "\n";
+                    });
+                    httpRequest({
+                        url: upgiSystem.broadcastUrl,
+                        method: "post",
+                        headers: { "Content-Type": "application/json" },
+                        json: {
+                            "chat_id": 241630569,
+                            "text": messageText.title + messageText.shiftMessage[0] + messageText.shiftMessage[1] + messageText.shiftMessage[2],
+                            "token": telegramBot.getToken("seedCountBot")
+                        }
+                    }, function(error, httpResponse, body) {
+                        if (error || (httpResponse.statusCode !== 200)) {
+                            mssql.close();
+                            console.log("error sending broadcast message: " + error + "\n" + JSON.stringify(body));
+                            return response.status(httpResponse.statusCode).send(error);
+                        } else {
+                            mssql.close();
+                            return response.status(httpResponse.statusCode).end();
+                        }
+                    });
+                })
+                .catch(function(error) {
+                    console.log("query error encountered: " + error);
+                    return response.status(500).send(error);
                 });
-                httpRequest({
-                    url: upgiSystem.broadcastUrl,
-                    method: "post",
-                    headers: { "Content-Type": "application/json" },
-                    json: {
-                        "chat_id": telegramUser.list[0].id,
-                        "text": text,
-                        "token": telegramBot.list[1].token
-                    }
-                }, function(error, response, body) {
-                    if (error) {
-                        console.log("推播作業發生錯誤：" + error);
-                    } else {
-                        console.log("推播作業成功：" + response.statusCode);
-                        console.log("伺服器回覆：" + JSON.stringify(body));
-                    }
-                });
-                mssql.close();
-                return response.status(200);
-            })
-            .catch(function(error) {
-                return response.status(500).send(error);
-            });
-    });
+        })
+        .catch(function(error) {
+            console.log("error connecting to database: " + error);
+            return response.status(500).send("error connecting to database: " + error);
+        });
 });
 
 app.get("/seedCount/api/getRecordCount", function(req, res) { // get the count of how many records is within the queried condition

@@ -65,7 +65,7 @@ function constructSituationTable(dateString) {
     $("#situationTableFooter").append('<th class="text-center dailyAverageField"></th>');
     // proceed to getting actual table data, first get the record count
     var getRecordCount = function() { // promise of ajax function
-        return $.getJSON("./seedCount/api/getRecordCount?workingDate=" + dateString)
+        return $.getJSON("../seedCount/api/getRecordCount?workingDate=" + dateString)
             .then(function(result) {
                 return JSON.parse(result)[0].recordCount;
             }).fail(function() {
@@ -74,7 +74,7 @@ function constructSituationTable(dateString) {
             });
     };
     var getRecordset = function() { // promise of ajax function
-        return $.getJSON("./seedCount/api/getRecordset?workingDate=" + dateString)
+        return $.getJSON("../seedCount/api/getRecordset?workingDate=" + dateString)
             .then(function(recordset) {
                 return (JSON.parse(recordset));
             }).fail(function() {

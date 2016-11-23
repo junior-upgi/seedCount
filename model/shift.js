@@ -87,10 +87,10 @@ function getShiftObject(datetimeString) {
     var datetimeObject = moment(datetimeString, "YYYY-MM-DD HH:mm:ss");
     var workingDate = getWorkingDateString(datetimeObject.format("YYYY-MM-DD HH:mm:ss"));
     var shiftTimePointList = [
-        moment(getWorkDatetimeString(workingDate, list[0].start), "YYYY-MM-DD HH:mm:ss"),
+        moment(getWorkDatetimeString(workingDate, list[0].start), "YYYY-MM-DD HH:mm:ss").subtract(1, "days"),
         moment(getWorkDatetimeString(workingDate, list[1].start), "YYYY-MM-DD HH:mm:ss"),
         moment(getWorkDatetimeString(workingDate, list[2].start), "YYYY-MM-DD HH:mm:ss"),
-        moment(getWorkDatetimeString(workingDate, list[0].start), "YYYY-MM-DD HH:mm:ss").add(1, "days")
+        moment(getWorkDatetimeString(workingDate, list[0].start), "YYYY-MM-DD HH:mm:ss")
     ];
     switch (true) {
         case (datetimeObject.isBefore(shiftTimePointList[3]) &&
@@ -118,7 +118,7 @@ function getWorkingDateString(datetimeString) {
 
 function getWorkDatetimeString(workingDateString, workingTime) {
     if (((workingTime.slice(0, 2) >= 0) && (workingTime.slice(0, 2) <= 7)) &&
-        ((workingTime.slice(3, 5) >= 0) && (workingTime.slice(3, 5) < 30))) {
+        ((workingTime.slice(3, 5) >= 0) && (workingTime.slice(3, 5) <= 30))) {
         return moment(workingDateString + " " + workingTime + ":00", "YYYY-MM-DD HH:mm:ss").add(1, "days").format("YYYY-MM-DD HH:mm:ss");
     } else {
         return moment(workingDateString + " " + workingTime + ":00", "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss");
