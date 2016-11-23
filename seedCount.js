@@ -163,7 +163,7 @@ app.get("/seedCount/api/broadcast/24HourData", function(request, response) {
     var shiftStartDatetime;
     var shiftEndDatetime;
     var messageText = {
-        title: "【24小時內氣泡數通報】\n",
+        title: "【近24小時內氣泡數通報】\n",
         shiftMessage: []
     };
     mssql.connect(config.mssqlConfig)
@@ -388,45 +388,7 @@ app.post("/seedCount/api/insertRecord", upload.any(), function(req, res) { // in
                 console.log("     資料新增發生錯誤：" + error);
                 return res.status(500).send("資料新增發生錯誤： " + error);
             } else {
-                // actions to take after a new entry is made
-                var currentDatetime = moment(moment(), "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss");
-                if (
-                    // now and record time is in the same shift, or
-                    shift.getShiftObject(currentDatetime) === shift.getShiftObject(req.body.recordDatetime) ||
-                    // submitted record time is within 8 hours of current time
-                    (moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").isSameOrAfter(moment(currentDatetime).subtract(8, "hours")))
-                ) {
-                    var averageSeedCount = Math.round((req.body.count_0 + req.body.count_1 + req.body.count_2 + req.body.count_3 + req.body.count_4 + req.body.count_5) / 6 / 10 * req.body.thickness * 100) / 100;
-                    var text = "";
-                    switch (true) { // if average seed count is larger than acceptable level cap
-                        case (averageSeedCount > seedCountLevelCap.setting[2].ceiling):
-                            text = req.body.prodLineID + "[" + req.body.prodReference + "]" + "氣泡狀況" + seedCountLevelCap.setting[3].situation + "！請注意";
-                            break;
-                        case (averageSeedCount > seedCountLevelCap.setting[1].ceiling):
-                            text = req.body.prodLineID + "[" + req.body.prodReference + "]" + "氣泡狀況" + seedCountLevelCap.setting[2].situation + "！請注意";
-                            break;
-                        default:
-                            text = req.body.prodLineID + "[" + req.body.prodReference + "]" + "氣泡狀況正常";
-                            break;
-                    }
-                    httpRequest({
-                        url: upgiSystem.broadcastUrl,
-                        method: "post",
-                        headers: { "Content-Type": "application/json" },
-                        json: {
-                            "chat_id": telegramUser.list[0].id,
-                            "text": text,
-                            "token": telegramBot.list[0].token
-                        }
-                    }, function(error, response, body) {
-                        if (error) {
-                            console.log("     推播作業發生錯誤：" + error);
-                        } else {
-                            console.log("     推播作業成功：" + response.statusCode);
-                            console.log("     伺服器回覆：" + JSON.stringify(body));
-                        }
-                    });
-                }
+                // actions to take after a new entry is made //////////////////////////////
             }
             mssql.close();
             console.log("     " + moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " 氣泡數資料新增成功");
@@ -663,11 +625,13 @@ var scheduledUpdate = new CronJob(seedCountScheduledUpdate.schedule, function() 
         }
     });
 }, null, true, shift.workingTimezone);
+//scheduledUpdate.start();
 
 app.listen(config.serverPort); // start server
 console.log("氣泡數監測系統伺服器服務運行中... (" + config.serverHost + ":" + config.serverPort + ")");
-//scheduledUpdate.start();
 
+/*
+// used to check shift and time relationship values can be produced correctly
 console.log(shift.getWorkDatetimeString("2016-11-23", "07:30"));
 console.log(shift.getWorkDatetimeString("2016-11-23", "07:40"));
 console.log(shift.getWorkDatetimeString("2016-11-23", "15:30"));
@@ -697,3 +661,4 @@ console.log(shift.getShiftObject("2016-11-23 23:40").cReference);
 console.log(shift.getShiftObject("2016-11-24 00:00").cReference);
 console.log(shift.getShiftObject("2016-11-24 00:30").cReference);
 console.log(shift.getShiftObject("2016-11-24 07:30").cReference);
+*/
