@@ -428,4 +428,4 @@ var scheduledUpdate = new CronJob(seedCountScheduledUpdate.schedule, function() 
         }
     });
 }, null, true, shift.workingTimezone);
-scheduledUpdate.start();
+//scheduledUpdate.start();
