@@ -6,6 +6,7 @@ var buttonInaccessibleCounterUpperLimit = 5; //控制計數器的停用時間長
 function autoRefresh() {
     var now;
     setInterval(function() {
+        surveyBroadcastServerStatus();
         now = moment(moment(), "YYYY-MM-DD HH:mm:ss");
         //every second decrease the buttonInaccessibleCount by 1
         decreaseInaccessibleCounter(1);
@@ -26,6 +27,22 @@ function autoRefresh() {
         //update the clock banner
         $("#clockBanner").text(now.format("YYYY-MM-DD HH:mm:ss"));
     }, 1000);
+};
+
+function surveyBroadcastServerStatus() {
+    $.ajax({
+        url: telegramStatusUrl,
+        type: "get",
+        success: function(data) {
+            $("button#broadcast24HourData").show();
+            $("button#broadcastShiftData").show();
+        },
+        error: function(data) {
+            $("button#broadcast24HourData").hide();
+            $("button#broadcastShiftData").hide();
+        }
+    });
+    return;
 };
 
 function switchToDate() {

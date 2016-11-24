@@ -41,8 +41,8 @@
                     <button id="todayButton" type="button" class="subjectToAccessControl btn btn-default btn-xs navigation" onclick="today()" disabled>返回今日</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                     <input id="designatedDate" type="date" class="input-xs" />
                     <button id="switchDateButton" type="button" class="subjectToAccessControl btn btn-default btn-xs navigation" onclick="switchToDate()" disabled>指定日期檢視</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                    <button type="button" class="subjectToAccessControl btn btn-default btn-xs" onclick="manualBroadcast24HourData()">發佈24小時內狀況</button>
-                    <button type="button" class="subjectToAccessControl btn btn-default btn-xs" onclick="manualBroadcastShiftData()">發佈目前班次狀況</button>
+                    <button id="broadcast24HourData" type="button" class="subjectToAccessControl btn btn-default btn-xs" onclick="manualBroadcast24HourData()">發佈24小時內狀況</button>
+                    <button id="broadcastShiftData" type="button" class="subjectToAccessControl btn btn-default btn-xs" onclick="manualBroadcastShiftData()">發佈目前班次狀況</button>
                     <h3><span id="workingDateBanner"></span>&nbsp;氣泡數統計資料</h3>
                 </caption>
                 <thead>
@@ -73,6 +73,7 @@
     var shiftList;
     var facilityList;
     var seedCountLevelCap;
+    var telegramStatusUrl;
 
     $.when(
         $.get("../seedCount/api/getConfigData"),
@@ -84,6 +85,7 @@
         $.get("../seedCount/api/getFacilityData"),
         $.get("../seedCount/api/getSeedCountLevelCapData")
     ).done(function(configData, workingDateString, prodLineData, shiftData, facilityData, seedCountLevelCapSetting) {
+        telegramStatusUrl = configData[0].telegramStatusUrl;
         workingTimezone = configData[0].workingTimezone;
         seedCountSituationTableSetting = configData[0].seedCountSituationTableSetting;
         workingDate = workingDateString[0];
@@ -107,6 +109,7 @@
             $.get("../seedCount/api/getFacilityData"),
             $.get("../seedCount/api/getSeedCountLevelCapData")
         ).done(function(configData, prodLineData, shiftData, facilityData, seedCountLevelCapSetting) {
+            telegramStatusUrl = configData[0].telegramStatusUrl;
             workingTimezone = configData[0].workingTimezone;
             seedCountSituationTableSetting = configData[0].seedCountSituationTableSetting;
             $("input#designatedDate").val(workingDate);

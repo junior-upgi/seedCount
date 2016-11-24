@@ -69,6 +69,9 @@ app.get("/seedCount/api/getConfigData", function(request, response) {
         workingTimezone: config.workingTimezone,
         serverHost: config.serverHost,
         serverPort: config.serverPort,
+        telegramStatusUrl: telegram.statusUrl,
+        broadcastServerHost: config.broadcastServerHost,
+        broadcastServerPort: config.broadcastServerPort,
         seedCountSituationTableSetting: {
             hideProdReferenceColumn: upgiSystem.list[2].setting.hideProdReferenceColumn,
             hideTimePointColumn: upgiSystem.list[2].setting.hideTimePointColumn,
