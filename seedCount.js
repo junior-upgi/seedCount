@@ -394,16 +394,52 @@ app.post("/seedCount/api/insertRecord", upload.any(), function(req, res) { // in
             req.body.count_0, req.body.count_1, req.body.count_2,
             req.body.count_3, req.body.count_4, req.body.count_5,
             req.body.note, photoLocation, req.body.created, req.body.modified);
-        console.log("SQL query:\n" + insertQueryString);
+        console.log("SQL query: " + insertQueryString);
         // insert data
         mssqlRequest.query(insertQueryString, function(error) {
             if (error) {
                 console.log("error inserting new record: " + error);
                 return res.status(500).send("error inserting new record: " + error);
             } else {
-                // actions to take after a new entry is made //////////////////////////////
                 // check if this record entry is within 1 shift of current time
-                //var currentDatetimeObject=moment(moment(),"YYYY-MM-DD HH:mm:ss")
+                var unitSeedCount = Math.round(((parseInt(req.body.count_0) + parseInt(req.body.count_1) + parseInt(req.body.count_2) + parseInt(req.body.count_3) + parseInt(req.body.count_4) + parseInt(req.body.count_5)) / 6 * (10 / Number(req.body.thickness))) * 100) / 100;
+                if (unitSeedCount >= seedCountLevelCap.setting[2].ceiling) {
+                    var currentDatetimeObject = moment(moment(), "YYYY-MM-DD HH:mm:ss");
+                    var datetimeObject = moment(currentDatetimeObject, "YYYY-MM-DD HH:mm:ss").subtract(8, "hours");
+                    var workingDateString = shift.getWorkingDateString(datetimeObject.format("YYYY-MM-DD HH:mm:ss"));
+                    var previousShiftObject = shift.getShiftObject(datetimeObject.format("YYYY-MM-DD HH:mm:ss"));
+                    var previousShiftStartDatetime = shift.getWorkDatetimeString(workingDateString, previousShiftObject.start);
+                    if (moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").isSameOrAfter(previousShiftStartDatetime)) {
+                        var messageText = "氣泡數異常通知 - " +
+                            shift.getWorkingDateString(req.body.recordDatetime).slice(5, 7) + "/" +
+                            shift.getWorkingDateString(req.body.recordDatetime).slice(8) + " " +
+                            shift.getShiftObject(
+                                moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss")).cReference + " " +
+                            req.body.prodLineID + "[" + req.body.prodReference + "] 氣泡數 " + unitSeedCount + "，請業務確認品質接受度。";
+                        httpRequest({
+                            url: upgiSystem.broadcastUrl,
+                            method: "post",
+                            headers: { "Content-Type": "application/json" },
+                            json: {
+                                "chat_id": telegramChat.getChatID("業務群組"),
+                                "text": messageText,
+                                "token": telegramBot.getToken("seedCountBot")
+                            }
+                        }, function(error, httpResponse, body) {
+                            if (error || (httpResponse.statusCode !== 200)) {
+                                mssql.close();
+                                console.log(moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " new data entry inserted successfully");
+                                console.log("seed count irregularity broadcasting failure: " + error + "\n" + JSON.stringify(body));
+                                return res.status(httpResponse.statusCode).send(error);
+                            } else {
+                                mssql.close();
+                                console.log(moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " new data entry inserted successfully");
+                                console.log("seed count irregularity message broadcasted");
+                                return res.status(httpResponse.statusCode).end();
+                            }
+                        });
+                    }
+                }
             }
             mssql.close();
             console.log(moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " new data entry inserted successfully");
