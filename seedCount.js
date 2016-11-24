@@ -47,9 +47,6 @@ if (fileStructureValidated !== true) {
     console.log("glass image being served... (" + config.serverHost + ":" + config.serverPort + "/" + seedImageDirectory + ")");
 }
 
-app.listen(config.serverPort); // start server
-console.log("seedCount monitor server in operation... (" + config.serverHost + ":" + config.serverPort + ")");
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get("/seedCount/index", function(request, response) { // serve front page
     return response.status(200).sendFile(__dirname + "/frontend/index.html");
 });
@@ -522,3 +519,6 @@ app.post("/seedCount/api/deleteRecord", urlencodedParser, function(req, res) { /
         });
     });
 });
+
+app.listen(config.serverPort); // start server
+console.log("seedCount monitor server in operation... (" + config.serverHost + ":" + config.serverPort + ")");
