@@ -124,3 +124,36 @@ module.exports = {
     getWorkingDateString,
     getWorkDatetimeString
 };
+
+/*
+// used to check shift and time relationship values can be produced correctly
+console.log(getWorkDatetimeString("2016-11-23", "07:30"));
+console.log(getWorkDatetimeString("2016-11-23", "07:40"));
+console.log(getWorkDatetimeString("2016-11-23", "15:30"));
+console.log(getWorkDatetimeString("2016-11-23", "15:40"));
+console.log(getWorkDatetimeString("2016-11-23", "23:30"));
+console.log(getWorkDatetimeString("2016-11-23", "23:40"));
+console.log(getWorkDatetimeString("2016-11-23", "00:00"));
+console.log(getWorkDatetimeString("2016-11-23", "00:30"));
+console.log(getWorkDatetimeString("2016-11-24", "07:30"));
+console.log("==============================================================");
+console.log(getWorkingDateString("2016-11-23 07:30"));
+console.log(getWorkingDateString("2016-11-23 07:40"));
+console.log(getWorkingDateString("2016-11-23 15:30"));
+console.log(getWorkingDateString("2016-11-23 15:40"));
+console.log(getWorkingDateString("2016-11-23 23:30"));
+console.log(getWorkingDateString("2016-11-23 23:40"));
+console.log(getWorkingDateString("2016-11-24 00:00"));
+console.log(getWorkingDateString("2016-11-24 00:30"));
+console.log(getWorkingDateString("2016-11-24 07:30"));
+console.log("==============================================================");
+console.log(getShiftObject("2016-11-23 07:30").cReference);
+console.log(getShiftObject("2016-11-23 07:40").cReference);
+console.log(getShiftObject("2016-11-23 15:30").cReference);
+console.log(getShiftObject("2016-11-23 15:40").cReference);
+console.log(getShiftObject("2016-11-23 23:30").cReference);
+console.log(getShiftObject("2016-11-23 23:40").cReference);
+console.log(getShiftObject("2016-11-24 00:00").cReference);
+console.log(getShiftObject("2016-11-24 00:30").cReference);
+console.log(getShiftObject("2016-11-24 07:30").cReference);
+*/

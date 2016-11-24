@@ -67,11 +67,11 @@ app.get("/seedCount/mobileEntry", function(request, response) { // serve mobile 
 app.get("/seedCount/api/getConfigData", function(request, response) {
     return response.status(200).json({
         workingTimezone: config.workingTimezone,
-        serverHost: config.serverHost,
-        serverPort: config.serverPort,
+        //serverHost: config.serverHost,
+        //serverPort: config.serverPort,
         telegramStatusUrl: telegram.statusUrl,
-        broadcastServerHost: config.broadcastServerHost,
-        broadcastServerPort: config.broadcastServerPort,
+        //broadcastServerHost: config.broadcastServerHost,
+        //broadcastServerPort: config.broadcastServerPort,
         seedCountSituationTableSetting: {
             hideProdReferenceColumn: upgiSystem.list[2].setting.hideProdReferenceColumn,
             hideTimePointColumn: upgiSystem.list[2].setting.hideTimePointColumn,
@@ -522,36 +522,3 @@ app.post("/seedCount/api/deleteRecord", urlencodedParser, function(req, res) { /
         });
     });
 });
-
-/*
-// used to check shift and time relationship values can be produced correctly
-console.log(shift.getWorkDatetimeString("2016-11-23", "07:30"));
-console.log(shift.getWorkDatetimeString("2016-11-23", "07:40"));
-console.log(shift.getWorkDatetimeString("2016-11-23", "15:30"));
-console.log(shift.getWorkDatetimeString("2016-11-23", "15:40"));
-console.log(shift.getWorkDatetimeString("2016-11-23", "23:30"));
-console.log(shift.getWorkDatetimeString("2016-11-23", "23:40"));
-console.log(shift.getWorkDatetimeString("2016-11-23", "00:00"));
-console.log(shift.getWorkDatetimeString("2016-11-23", "00:30"));
-console.log(shift.getWorkDatetimeString("2016-11-24", "07:30"));
-console.log("==============================================================");
-console.log(shift.getWorkingDateString("2016-11-23 07:30"));
-console.log(shift.getWorkingDateString("2016-11-23 07:40"));
-console.log(shift.getWorkingDateString("2016-11-23 15:30"));
-console.log(shift.getWorkingDateString("2016-11-23 15:40"));
-console.log(shift.getWorkingDateString("2016-11-23 23:30"));
-console.log(shift.getWorkingDateString("2016-11-23 23:40"));
-console.log(shift.getWorkingDateString("2016-11-24 00:00"));
-console.log(shift.getWorkingDateString("2016-11-24 00:30"));
-console.log(shift.getWorkingDateString("2016-11-24 07:30"));
-console.log("==============================================================");
-console.log(shift.getShiftObject("2016-11-23 07:30").cReference);
-console.log(shift.getShiftObject("2016-11-23 07:40").cReference);
-console.log(shift.getShiftObject("2016-11-23 15:30").cReference);
-console.log(shift.getShiftObject("2016-11-23 15:40").cReference);
-console.log(shift.getShiftObject("2016-11-23 23:30").cReference);
-console.log(shift.getShiftObject("2016-11-23 23:40").cReference);
-console.log(shift.getShiftObject("2016-11-24 00:00").cReference);
-console.log(shift.getShiftObject("2016-11-24 00:30").cReference);
-console.log(shift.getShiftObject("2016-11-24 07:30").cReference);
-*/

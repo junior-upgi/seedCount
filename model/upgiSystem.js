@@ -5,7 +5,6 @@ var telegramChat = require("./telegramChat.js");
 var telegramUser = require("./telegramUser.js");
 
 var broadcastUrl = config.broadcastServerHost + ":" + config.broadcastServerPort + "/broadcast";
-//var broadcastUrl = "http://192.168.168.25:9001/broadcast";
 
 var list = [{
     id: "wasteReduction",
