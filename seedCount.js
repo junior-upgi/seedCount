@@ -9,6 +9,7 @@ var moment = require("moment-timezone");
 var mssql = require("mssql");
 var multer = require("multer");
 var httpRequest = require("request");
+var uniq = require("lodash.uniq");
 
 var config = require("./config.js");
 var shift = require("./model/shift.js");
@@ -66,11 +67,7 @@ app.get("/seedCount/mobileEntry", function(request, response) { // serve mobile 
 app.get("/seedCount/api/getConfigData", function(request, response) {
     return response.status(200).json({
         workingTimezone: config.workingTimezone,
-        //serverHost: config.serverHost,
-        //serverPort: config.serverPort,
         telegramStatusUrl: telegram.statusUrl,
-        //broadcastServerHost: config.broadcastServerHost,
-        //broadcastServerPort: config.broadcastServerPort,
         seedCountSituationTableSetting: {
             hideProdReferenceColumn: upgiSystem.list[2].setting.hideProdReferenceColumn,
             hideTimePointColumn: upgiSystem.list[2].setting.hideTimePointColumn,
@@ -118,6 +115,7 @@ app.get("/seedCount/api/broadcast/shiftData", function(request, response) {
         workingDateString.slice(5, 7) + "/" +
         workingDateString.slice(8, 10) + " " +
         shiftObject.cReference + "氣泡數通報】\n";
+    var broadcastedDatetimeList = []; // to hold an array of broadcasted datetimes
     mssql.connect(config.mssqlConfig)
         .then(function() {
             var mssqlRequest = new mssql.Request();
@@ -129,11 +127,14 @@ app.get("/seedCount/api/broadcast/shiftData", function(request, response) {
                             messageText += "   " + record.prodLineID + "[" +
                                 record.prodReference + "] - 氣泡數：" +
                                 seedCountLevelCap.applyHtmlColor(Math.round(record.unitSeedCount * 100) / 100) + "\n";
+                            broadcastedDatetimeList.push(moment(record.recordDatetime, "YYYY-MM-DD HH:mm:ss").utcOffset(0).format("YYYY-MM-DD HH:mm:ss")); // add the recordDatetime to the list
                         });
                     } else {
                         messageText += "未建立資料";
                     }
-                    httpRequest({
+                    broadcastedDatetimeList = uniq(broadcastedDatetimeList); // remove duplicates
+                    console.log(broadcastedDatetimeList); ///////////////////////////////////////////////
+                    httpRequest({ // send broadcast of current shift data
                         url: upgiSystem.broadcastUrl,
                         method: "post",
                         headers: { "Content-Type": "application/json" },
@@ -143,17 +144,47 @@ app.get("/seedCount/api/broadcast/shiftData", function(request, response) {
                             "token": telegramBot.getToken("seedCountBot")
                         }
                     }, function(error, httpResponse, body) {
-                        if (error || (httpResponse.statusCode !== 200)) {
+                        if (error || (httpResponse.statusCode !== 200)) { // broadcast unsuccessful
                             mssql.close();
                             console.log("error sending broadcast message: " + error + "\n" + JSON.stringify(body));
                             return response.status(httpResponse.statusCode).send(error);
-                        } else {
-                            mssql.close();
-                            return response.status(httpResponse.statusCode).end();
+                        } else { // successful continue to make record of the broadcast
+                            broadcastedDatetimeList.forEach(function(broadcastedDatetime) {
+                                // update broadcast time if existing
+                                mssqlRequest.query(queryString.updateBroadcastRecord(broadcastedDatetime, datetimeObject.format("YYYY-MM-DD HH:mm:ss")), function(error) {
+                                    if (error) {
+                                        mssql.close();
+                                        console.log("updateBroadcastRecord() failure: " + error);
+                                        return response.status(500).send("updateBroadcastRecord() failure: " + error);
+                                    }
+                                    // query if broadcasted status is available
+                                    mssqlRequest.query(queryString.getBroadcastRecordCount(broadcastedDatetime), function(error, data) {
+                                        if (error) {
+                                            mssql.close();
+                                            console.log("getBroadcastRecordCount() failure: " + error);
+                                            return response.status(500).send("getBroadcastRecordCount() failure: " + error);
+                                        }
+                                        if (data[0].recordCount === 0) {
+                                            // if doesn't exist, insert a record to indicat
+                                            mssqlRequest.query(queryString.insertBroadcastRecord(broadcastedDatetime, datetimeObject.format("YYYY-MM-DD HH:mm:ss")), function(error) {
+                                                if (error) {
+                                                    mssql.close();
+                                                    console.log("insertBroadcastRecord() failure: " + error);
+                                                    return response.status(500).send("insertBroadcastRecord() failure: " + error);
+                                                }
+                                                mssql.close();
+                                                return response.status(200).end();
+                                            });
+                                        } else {
+                                            mssql.close();
+                                            return response.status(200).end();
+                                        }
+                                    });
+                                });
+                            });
                         }
                     });
-                })
-                .catch(function(error) {
+                }).catch(function(error) {
                     console.log("query error encountered: " + error);
                     return response.status(500).send(error);
                 });
@@ -411,7 +442,8 @@ app.post("/seedCount/api/insertRecord", upload.any(), function(req, res) { // in
             return res.status(500).send("database connection failure: " + error);
         }
         var mssqlRequest = new mssql.Request();
-        var insertQueryString = queryString.insertRecord(req.body.recordDatetime, req.body.prodFacilityID, req.body.prodLineID,
+        var insertQueryString = queryString.insertRecord(
+            req.body.recordDatetime, req.body.prodFacilityID, req.body.prodLineID,
             req.body.prodReference, req.body.thickness,
             req.body.count_0, req.body.count_1, req.body.count_2,
             req.body.count_3, req.body.count_4, req.body.count_5,
@@ -553,7 +585,7 @@ app.post("/seedCount/api/deleteRecord", urlencodedParser, function(req, res) { /
                             if (error) {
                                 mssql.close();
                                 console.log("error encountered while deleting record: " + error);
-                                res.status(500).send("error encountered while deleting record: " + error).end();
+                                return res.status(500).send("error encountered while deleting record: " + error);
                             }
                             mssql.close();
                             console.log("record deleted");
@@ -568,9 +600,16 @@ app.post("/seedCount/api/deleteRecord", urlencodedParser, function(req, res) { /
                             console.log("record delete failure: " + error);
                             return res.status(500).send("record delete failure: " + error);
                         }
-                        mssql.close();
-                        console.log("record deleted");
-                        return res.status(200).send("record deleted");
+                        mssqlRequest.query(queryString.deleteBroadcastRecord(req.body.recordDatetime), function(error) {
+                            if (error) {
+                                mssql.close();
+                                console.log("deleteBroadcastRecord() failure: " + error);
+                                return res.status(500).send("deleteBroadcastRecord() failure: " + error);
+                            }
+                            mssql.close();
+                            console.log("record deleted");
+                            return res.status(200).send("record deleted");
+                        });
                     });
                 }
             }

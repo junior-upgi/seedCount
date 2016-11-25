@@ -28,6 +28,22 @@ function updateRecord(recordDatetime, prodFacilityID, prodLineID, prodReference,
     return "UPDATE productionHistory.dbo.seedCount SET " + "prodReference='" + prodReference + "',thickness=" + thickness + ",count_0=" + count_0 + ",count_1=" + count_1 + ",count_2=" + count_2 + ",count_3=" + count_3 + ",count_4=" + count_4 + ",count_5=" + count_5 + ",note=" + (note === "" ? "NULL" : "'" + note + "'") + ",photoLocation=" + (photoLocation === "NULL" ? "NULL" : "'" + photoLocation + "'") + ",modified='" + modified + "' WHERE " + "recordDatetime='" + recordDatetime + "' AND prodFacilityID='" + prodFacilityID + "' AND prodLineID='" + prodLineID + "';";
 };
 
+function updateBroadcastRecord(recordDatetimeString, broadcastDatetimeString) {
+    return "UPDATE productionHistory.dbo.seedCountBroadcastRecord SET broadcastDatetime='" + broadcastDatetimeString + "' WHERE recordDatetime='" + recordDatetimeString + "';";
+};
+
+function getBroadcastRecordCount(recordDatetimeString) {
+    return "SELECT COUNT(*) AS recordCount FROM productionHistory.dbo.seedCountBroadcastRecord WHERE recordDatetime='" + recordDatetimeString + "';";
+};
+
+function insertBroadcastRecord(recordDatetimeString, broadcastDatetimeString) {
+    return "INSERT INTO productionHistory.dbo.seedCountBroadcastRecord VALUES('" + recordDatetimeString + "','" + broadcastDatetimeString + "');";
+};
+
+function deleteBroadcastRecord(recordDatetimeString) {
+    return "DELETE FROM productionHistory.dbo.seedCountBroadcastRecord WHERE recordDatetime='" + recordDatetimeString + "';";
+};
+
 module.exports = {
     deleteRecord,
     getBroadcastRecord,
@@ -35,5 +51,9 @@ module.exports = {
     getRecordCount,
     getSeedCountRecordsBetweenDate,
     insertRecord,
-    updateRecord
+    updateRecord,
+    updateBroadcastRecord,
+    getBroadcastRecordCount,
+    insertBroadcastRecord,
+    deleteBroadcastRecord
 };

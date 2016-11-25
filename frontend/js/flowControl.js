@@ -38,7 +38,7 @@ function updateBroadcastRecord() {
                 $("span.broadcastIndicator." + trimmedTimePoint).removeClass("hidden");
             });
         });
-    }, 5000);
+    }, 60000);
     return;
 };
 
