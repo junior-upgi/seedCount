@@ -23,7 +23,9 @@ function constructSituationTable(dateString) {
                 '<td class="processing prodReferenceField"></td>' +
                 '</tr>');
             $("tr.processing").addClass(shift.reference + ' ' + inspectTimePoint.trimmedTimePoint);
-            $("td.processing.shiftField").html(shift.cReference).addClass("text-center " + shift.reference + ' ' + inspectTimePoint.trimmedTimePoint);
+            $("td.processing.shiftField").html(shift.cReference)
+                .addClass("text-center " + shift.reference + ' ' + inspectTimePoint.trimmedTimePoint)
+                .append('<span class="glyphicon glyphicon-phone broadcastIndicator ' + inspectTimePoint.trimmedTimePoint + ' hidden"></span>');
             $("td.processing.timePointField").html(inspectTimePoint.trimmedTimePoint).addClass("text-center " + shift.reference + ' ' + inspectTimePoint.trimmedTimePoint);
             $("td.processing.prodReferenceField").addClass("text-center " + shift.reference + ' ' + inspectTimePoint.trimmedTimePoint);
             //review the shiftList for items with hidden property of true, add a 'preventDisplay' class

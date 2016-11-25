@@ -1,5 +1,6 @@
 "use strict";
 
+var cors = require("cors");
 var bodyParser = require("body-parser");
 var fs = require("fs");
 var express = require("express");
@@ -23,6 +24,7 @@ var queryString = require("./model/queryString");
 
 var app = express();
 app.set("view engine", "ejs");
+app.use(cors()); // allow cross origin request
 app.use(morgan("dev")); // log request and result to console
 app.use(bodyParser.urlencoded({ extended: true })); // parse application/x-www-form-urlencoded
 var urlencodedParser = bodyParser.urlencoded({ extended: true });
@@ -274,6 +276,26 @@ app.get("/seedCount/api/broadcast/24HourData", function(request, response) {
             console.log("error connecting to database: " + error);
             return response.status(500).send("error connecting to database: " + error);
         });
+});
+
+app.get("/seedCount/api/getRecentBroadcastRecord", function(request, response) { // get broadcast record for the 48 hours
+    mssql.connect(config.mssqlConfig, function(error) {
+        if (error) {
+            console.log("database connection error: " + error);
+            return response.status(500).send("database connection error: " + error);
+        }
+        var mssqlRequest = new mssql.Request();
+        var startDatetime = request.query.workingDate + " 07:30:00";
+        var endDatetime = moment(startDatetime, "YYYY-MM-DD HH:mm:ss").add(1, "days").format("YYYY-MM-DD HH:mm:ss");
+        mssqlRequest.query(queryString.getBroadcastRecord(startDatetime, endDatetime), function(error, resultset) {
+            if (error) {
+                console.log("unable to query dbo.seedCountBroadcastRecord data, returning empty recordset" + error);
+                return response.status(500).send("[]");
+            }
+            mssql.close();
+            return response.status(200).json(JSON.stringify(resultset));
+        });
+    });
 });
 
 app.get("/seedCount/api/getRecordCount", function(req, res) { // get the count of how many records is within the queried condition [FIXED]

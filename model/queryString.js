@@ -4,6 +4,10 @@ function deleteRecord(recordDatetime, prodFacilityID, prodLineID) {
     return "DELETE FROM productionHistory.dbo.seedCount WHERE " + "recordDatetime='" + recordDatetime + "' AND " + "prodFacilityID='" + prodFacilityID + "' AND " + "prodLineID='" + prodLineID + "';";
 };
 
+function getBroadcastRecord(startDatetimeString, endDatetimeString) {
+    return "SELECT * FROM productionHistory.dbo.seedCountBroadcastRecord WHERE recordDatetime BETWEEN '" + startDatetimeString + "' AND '" + endDatetimeString + "' ORDER BY recordDatetime DESC;";
+};
+
 function getRecord(recordDatetime, prodFacilityID, prodLineID) {
     return "SELECT photoLocation FROM productionHistory.dbo.seedCount WHERE " + "recordDatetime='" + recordDatetime + "' AND " + "prodFacilityID='" + prodFacilityID + "' AND " + "prodLineID='" + prodLineID + "';";
 };
@@ -26,6 +30,7 @@ function updateRecord(recordDatetime, prodFacilityID, prodLineID, prodReference,
 
 module.exports = {
     deleteRecord,
+    getBroadcastRecord,
     getRecord,
     getRecordCount,
     getSeedCountRecordsBetweenDate,
