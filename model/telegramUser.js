@@ -214,10 +214,10 @@ var list = [{
     joinedGroupList: [],
     upgEmployeeID: "99040008"
 }, {
-    id: undefined,
+    id: 295200881,
     username: "UPGChristina",
-    first_name: "Chi-Chieh",
-    last_name: "Lin",
+    first_name: "綺緁",
+    last_name: "林",
     status: ["user"],
     joinedGroupList: [],
     upgEmployeeID: "14060007"
