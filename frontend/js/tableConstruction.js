@@ -131,6 +131,17 @@ function populateSituationTable(seedCountRecordSet) {
             }
         });
     });
+    // grab data from dbo.seedCountBroadcastRecord
+    $.get("http://upgi.ddns.net:9002/seedCount/api/getRecentBroadcastRecord?workingDate=" + workingDate, function(recordset) {
+        var broadcastRecordList = JSON.parse(recordset);
+        // loop through each record in recordset
+        broadcastRecordList.forEach(function(broadcastRecord) {
+            // turn time string into trimmed format, eg. 10:00 => 1000
+            var trimmedTimePoint = moment(broadcastRecord.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("HHmm");
+            // match the record in the display table, and show the phone glyph icon to indicate it's broadcasted
+            $("span.broadcastIndicator." + trimmedTimePoint).removeClass("hidden");
+        });
+    });
     // calculate the summary column data
     $.each(prodLineList, function(index, prodLine) { // cycle through each production line (每線當日平均)
         var validEntryCount = 0,

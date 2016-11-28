@@ -29,6 +29,8 @@ function autoRefresh() {
     }, 1000);
 };
 
+/*
+// deprecated, to be removed if not other issues are experienced
 function updateBroadcastRecord() {
     setInterval(function() {
         $.get("http://upgi.ddns.net:9002/seedCount/api/getRecentBroadcastRecord?workingDate=" + workingDate, function(recordset) {
@@ -40,7 +42,7 @@ function updateBroadcastRecord() {
         });
     }, 60000);
     return;
-};
+};*/
 
 function surveyBroadcastServerStatus() {
     $.ajax({
