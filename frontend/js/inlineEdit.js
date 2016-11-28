@@ -5,6 +5,7 @@ var editMode = false;
 var editModeInProgress = false;
 
 //add click-n-edit/insert functionality to seedCountField cells
+//$("td.seedCountField").on("click", function() {
 $(document).on("click", "td.seedCountField", function() {
     if ((editMode === true) && (editModeInProgress === false)) {
         var workingCell = $(this);

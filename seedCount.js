@@ -9,6 +9,8 @@ var moment = require("moment-timezone");
 var mssql = require("mssql");
 var multer = require("multer");
 var httpRequest = require("request");
+var filter = require("lodash.filter");
+var map = require("lodash.map");
 var uniq = require("lodash.uniq");
 
 var config = require("./config.js");
@@ -614,6 +616,58 @@ app.post("/seedCount/api/deleteRecord", urlencodedParser, function(req, res) { /
                 }
             }
         });
+    });
+});
+
+app.get("/seedCount/api/dailySeedCountSummaryByProdLine", function(request, response) { // provide chart data
+    console.log("\n/seedCount/api/dailySeedCountSummaryByProdLine");
+    var workingDate = new Date(request.query.workingDate);
+    var workingYear = workingDate.getUTCFullYear();
+    var workingMonth = workingDate.getUTCMonth() + 1;
+    var lastDateOfMonth = moment(new Date(workingYear, workingMonth, 0)).format("D");
+    mssql.connect(config.mssqlConfig, function(error) {
+        if (error) {
+            console.log("database connection failure: " + error);
+            return res.status(500).send("database connection failure: " + error);
+        }
+        var mssqlRequest = new mssql.Request();
+        mssqlRequest.query(queryString.getDailySeedCountSummaryByProdLine(workingYear, workingMonth))
+            .then(function(recordset) {
+                mssql.close();
+                var chartData = {
+                    labels: [],
+                    datasets: []
+                };
+                for (var loopIndex = 1; loopIndex <= lastDateOfMonth; loopIndex++) { // create labels for chart (days existed in the workingMonth)
+                    chartData.labels.push(loopIndex);
+                }
+                prodLine.list.forEach(function(prodLineObject, index) { // loop through each production line
+                    var prodLineDataset = { // create a temporary object to hold data
+                        label: "",
+                        data: []
+                    };
+                    prodLineDataset.label = prodLineObject.reference + " 每日平均"; // generate title for temporary data object
+                    for (var loopIndex = 0; loopIndex < lastDateOfMonth; loopIndex++) { // loop through each day of the workingMonth
+                        // map data into temporary variable, if data does not exist for the particular day, add a undefined place holder
+                        if (filter(recordset, function(record) {
+                                return ((record.prodLineID === prodLineObject.reference) && (record.day === loopIndex + 1));
+                            })[0]) {
+                            prodLineDataset.data.push(filter(recordset, function(record) {
+                                return ((record.prodLineID === prodLineObject.reference) && (record.day === loopIndex + 1));
+                            })[0].avgUnitSeedCount);
+                        } else {
+                            prodLineDataset.data.push(undefined);
+                        }
+                    }
+                    chartData.datasets.push(prodLineDataset); // push data for one production line into the dataset
+                });
+                return response.status(200).json(chartData); // return the dataset after everything is complete
+            })
+            .catch(function(error) {
+                mssql.close();
+                console.log("failure running getDailySeedCountSummaryByProdLine() query, returning empty recordset: " + error);
+                return response.status(500).json("[]");
+            });
     });
 });
 

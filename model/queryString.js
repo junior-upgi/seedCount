@@ -44,6 +44,10 @@ function deleteBroadcastRecord(recordDatetimeString) {
     return "DELETE FROM productionHistory.dbo.seedCountBroadcastRecord WHERE recordDatetime='" + recordDatetimeString + "';";
 };
 
+function getDailySeedCountSummaryByProdLine(year, month) {
+    return "SELECT * FROM productionHistory.dbo.dailySeedCountSummaryByProdLine WHERE year=" + year + " AND month=" + month + " ORDER BY prodLineID,year,month,day;";
+};
+
 module.exports = {
     deleteRecord,
     getBroadcastRecord,
@@ -55,5 +59,6 @@ module.exports = {
     updateBroadcastRecord,
     getBroadcastRecordCount,
     insertBroadcastRecord,
-    deleteBroadcastRecord
+    deleteBroadcastRecord,
+    getDailySeedCountSummaryByProdLine
 };
