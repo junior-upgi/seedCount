@@ -268,3 +268,9 @@ var dailySummaryByProdLineChart = new Chart($("#dailySummaryByProdLineChart"), {
     data: data
 });
 */
+
+function constructSummaryChart(dateString) {
+    $.get("../seedCount/api/dailySeedCountSummaryByProdLine?workingDate=" + dateString, function(resultset) {
+        console.log(resultset);
+    });
+};
