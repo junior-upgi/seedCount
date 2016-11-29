@@ -757,7 +757,7 @@ var monthlyJob = new CronJob("0 0 10 1 * *", function() { // 每月一號早上1
         from: "氣泡數監測系統 <junior@upgi.com.tw>",
         to: "junior@upgi.com.tw, shuhua.lee@upgi.com.tw",
         subject: workingYear + " 年度氣泡數資料 " + workingMonth + " 月定期備份",
-        text: workingYear + " 年度氣泡數資料 " + workingMonth + " 月定期備份如附件，請查收",
+        text: workingYear + " 年度氣泡數資料 " + workingMonth + " 月定期備份如附件，請查收並妥善保存。謝謝",
         attachments: [{ path: "./" + workingYear + "-" + workingMonth + "氣泡數備份資料.xlsx" }]
     };
 
