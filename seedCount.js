@@ -620,10 +620,6 @@ app.get("/seedCount/api/dailySeedCountSummaryByProdLine", function(request, resp
                         chartData.labels.push(loopIndex);
                     }
                     prodLine.list.forEach(function(prodLineObject) { // loop through each production line
-                        /*var prodLineDataset = { // create a temporary object to hold data
-                            label: "",
-                            data: []
-                        };*/
                         var prodLineDataset = prodLineObject.lineGraphProperty;
                         prodLineDataset.label = "";
                         prodLineDataset.data = [];
@@ -642,6 +638,69 @@ app.get("/seedCount/api/dailySeedCountSummaryByProdLine", function(request, resp
                         }
                         chartData.datasets.push(prodLineDataset); // push data for one production line into the dataset
                     });
+                    return response.status(200).json(chartData); // return the dataset after everything is complete
+                })
+                .catch(function(error) {
+                    console.log("failure running getDailySeedCountSummaryByProdLine() query, returning empty recordset: " + error);
+                    return response.status(500).json("[]");
+                });
+        })
+        .catch(function(error) {
+            console.log("database connection failure: " + error);
+            return response.status(500).send("database connection failure: " + error);
+        });
+});
+
+app.get("/seedCount/api/dailySeedCountSummaryOverall", function(request, response) { // provide chart data
+    console.log("\n/seedCount/api/dailySeedCountSummaryOverall");
+    var workingDate = new Date(request.query.workingDate);
+    var workingYear = workingDate.getUTCFullYear();
+    var workingMonth = workingDate.getUTCMonth() + 1;
+    var lastDateOfMonth = moment(new Date(workingYear, workingMonth, 0)).format("D");
+    var mssqlConnection = mssql.connect(config.mssqlConfig)
+        .then(function() {
+            var mssqlRequest = new mssql.Request(mssqlConnection);
+            mssqlRequest.query(queryString.getDailySeedCountSummaryOverall(workingYear, workingMonth))
+                .then(function(recordset) {
+                    var chartData = {
+                        labels: [],
+                        datasets: []
+                    };
+                    for (var loopIndex = 1; loopIndex <= lastDateOfMonth; loopIndex++) { // create labels for chart (days existed in the workingMonth)
+                        chartData.labels.push(loopIndex);
+                    }
+                    chartData.datasets = [{
+                        label: "全線",
+                        fill: false,
+                        lineTension: 0,
+                        backgroundColor: "#ff0000",
+                        borderColor: "#ff0000",
+                        borderCapStyle: 'butt',
+                        borderDash: [],
+                        borderDashOffset: 0.0,
+                        borderJoinStyle: 'miter',
+                        borderWidth: 1,
+                        pointBorderColor: "rgba(75,192,192,1)",
+                        pointBackgroundColor: "#fff",
+                        pointBorderWidth: 1,
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: "rgba(75,192,192,1)",
+                        pointHoverBorderColor: "rgba(220,220,220,1)",
+                        pointHoverBorderWidth: 2,
+                        pointRadius: 1,
+                        pointHitRadius: 10,
+                        pointStyle: "cross",
+                        spanGaps: false,
+                        data: []
+                    }];
+                    for (var loopIndex = 0; loopIndex < lastDateOfMonth; loopIndex++) { // loop through each day of the workingMonth
+                        // map data into variable, if data does not exist for the particular day, add a undefined place holder
+                        if (filter(recordset, function(record) { return (record.day === loopIndex + 1); })[0]) {
+                            chartData.datasets[0].data.push(Math.round(filter(recordset, function(record) { return (record.day === loopIndex + 1); })[0].avgUnitSeedCount * 100) / 100);
+                        } else {
+                            chartData.datasets[0].data.push(undefined);
+                        }
+                    }
                     return response.status(200).json(chartData); // return the dataset after everything is complete
                 })
                 .catch(function(error) {

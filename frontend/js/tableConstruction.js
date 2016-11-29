@@ -239,7 +239,8 @@ function removeTableComponent() {
 
 function constructSummaryChart(dateString) {
     $("div.canvasContainer").empty();
-    $("div.dailySeedCountSummaryByProdLineChart.canvasContainer").append('<canvas id="dailySeedCountSummaryByProdLineChart" width="800" height="400"></canvas>');
+    $("div.dailySeedCountSummaryByProdLineChart.canvasContainer").append('<canvas id="dailySeedCountSummaryByProdLineChart"></canvas>');
+    $("div.dailySeedCountSummaryOverall.canvasContainer").append('<canvas id="dailySeedCountSummaryOverall"></canvas>');
     $.get("../seedCount/api/dailySeedCountSummaryByProdLine?workingDate=" + dateString, function(resultset) {
         var dailySummaryByProdLineChart = new Chart($("#dailySeedCountSummaryByProdLineChart"), {
             type: "line",
@@ -248,25 +249,54 @@ function constructSummaryChart(dateString) {
                 title: {
                     display: true,
                     fontSize: 24,
-                    text: "每日線別統計線狀圖"
+                    text: "線別每日統計線狀圖"
                 },
                 scales: {
                     yAxes: [{
                         scaleLabel: {
                             display: true,
-                            fontSize: 24,
+                            fontSize: 18,
                             labelString: "氣泡數"
                         }
                     }],
                     xAxes: [{
                         scaleLabel: {
                             display: true,
-                            fontSize: 24,
+                            fontSize: 18,
                             labelString: "日期"
                         }
                     }]
                 }
             }
+        });
+        $.get("../seedCount/api/dailySeedCountSummaryOverall?workingDate=" + dateString, function(resultset) {
+            var dailySummaryOverall = new Chart($("#dailySeedCountSummaryOverall"), {
+                type: "bar",
+                data: resultset,
+                options: {
+                    title: {
+                        display: true,
+                        fontSize: 24,
+                        text: "全線每日統計線狀圖"
+                    },
+                    scales: {
+                        yAxes: [{
+                            scaleLabel: {
+                                display: true,
+                                fontSize: 18,
+                                labelString: "氣泡數"
+                            }
+                        }],
+                        xAxes: [{
+                            scaleLabel: {
+                                display: true,
+                                fontSize: 18,
+                                labelString: "日期"
+                            }
+                        }]
+                    }
+                }
+            });
         });
     });
 };

@@ -48,6 +48,10 @@ function getDailySeedCountSummaryByProdLine(year, month) {
     return "SELECT * FROM productionHistory.dbo.dailySeedCountSummaryByProdLine WHERE year=" + year + " AND month=" + month + " ORDER BY prodLineID,year,month,day;";
 };
 
+function getDailySeedCountSummaryOverall(year, month) {
+    return "SELECT * FROM productionHistory.dbo.dailySeedCountSummaryOverall WHERE year=" + year + " AND month=" + month + " ORDER BY year,month,day;";
+};
+
 module.exports = {
     deleteRecord,
     getBroadcastRecord,
@@ -60,5 +64,6 @@ module.exports = {
     getBroadcastRecordCount,
     insertBroadcastRecord,
     deleteBroadcastRecord,
-    getDailySeedCountSummaryByProdLine
+    getDailySeedCountSummaryByProdLine,
+    getDailySeedCountSummaryOverall
 };
