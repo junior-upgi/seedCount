@@ -4,3 +4,4 @@ backend/seedImage
 *.JPG
 *.log
 launch.json
+*.xlsx

@@ -2,8 +2,10 @@
 
 var cors = require("cors");
 var bodyParser = require("body-parser");
+var CronJob = require("cron").CronJob;
 var fs = require("fs");
 var express = require("express");
+var json2xls = require("json2xls");
 var morgan = require("morgan");
 var moment = require("moment-timezone");
 var mssql = require("mssql");
@@ -21,7 +23,6 @@ var seedCountLevelCap = require("./model/seedCountLevelCap.js");
 var telegram = require("./model/telegram");
 var telegramBot = require("./model/telegramBot");
 var telegramChat = require("./model/telegramChat");
-//var telegramUser = require("./model/telegramUser");
 var queryString = require("./model/queryString");
 
 var app = express();
@@ -31,7 +32,6 @@ app.use(morgan("dev")); // log request and result to console
 app.use(bodyParser.urlencoded({ extended: true })); // parse application/x-www-form-urlencoded
 var urlencodedParser = bodyParser.urlencoded({ extended: true });
 app.use(bodyParser.json()); // parse application/json
-//var jsonParser = bodyParser.json();
 
 app.use("/seedCount/frontend/js", express.static("./frontend/js")); // serve javascript files for frontend website
 app.use("/seedCount/frontend/template", express.static("./frontend/template")); // serve front end website
@@ -716,3 +716,30 @@ app.get("/seedCount/api/dailySeedCountSummaryOverall", function(request, respons
 
 app.listen(config.serverPort); // start server
 console.log("seedCount monitor server in operation... (" + config.serverHost + ":" + config.serverPort + ")");
+
+var monthlyJob = new CronJob("0 0 9 * * *", function() {
+    var mssqlConnection = mssql.connect(config.mssqlConfig)
+        .then(function() {
+            var workingDate = new Date();
+            var workingYear = workingDate.getUTCFullYear();
+            var workingMonth = workingDate.getUTCMonth() + 1;
+            var mssqlRequest = new mssql.Request(mssqlConnection);
+            mssqlRequest.query("SELECT CONVERT(VARCHAR(40),recordDatetime,121) AS recordDatetime,prodFacilityID,prodLineID,prodReference,thickness,count_0,count_1,count_2,count_3,count_4,count_5,note,photoLocation,CONVERT(VARCHAR(40),created,121) AS created,CONVERT(VARCHAR(40),modified,121) AS modified FROM productionHistory.dbo.seedCount WHERE DATEPART(year,recordDatetime)=" + workingYear + " ORDER BY recordDatetime;")
+                .then(function(resultset) {
+                    try {
+                        var xlsObject = json2xls(resultset);
+                        fs.writeFileSync("./" + workingYear + "-" + workingMonth + "氣泡數備份資料.xlsx", xlsObject, "binary");
+                        console.log("success");
+                    } catch (error) {
+                        return console.log("error dumping data for backup: " + error);
+                    }
+                })
+                .catch(function(error) {
+                    return console.log("dbo.seedCount query error: " + error);
+                });
+        })
+        .catch(function(error) {
+            return console.log("database connection failure: " + error);
+        });
+}, null, true, config.workingTimezone);
+monthlyJob.start();
