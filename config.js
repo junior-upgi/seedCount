@@ -13,7 +13,9 @@ var mssqlConfig = {
     password: upgiSystemPassword
 };
 
-const workingTimezone = "Asia/Taipei"
+const smtpTransportAccount = "smtps://junior.upgi@gmail.com:cHApPPZV@smtp.gmail.com";
+
+const workingTimezone = "Asia/Taipei";
 
 module.exports = {
     serverHost,
@@ -23,5 +25,6 @@ module.exports = {
     upgiSystemAccount,
     upgiSystemPassword,
     mssqlConfig,
+    smtpTransportAccount,
     workingTimezone
 };

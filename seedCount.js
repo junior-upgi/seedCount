@@ -10,6 +10,7 @@ var morgan = require("morgan");
 var moment = require("moment-timezone");
 var mssql = require("mssql");
 var multer = require("multer");
+var nodemailer = require("nodemailer");
 var httpRequest = require("request");
 var filter = require("lodash.filter");
 var uniq = require("lodash.uniq");
@@ -24,6 +25,7 @@ var telegram = require("./model/telegram");
 var telegramBot = require("./model/telegramBot");
 var telegramChat = require("./model/telegramChat");
 var queryString = require("./model/queryString");
+var smtpTransport = nodemailer.createTransport(config.smtpTransportAccount);
 
 var app = express();
 app.set("view engine", "ejs");
@@ -719,7 +721,7 @@ app.get("/seedCount/api/dailySeedCountSummaryOverall", function(request, respons
 app.listen(config.serverPort); // start server
 console.log("seedCount monitor server in operation... (" + config.serverHost + ":" + config.serverPort + ")");
 
-var monthlyJob = new CronJob("0 0 9 * * *", function() {
+var dailyJob = new CronJob("0 0 9 * * *", function() { // 每天早上九點執行
     var mssqlConnection = mssql.connect(config.mssqlConfig)
         .then(function() {
             var workingDate = new Date();
@@ -743,5 +745,28 @@ var monthlyJob = new CronJob("0 0 9 * * *", function() {
         .catch(function(error) {
             return console.log("database connection failure: " + error);
         });
+}, null, true, config.workingTimezone);
+dailyJob.start();
+
+//var monthlyJob = new CronJob("*/30 * * * * *", function() { // 測試用
+var monthlyJob = new CronJob("0 0 10 1 * *", function() { // 每月一號早上10點執行
+    var workingDate = new Date();
+    var workingYear = workingDate.getUTCFullYear();
+    var workingMonth = workingDate.getUTCMonth() + 1;
+    var mailOption = {
+        from: "氣泡數監測系統 <junior@upgi.com.tw>",
+        to: "junior@upgi.com.tw", //shuhua.lee@upgi.com.tw
+        subject: workingYear + " 年度氣泡數資料 " + workingMonth + " 月定期備份",
+        text: workingYear + " 年度氣泡數資料 " + workingMonth + " 月定期備份如附件，請查收",
+        attachments: [{ path: "./" + workingYear + "-" + workingMonth + "氣泡數備份資料.xlsx" }]
+    };
+
+    smtpTransport.sendMail(mailOption, function(error, info) {
+        if (error) {
+            console.log("failed to send message: " + error);
+        } else {
+            console.log("message sent successfully: " + info.response);
+        }
+    });
 }, null, true, config.workingTimezone);
 monthlyJob.start();

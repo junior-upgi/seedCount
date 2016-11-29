@@ -8,6 +8,7 @@ var list = [{
     first_name: "佳佑",
     last_name: "蔡",
     status: ["admin", "user"],
+    email: "junior@upgi.com.tw",
     joinedGroupIDList: [
         telegramChat.list[0].id,
         telegramChat.list[1].id
@@ -19,6 +20,7 @@ var list = [{
     first_name: "于斌",
     last_name: "林",
     status: ["admin", "user"],
+    email: "it@upgi.com.tw",
     joinedGroupList: [],
     upgEmployeeID: "16080003"
 }, {
@@ -27,6 +29,7 @@ var list = [{
     first_name: "治儒",
     last_name: "陳",
     status: ["user"],
+    email: "",
     joinedGroupList: [],
     upgEmployeeID: "15050003"
 }, {
@@ -35,6 +38,7 @@ var list = [{
     first_name: "顯鈞",
     last_name: "黃",
     status: ["user"],
+    email: "",
     joinedGroupList: [],
     upgEmployeeID: "16010002"
 }, {
@@ -43,6 +47,7 @@ var list = [{
     first_name: "宏達",
     last_name: "翁",
     status: ["admin", "user"],
+    email: "mis@upgi.com.tw",
     joinedGroupList: [],
     upgEmployeeID: "99030003"
 }, {
@@ -51,6 +56,7 @@ var list = [{
     first_name: "高榮",
     last_name: "張",
     status: ["user"],
+    email: "furnace@upgi.com.tw",
     joinedGroupList: [],
     upgEmployeeID: "10120001"
 }, {
@@ -59,6 +65,7 @@ var list = [{
     first_name: "再興",
     last_name: "莊",
     status: ["user"],
+    email: "jacob@upgi.com.tw",
     joinedGroupList: [],
     upgEmployeeID: "88080073"
 }, {
@@ -67,6 +74,7 @@ var list = [{
     first_name: "世玲",
     last_name: "翁",
     status: ["user"],
+    email: "prodctrl@upgi.com.tw",
     joinedGroupList: [],
     upgEmployeeID: "07100003"
 }, {
@@ -75,6 +83,7 @@ var list = [{
     first_name: "建睿",
     last_name: "林",
     status: ["user"],
+    email: "jacklin@upgi.com.tw",
     joinedGroupList: [],
     upgEmployeeID: "94030001"
 }, {
@@ -83,6 +92,7 @@ var list = [{
     first_name: "逸樺",
     last_name: "陳",
     status: ["user"],
+    email: "olivia@upgi.com.tw",
     joinedGroupList: [],
     upgEmployeeID: "06070004"
 }, {
@@ -99,6 +109,7 @@ var list = [{
     first_name: "淑華",
     last_name: "李",
     status: ["user"],
+    email: "shuhua.lee@upgi.com.tw",
     joinedGroupList: [],
     upgEmployeeID: "95090001"
 }, {
@@ -107,6 +118,7 @@ var list = [{
     first_name: "芳伊",
     last_name: "郭",
     status: ["user"],
+    email: "janice@upgi.com.tw",
     joinedGroupList: [],
     upgEmployeeID: "13070002"
 }, {
@@ -115,6 +127,7 @@ var list = [{
     first_name: "珈慧",
     last_name: "廖",
     status: ["user"],
+    email: "phoebe@upgi.com.tw",
     joinedGroupList: [],
     upgEmployeeID: "12090006"
 }, {
@@ -131,6 +144,7 @@ var list = [{
     first_name: "David",
     last_name: "Lin",
     status: ["user"],
+    email: "davidlin@upgi.com.tw",
     joinedGroupList: [],
     upgEmployeeID: "03090001"
 }, {
@@ -139,6 +153,7 @@ var list = [{
     first_name: "Evita",
     last_name: "Chuang",
     status: ["user"],
+    email: "evita@upgi.com.tw",
     joinedGroupList: [],
     upgEmployeeID: "12020012"
 }, {
@@ -163,6 +178,7 @@ var list = [{
     first_name: "雨利",
     last_name: "陳",
     status: ["user"],
+    email: "hugo@upgi.com.tw",
     joinedGroupList: [],
     upgEmployeeID: "93120001"
 }, {
@@ -203,6 +219,7 @@ var list = [{
     first_name: "Mavid",
     last_name: "Chao",
     status: ["user"],
+    email: "mavis@upgi.com.tw",
     joinedGroupList: [],
     upgEmployeeID: "08030005"
 }, {
@@ -227,6 +244,7 @@ var list = [{
     first_name: "宜如",
     last_name: "林",
     status: ["user"],
+    email: "design2@upgi.com.tw",
     joinedGroupList: [],
     upgEmployeeID: "99040007"
 }];
