@@ -303,22 +303,24 @@ app.get("/seedCount/api/broadcast/24HourData", function(request, response) {
 });
 
 app.get("/seedCount/api/getRecentBroadcastRecord", function(request, response) { // get broadcast record for the 48 hours
-    mssql.connect(config.mssqlConfig, function(error) {
-        if (error) {
+    var mssqlConnection = mssql.connect(config.mssqlConfig)
+        .then(function() {
+            var startDatetime = request.query.workingDate + " 07:30:00";
+            var endDatetime = moment(startDatetime, "YYYY-MM-DD HH:mm:ss").add(1, "days").format("YYYY-MM-DD HH:mm:ss");
+            var mssqlRequest = new mssql.Request(mssqlConnection);
+            mssqlRequest.query(queryString.getBroadcastRecord(startDatetime, endDatetime))
+                .then(function(resultset) {
+                    return response.status(200).json(JSON.stringify(resultset));
+                })
+                .catch(function(error) {
+                    console.log("unable to query dbo.seedCountBroadcastRecord data, returning empty recordset" + error);
+                    return response.status(500).send("unable to query dbo.seedCountBroadcastRecord data, returning empty recordset" + error);
+                });
+        })
+        .catch(function(error) {
             console.log("database connection error: " + error);
             return response.status(500).send("database connection error: " + error);
-        }
-        var mssqlRequest = new mssql.Request();
-        var startDatetime = request.query.workingDate + " 07:30:00";
-        var endDatetime = moment(startDatetime, "YYYY-MM-DD HH:mm:ss").add(1, "days").format("YYYY-MM-DD HH:mm:ss");
-        mssqlRequest.query(queryString.getBroadcastRecord(startDatetime, endDatetime), function(error, resultset) {
-            if (error) {
-                console.log("unable to query dbo.seedCountBroadcastRecord data, returning empty recordset" + error);
-                return response.status(500).send("[]");
-            }
-            return response.status(200).json(JSON.stringify(resultset));
         });
-    });
 });
 
 app.get("/seedCount/api/getRecordCount", function(request, response) { // count records between dates

@@ -29,21 +29,6 @@ function autoRefresh() {
     }, 1000);
 };
 
-/*
-// deprecated, to be removed if not other issues are experienced
-function updateBroadcastRecord() {
-    setInterval(function() {
-        $.get("http://upgi.ddns.net:9002/seedCount/api/getRecentBroadcastRecord?workingDate=" + workingDate, function(recordset) {
-            var broadcastRecordList = JSON.parse(recordset);
-            broadcastRecordList.forEach(function(broadcastRecord) {
-                var trimmedTimePoint = moment(broadcastRecord.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("HHmm");
-                $("span.broadcastIndicator." + trimmedTimePoint).removeClass("hidden");
-            });
-        });
-    }, 60000);
-    return;
-};*/
-
 function surveyBroadcastServerStatus() {
     $.ajax({
         url: telegramStatusUrl,

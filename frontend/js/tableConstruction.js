@@ -95,6 +95,18 @@ function constructSituationTable(dateString) {
             $("#workingDateBanner").text(dateString); //set the date label on the situation table caption
             //ajax POST for seed count data and pass on the data for processing
             getRecordset().done(function(recordset) {
+                // grab data from dbo.seedCountBroadcastRecord
+                $.get("http://upgi.ddns.net:9002/seedCount/api/getRecentBroadcastRecord?workingDate=" + workingDate)
+                    .then(function(recordset) {
+                        var broadcastRecordList = JSON.parse(recordset);
+                        // loop through each record in recordset
+                        broadcastRecordList.forEach(function(broadcastRecord) {
+                            // turn time string into trimmed format, eg. 10:00 => 1000
+                            var trimmedTimePoint = moment(broadcastRecord.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("HHmm");
+                            // match the record in the display table, and show the phone glyph icon to indicate it's broadcasted
+                            $("span.broadcastIndicator." + trimmedTimePoint).removeClass("hidden");
+                        });
+                    });
                 populateSituationTable(recordset);
             });
         }
@@ -131,17 +143,6 @@ function populateSituationTable(seedCountRecordSet) {
                 // if there are valid entries, calculate the bi-hourly average
                 $("th.hourlyAverageField." + inspectTimePoint.trimmedTimePoint).text(Math.round(((Math.round(seedCountSum * 100) / 100) / validEntryCount) * 100) / 100);
             }
-        });
-    });
-    // grab data from dbo.seedCountBroadcastRecord
-    $.get("http://upgi.ddns.net:9002/seedCount/api/getRecentBroadcastRecord?workingDate=" + workingDate, function(recordset) {
-        var broadcastRecordList = JSON.parse(recordset);
-        // loop through each record in recordset
-        broadcastRecordList.forEach(function(broadcastRecord) {
-            // turn time string into trimmed format, eg. 10:00 => 1000
-            var trimmedTimePoint = moment(broadcastRecord.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("HHmm");
-            // match the record in the display table, and show the phone glyph icon to indicate it's broadcasted
-            $("span.broadcastIndicator." + trimmedTimePoint).removeClass("hidden");
         });
     });
     // calculate the summary column data
