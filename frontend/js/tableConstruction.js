@@ -238,6 +238,8 @@ function removeTableComponent() {
 }
 
 function constructSummaryChart(dateString) {
+    $("div.canvasContainer").empty();
+    $("div.dailySeedCountSummaryByProdLineChart.canvasContainer").append('<canvas id="dailySeedCountSummaryByProdLineChart" width="800" height="400"></canvas>');
     $.get("../seedCount/api/dailySeedCountSummaryByProdLine?workingDate=" + dateString, function(resultset) {
         var dailySummaryByProdLineChart = new Chart($("#dailySeedCountSummaryByProdLineChart"), {
             type: "line",
