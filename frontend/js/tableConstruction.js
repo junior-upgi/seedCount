@@ -78,7 +78,7 @@ function constructSituationTable(dateString) {
     $("td.seedCountField").on("click", function() {}); // to counter iOS problem of not able to attach click event to non-clickable element by default
     $("td.seedCountField").css("cursor", "pointer"); // to counter iOS problem of not able to attach click event to non-clickable element by default
     var getRecordset = function() { // promise of ajax function
-        return $.getJSON("../seedCount/api/getRecordset?workingDate=" + dateString)
+        return $.get("../seedCount/api/getRecordset?workingDate=" + dateString)
             .then(function(recordset) {
                 return (JSON.parse(recordset));
             }).fail(function() {
@@ -208,6 +208,7 @@ function formatSituationTable() {
         $(".preventDisplay").show();
         $("button#preventDisplayToggleButton").text("隱藏");
     }
+    constructSummaryChart(workingDate);
 };
 
 function togglePreventDisplay() {
@@ -236,41 +237,34 @@ function removeTableComponent() {
     $("tr#situationTableHeading").empty();
 }
 
-/*
-var seedCountData = {
-    labels: ["January", "February", "March", "April", "May", "June", "July"],
-    datasets: [{
-        label: "圖形製表測試",
-        fill: false,
-        lineTension: 0.1,
-        backgroundColor: "rgba(75,192,192,0.4)",
-        borderColor: "rgba(75,192,192,1)",
-        borderCapStyle: 'butt',
-        borderDash: [],
-        borderDashOffset: 0.0,
-        borderJoinStyle: 'miter',
-        pointBorderColor: "rgba(75,192,192,1)",
-        pointBackgroundColor: "#fff",
-        pointBorderWidth: 1,
-        pointHoverRadius: 5,
-        pointHoverBackgroundColor: "rgba(75,192,192,1)",
-        pointHoverBorderColor: "rgba(220,220,220,1)",
-        pointHoverBorderWidth: 2,
-        pointRadius: 1,
-        pointHitRadius: 10,
-        data: [65, 59, 80, 81, 56, 55, 40],
-        spanGaps: false,
-    }]
-};
-
-var dailySummaryByProdLineChart = new Chart($("#dailySummaryByProdLineChart"), {
-    type: "line",
-    data: data
-});
-*/
-
 function constructSummaryChart(dateString) {
     $.get("../seedCount/api/dailySeedCountSummaryByProdLine?workingDate=" + dateString, function(resultset) {
-        console.log(resultset);
+        var dailySummaryByProdLineChart = new Chart($("#dailySeedCountSummaryByProdLineChart"), {
+            type: "line",
+            data: resultset,
+            options: {
+                title: {
+                    display: true,
+                    fontSize: 24,
+                    text: "每日線別統計線狀圖"
+                },
+                scales: {
+                    yAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            fontSize: 24,
+                            labelString: "氣泡數"
+                        }
+                    }],
+                    xAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            fontSize: 24,
+                            labelString: "日期"
+                        }
+                    }]
+                }
+            }
+        });
     });
 };

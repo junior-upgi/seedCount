@@ -10,7 +10,6 @@ var mssql = require("mssql");
 var multer = require("multer");
 var httpRequest = require("request");
 var filter = require("lodash.filter");
-var map = require("lodash.map");
 var uniq = require("lodash.uniq");
 
 var config = require("./config.js");
@@ -118,9 +117,9 @@ app.get("/seedCount/api/broadcast/shiftData", function(request, response) {
         workingDateString.slice(8, 10) + " " +
         shiftObject.cReference + "氣泡數通報】\n";
     var broadcastedDatetimeList = []; // to hold an array of broadcasted datetimes
-    mssql.connect(config.mssqlConfig)
+    var mssqlConnection = mssql.connect(config.mssqlConfig)
         .then(function() {
-            var mssqlRequest = new mssql.Request();
+            var mssqlRequest = new mssql.Request(mssqlConnection);
             console.log(queryString.getSeedCountRecordsBetweenDate(shiftStartDatetime, shiftEndDatetime));
             mssqlRequest.query(queryString.getSeedCountRecordsBetweenDate(shiftStartDatetime, shiftEndDatetime))
                 .then(function(recordset) {
@@ -135,7 +134,6 @@ app.get("/seedCount/api/broadcast/shiftData", function(request, response) {
                         messageText += "未建立資料";
                     }
                     broadcastedDatetimeList = uniq(broadcastedDatetimeList); // remove duplicates
-                    console.log(broadcastedDatetimeList); ///////////////////////////////////////////////
                     httpRequest({ // send broadcast of current shift data
                         url: upgiSystem.broadcastUrl,
                         method: "post",
@@ -147,7 +145,6 @@ app.get("/seedCount/api/broadcast/shiftData", function(request, response) {
                         }
                     }, function(error, httpResponse, body) {
                         if (error || (httpResponse.statusCode !== 200)) { // broadcast unsuccessful
-                            mssql.close();
                             console.log("error sending broadcast message: " + error + "\n" + JSON.stringify(body));
                             return response.status(httpResponse.statusCode).send(error);
                         } else { // successful continue to make record of the broadcast
@@ -155,14 +152,12 @@ app.get("/seedCount/api/broadcast/shiftData", function(request, response) {
                                 // update broadcast time if existing
                                 mssqlRequest.query(queryString.updateBroadcastRecord(broadcastedDatetime, datetimeObject.format("YYYY-MM-DD HH:mm:ss")), function(error) {
                                     if (error) {
-                                        mssql.close();
                                         console.log("updateBroadcastRecord() failure: " + error);
                                         return response.status(500).send("updateBroadcastRecord() failure: " + error);
                                     }
                                     // query if broadcasted status is available
                                     mssqlRequest.query(queryString.getBroadcastRecordCount(broadcastedDatetime), function(error, data) {
                                         if (error) {
-                                            mssql.close();
                                             console.log("getBroadcastRecordCount() failure: " + error);
                                             return response.status(500).send("getBroadcastRecordCount() failure: " + error);
                                         }
@@ -170,15 +165,12 @@ app.get("/seedCount/api/broadcast/shiftData", function(request, response) {
                                             // if doesn't exist, insert a record to indicat
                                             mssqlRequest.query(queryString.insertBroadcastRecord(broadcastedDatetime, datetimeObject.format("YYYY-MM-DD HH:mm:ss")), function(error) {
                                                 if (error) {
-                                                    mssql.close();
                                                     console.log("insertBroadcastRecord() failure: " + error);
                                                     return response.status(500).send("insertBroadcastRecord() failure: " + error);
                                                 }
-                                                mssql.close();
                                                 return response.status(200).end();
                                             });
                                         } else {
-                                            mssql.close();
                                             return response.status(200).end();
                                         }
                                     });
@@ -186,9 +178,10 @@ app.get("/seedCount/api/broadcast/shiftData", function(request, response) {
                             });
                         }
                     });
-                }).catch(function(error) {
+                })
+                .catch(function(error) {
                     console.log("query error encountered: " + error);
-                    return response.status(500).send(error);
+                    return response.status(500).send("query error encountered: " + error);
                 });
         }).catch(function(error) {
             console.log("error connecting to database: " + error);
@@ -207,9 +200,9 @@ app.get("/seedCount/api/broadcast/24HourData", function(request, response) {
         title: "【近24小時內氣泡數通報】\n",
         shiftMessage: []
     };
-    mssql.connect(config.mssqlConfig)
+    var mssqlConnection = mssql.connect(config.mssqlConfig)
         .then(function() {
-            var mssqlRequest = new mssql.Request();
+            var mssqlRequest = new mssql.Request(mssqlConnection);
             var shiftDataQueryPromiseList = [];
 
             function queryShiftData(startDatetimeString, endDatetimeString) {
@@ -291,11 +284,9 @@ app.get("/seedCount/api/broadcast/24HourData", function(request, response) {
                         }
                     }, function(error, httpResponse, body) {
                         if (error || (httpResponse.statusCode !== 200)) {
-                            mssql.close();
                             console.log("error sending broadcast message: " + error + "\n" + JSON.stringify(body));
                             return response.status(httpResponse.statusCode).send(error);
                         } else {
-                            mssql.close();
                             return response.status(httpResponse.statusCode).end();
                         }
                     });
@@ -325,47 +316,49 @@ app.get("/seedCount/api/getRecentBroadcastRecord", function(request, response) {
                 console.log("unable to query dbo.seedCountBroadcastRecord data, returning empty recordset" + error);
                 return response.status(500).send("[]");
             }
-            mssql.close();
             return response.status(200).json(JSON.stringify(resultset));
         });
     });
 });
 
-app.get("/seedCount/api/getRecordCount", function(req, res) { // get the count of how many records is within the queried condition [FIXED]
+app.get("/seedCount/api/getRecordCount", function(request, response) { // count records between dates
+    //debugger
     console.log("\n/seedCount/api/getRecordCount");
     var dateToCheck = "";
-    if (req.query.workingDate === undefined) {
+    if (request.query.workingDate === undefined) {
         console.log("workingDate parameter not set, return empty recordset");
-        return res.status(400).send('[{"recordCount":0}]');
+        return response.status(400).send('[{"recordCount":0}]');
     } else {
-        dateToCheck = moment(req.query.workingDate, "YYYY-MM-DD");
-        var workDateStartTime = moment(shift.getWorkDatetimeString(req.query.workingDate, "07:30"), "YYYY-MM-DD HH:mm:ss");
+        //debugger
+        dateToCheck = moment(request.query.workingDate, "YYYY-MM-DD");
+        var workDateStartTime = moment(shift.getWorkDatetimeString(request.query.workingDate, "07:30"), "YYYY-MM-DD HH:mm:ss");
         var workDateEndTime = moment(workDateStartTime, "YYYY-MM-DD HH:mm:ss").add(1, "days").subtract(1, "milliseconds");
-        if ((!dateToCheck.isValid()) || (req.query.workingDate.length !== 10)) {
+        if ((!dateToCheck.isValid()) || (request.query.workingDate.length !== 10)) {
             console.log("workingDate parameter irregularity detected, returning empty recordset");
-            return res.status(400).send('[{"recordCount":0}]');
+            return response.status(400).send('[{"recordCount":0}]');
         } else {
-            mssql.connect(config.mssqlConfig, function(error) {
-                if (error) {
-                    console.log("database connection error: " + error);
-                    return res.status(500).send("database connection error: " + error);
-                }
-                var mssqlRequest = new mssql.Request();
-                console.log("SQL query: " + queryString.getRecordCount(
-                    workDateStartTime.format("YYYY-MM-DD HH:mm:ss:SSS"),
-                    workDateEndTime.format("YYYY-MM-DD HH:mm:ss:SSS")));
-                mssqlRequest.query(queryString.getRecordCount(
+            //debugger
+            var mssqlConnection = mssql.connect(config.mssqlConfig)
+                .then(function() {
+                    var mssqlRequest = new mssql.Request(mssqlConnection);
+                    console.log("SQL query: " + queryString.getRecordCount(
                         workDateStartTime.format("YYYY-MM-DD HH:mm:ss:SSS"),
-                        workDateEndTime.format("YYYY-MM-DD HH:mm:ss:SSS")),
-                    function(error, resultset) {
-                        if (error) {
-                            console.log("unable to query record count data, returning empty recordset" + error);
-                            return res.status(500).send('[{"recordCount":0}]');
-                        }
-                        mssql.close();
-                        return res.status(200).json(JSON.stringify(resultset));
-                    });
-            });
+                        workDateEndTime.format("YYYY-MM-DD HH:mm:ss:SSS")));
+                    mssqlRequest.query(queryString.getRecordCount(
+                            workDateStartTime.format("YYYY-MM-DD HH:mm:ss:SSS"),
+                            workDateEndTime.format("YYYY-MM-DD HH:mm:ss:SSS")))
+                        .then(function(resultset) {
+                            return response.status(200).json(JSON.stringify(resultset));
+                        })
+                        .catch(function(error) {
+                            console.log("unable to query record count data, returning empty recordset: " + error);
+                            return response.status(500).send('[{"recordCount":0}]');
+                        });
+                })
+                .catch(function(error) {
+                    console.log("database connection error: " + error);
+                    return response.status(500).send("database connection error: " + error);
+                });
         }
     }
 });
@@ -387,7 +380,6 @@ app.get("/seedCount/api/getRecordset", function(req, response) { // get a set of
                 console.log("seed count data query failure: " + error)
                 return response.status(500).send("seed count data query failure: " + error);
             }
-            mssql.close();
             console.log("seed count data result query successfully");
             return response.status(200).json(JSON.stringify(resultset));
         });
@@ -412,7 +404,6 @@ app.get("/seedCount/api/getRecord", function(req, res) { // get one single recor
                 console.log("record query failed: " + error);
                 return res.status(500).send("record query failed: " + error);
             }
-            mssql.close();
             console.log("record query successful");
             return res.status(200).json(JSON.stringify(resultset));
         });
@@ -483,12 +474,10 @@ app.post("/seedCount/api/insertRecord", upload.any(), function(req, res) { // in
                             }
                         }, function(error, httpResponse, body) {
                             if (error || (httpResponse.statusCode !== 200)) {
-                                mssql.close();
                                 console.log(moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " new data entry inserted successfully");
                                 console.log("seed count irregularity broadcasting failure: " + error + "\n" + JSON.stringify(body));
                                 return res.status(httpResponse.statusCode).send(error);
                             } else {
-                                mssql.close();
                                 console.log(moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " new data entry inserted successfully");
                                 console.log("seed count irregularity message broadcasted");
                                 return res.status(httpResponse.statusCode).end();
@@ -497,7 +486,6 @@ app.post("/seedCount/api/insertRecord", upload.any(), function(req, res) { // in
                     }
                 }
             }
-            mssql.close();
             console.log(moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " new data entry inserted successfully");
             return res.status(200).redirect("../mobile");
         });
@@ -550,7 +538,6 @@ app.post("/seedCount/api/updateRecord", upload.any(), function(req, res) { // up
                 console.log("record update failure:" + error);
                 return res.status(500).send("record update failure:" + error);
             }
-            mssql.close();
             console.log(moment(req.body.recordDatetime, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss") + " " + req.body.prodLineID + " record updated");
             return res.status(200).send(req.body.recordDatetime + " " + req.body.prodLineID + " record updated");
         });
@@ -585,11 +572,9 @@ app.post("/seedCount/api/deleteRecord", urlencodedParser, function(req, res) { /
                         console.log("SQL query" + deleteRecordQuery);
                         mssqlRequest.query(deleteRecordQuery, function(error) {
                             if (error) {
-                                mssql.close();
                                 console.log("error encountered while deleting record: " + error);
                                 return res.status(500).send("error encountered while deleting record: " + error);
                             }
-                            mssql.close();
                             console.log("record deleted");
                             return res.status(200).send("record deleted");
                         });
@@ -598,17 +583,14 @@ app.post("/seedCount/api/deleteRecord", urlencodedParser, function(req, res) { /
                     console.log("SQL query: " + deleteRecordQuery);
                     mssqlRequest.query(deleteRecordQuery, function(error) {
                         if (error) {
-                            mssql.close();
                             console.log("record delete failure: " + error);
                             return res.status(500).send("record delete failure: " + error);
                         }
                         mssqlRequest.query(queryString.deleteBroadcastRecord(req.body.recordDatetime), function(error) {
                             if (error) {
-                                mssql.close();
                                 console.log("deleteBroadcastRecord() failure: " + error);
                                 return res.status(500).send("deleteBroadcastRecord() failure: " + error);
                             }
-                            mssql.close();
                             console.log("record deleted");
                             return res.status(200).send("record deleted");
                         });
@@ -625,50 +607,52 @@ app.get("/seedCount/api/dailySeedCountSummaryByProdLine", function(request, resp
     var workingYear = workingDate.getUTCFullYear();
     var workingMonth = workingDate.getUTCMonth() + 1;
     var lastDateOfMonth = moment(new Date(workingYear, workingMonth, 0)).format("D");
-    mssql.connect(config.mssqlConfig, function(error) {
-        if (error) {
-            console.log("database connection failure: " + error);
-            return res.status(500).send("database connection failure: " + error);
-        }
-        var mssqlRequest = new mssql.Request();
-        mssqlRequest.query(queryString.getDailySeedCountSummaryByProdLine(workingYear, workingMonth))
-            .then(function(recordset) {
-                mssql.close();
-                var chartData = {
-                    labels: [],
-                    datasets: []
-                };
-                for (var loopIndex = 1; loopIndex <= lastDateOfMonth; loopIndex++) { // create labels for chart (days existed in the workingMonth)
-                    chartData.labels.push(loopIndex);
-                }
-                prodLine.list.forEach(function(prodLineObject, index) { // loop through each production line
-                    var prodLineDataset = { // create a temporary object to hold data
-                        label: "",
-                        data: []
+    var mssqlConnection = mssql.connect(config.mssqlConfig)
+        .then(function() {
+            var mssqlRequest = new mssql.Request(mssqlConnection);
+            mssqlRequest.query(queryString.getDailySeedCountSummaryByProdLine(workingYear, workingMonth))
+                .then(function(recordset) {
+                    var chartData = {
+                        labels: [],
+                        datasets: []
                     };
-                    prodLineDataset.label = prodLineObject.reference + " 每日平均"; // generate title for temporary data object
-                    for (var loopIndex = 0; loopIndex < lastDateOfMonth; loopIndex++) { // loop through each day of the workingMonth
-                        // map data into temporary variable, if data does not exist for the particular day, add a undefined place holder
-                        if (filter(recordset, function(record) {
-                                return ((record.prodLineID === prodLineObject.reference) && (record.day === loopIndex + 1));
-                            })[0]) {
-                            prodLineDataset.data.push(filter(recordset, function(record) {
-                                return ((record.prodLineID === prodLineObject.reference) && (record.day === loopIndex + 1));
-                            })[0].avgUnitSeedCount);
-                        } else {
-                            prodLineDataset.data.push(undefined);
-                        }
+                    for (var loopIndex = 1; loopIndex <= lastDateOfMonth; loopIndex++) { // create labels for chart (days existed in the workingMonth)
+                        chartData.labels.push(loopIndex);
                     }
-                    chartData.datasets.push(prodLineDataset); // push data for one production line into the dataset
+                    prodLine.list.forEach(function(prodLineObject) { // loop through each production line
+                        /*var prodLineDataset = { // create a temporary object to hold data
+                            label: "",
+                            data: []
+                        };*/
+                        var prodLineDataset = prodLineObject.lineGraphProperty;
+                        prodLineDataset.label = "";
+                        prodLineDataset.data = [];
+                        prodLineDataset.label = prodLineObject.reference; // generate title for temporary data object
+                        for (var loopIndex = 0; loopIndex < lastDateOfMonth; loopIndex++) { // loop through each day of the workingMonth
+                            // map data into temporary variable, if data does not exist for the particular day, add a undefined place holder
+                            if (filter(recordset, function(record) {
+                                    return ((record.prodLineID === prodLineObject.reference) && (record.day === loopIndex + 1));
+                                })[0]) {
+                                prodLineDataset.data.push(Math.round(filter(recordset, function(record) {
+                                    return ((record.prodLineID === prodLineObject.reference) && (record.day === loopIndex + 1));
+                                })[0].avgUnitSeedCount * 100) / 100);
+                            } else {
+                                prodLineDataset.data.push(undefined);
+                            }
+                        }
+                        chartData.datasets.push(prodLineDataset); // push data for one production line into the dataset
+                    });
+                    return response.status(200).json(chartData); // return the dataset after everything is complete
+                })
+                .catch(function(error) {
+                    console.log("failure running getDailySeedCountSummaryByProdLine() query, returning empty recordset: " + error);
+                    return response.status(500).json("[]");
                 });
-                return response.status(200).json(chartData); // return the dataset after everything is complete
-            })
-            .catch(function(error) {
-                mssql.close();
-                console.log("failure running getDailySeedCountSummaryByProdLine() query, returning empty recordset: " + error);
-                return response.status(500).json("[]");
-            });
-    });
+        })
+        .catch(function(error) {
+            console.log("database connection failure: " + error);
+            return response.status(500).send("database connection failure: " + error);
+        });
 });
 
 app.listen(config.serverPort); // start server

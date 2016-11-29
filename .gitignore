@@ -2,3 +2,5 @@
 node_modules
 backend/seedImage
 *.JPG
+*.log
+launch.json
