@@ -4,7 +4,7 @@ var list = [{
     reference: 'L1-1',
     sequence: 0,
     side: 'west',
-    hidden: true,
+    hidden: false,
     lineGraphProperty: {
         fill: false,
         lineTension: 0,
