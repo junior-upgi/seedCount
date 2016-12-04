@@ -1,7 +1,9 @@
 "use strict";
 
 var list = [{
-    cReference: '新工總廠'
+    id: 1,
+    reference: "upgiMainSite",
+    cReference: "新工總廠"
 }];
 
 module.exports = { list };
