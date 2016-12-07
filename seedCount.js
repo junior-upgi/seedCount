@@ -35,6 +35,8 @@ app.use(bodyParser.urlencoded({ extended: true })); // parse application/x-www-f
 var urlencodedParser = bodyParser.urlencoded({ extended: true });
 app.use(bodyParser.json()); // parse application/json
 
+
+app.use("/seedCount/frontend/image", express.static("./frontend/image")); // serve favicon
 app.use("/seedCount/frontend/js", express.static("./frontend/js")); // serve javascript files for frontend website
 app.use("/seedCount/frontend/template", express.static("./frontend/template")); // serve front end website
 
