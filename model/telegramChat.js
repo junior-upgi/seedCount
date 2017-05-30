@@ -1,6 +1,14 @@
 "use strict";
 
-var list = [{
+var list = [{ /* ** */
+    id: -224820909,
+    title: '統義業務部',
+    type: 'group'
+}, {
+    id: -224420315,
+    title: '統義生產部',
+    type: 'group'
+}, { /* ** */
     id: -150874076,
     title: "業務群組",
     type: "group"
@@ -20,7 +28,7 @@ var list = [{
 
 function getChatID(title) {
     var chat_id;
-    list.forEach(function(chatObject) {
+    list.forEach(function (chatObject) {
         if (chatObject.title === title) {
             chat_id = chatObject.id;
         }

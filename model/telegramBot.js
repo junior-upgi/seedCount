@@ -49,12 +49,19 @@ var list = [{
         token: "287236637:AAHSuMHmaZJ2Vm9gXf3NeSlInrgr-XXzoRo",
         functionList: [],
         joinedGroupIDList: []
-    }
+    }, { /* ** */
+        id: 313994181,
+        first_name: 'UPGI IT Bot',
+        username: 'upgiItBot',
+        token: '313994181:AAHTIPRVfLeJ_YW4LSSfGx-Y7G5p_8_sC64',
+        functionList: [],
+        joinedGroupIDList: []
+    } /* ** */
 ];
 
 function getToken(botUsername) {
     var token;
-    list.forEach(function(botObject) {
+    list.forEach(function (botObject) {
         if (botObject.username === botUsername) {
             token = botObject.token;
         }
