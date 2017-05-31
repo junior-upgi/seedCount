@@ -775,8 +775,8 @@ var monthlyJob = new CronJob("0 0 10 1 * *", function () { // 每月一號早上
     var workingYear = workingDate.getUTCFullYear();
     var workingMonth = workingDate.getUTCMonth() + 1;
     var mailOption = {
-        from: "氣泡數監測系統 <junior@upgi.com.tw>",
-        to: "junior@upgi.com.tw, shuhua.lee@upgi.com.tw",
+        from: "氣泡數監測系統 <mis@upgi.com.tw>",
+        to: "mis@upgi.com.tw, shuhua.lee@upgi.com.tw",
         subject: workingYear + " 年度氣泡數資料 " + workingMonth + " 月定期備份",
         text: workingYear + " 年度氣泡數資料 " + workingMonth + " 月定期備份如附件，請查收並妥善保存。謝謝",
         attachments: [{
